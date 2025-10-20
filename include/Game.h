@@ -1,7 +1,7 @@
 #pragma once
 #include <SFML/Graphics.hpp>
 #include "Player.h"
-#include "stage/Floor.h"
+#include "StaticCollidable.h"
 
 class Game {
 public:
@@ -14,5 +14,5 @@ private:
 
     sf::RenderWindow window;
     Player player;
-    Floor floor;
+    std::vector<StaticCollidable*> staticCollidables;
 };

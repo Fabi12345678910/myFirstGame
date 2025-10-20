@@ -11,7 +11,7 @@ add_executable(MyGame
     src/main.cpp
     src/Game.cpp
     src/Player.cpp
-    src/stage/Floor.cpp
+    src/StageObject.cpp
 )
 
 target_link_libraries(MyGame sfml-system sfml-window sfml-graphics sfml-audio)

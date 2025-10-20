@@ -1,11 +1,11 @@
 #include "Game.h"
+#include "StageObject.h"
 
-Game::Game():
-window(sf::VideoMode(800, 600), "My Game"), 
-player(40.f, 40.f, 400.f, 200.f), 
-floor(800.f, 50.f, 0.f, 550.f) 
+Game::Game()
+: window(sf::VideoMode(800, 600), "My Game"),
+  player(40.f, 40.f, 400.f, 510.f)
 {
-
+    staticCollidables.push_back(new StageObject(800.f, 50.f, 0.f, 550.f));
 }
 
 void Game::run() {
@@ -27,15 +27,21 @@ void Game::processEvents() {
 }
 
 void Game::update(float deltaTime) {
-    if (player.getBounds().intersects(floor.getBounds())) {
-        player.onCollision(floor);
-    }
     player.update(deltaTime);
+    for (StaticCollidable* c : staticCollidables) {
+        if (player.getBounds().intersects(c->getBounds())) {
+            player.onCollision(*c);
+        }
+    }
 }
 
 void Game::render() {
     window.clear(sf::Color::Yellow);
     player.draw(window);
-    floor.draw(window);
+
+    for (StaticCollidable* c : staticCollidables) {
+        c->draw(window);
+    }
+
     window.display();
 }
