@@ -27,11 +27,14 @@ int ServerConnection::sendEvent(Event& event){
 
 Event& ServerConnection::receiveNextEvent(){
 
-    struct event nextEvent;
-    ssize_t read_size = recv(connectionSocket, &nextEvent, sizeof(nextEvent), 0);
+    char eventData[128] = {'\0','\0'};
+    ssize_t read_size = recv(connectionSocket, eventData, sizeof(eventData), 0);
     if (read_size == 0){
         throw std::runtime_error("connection closed");
     }
+    struct event nextEvent = {.type = (int) eventData[1], .dataSize = (size_t) eventData[0]};
+    memcpy(nextEvent.dataBuffer, eventData+2, nextEvent.dataSize);
+    printf("read %u bytes, got size %u and type %d from event data\n", read_size, (size_t) eventData[0],(int) eventData[1]);
     return createEventFromEventData(nextEvent);
 }
 
@@ -46,7 +49,6 @@ static void* eventHandlerFunction(void* arg){
         catch(const std::exception& e)
         {
             std::cerr << e.what() << '\n';
-            delete conn;
             return NULL;
         }
     }

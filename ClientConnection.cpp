@@ -13,7 +13,14 @@ ClientConnection::~ClientConnection()
 
 int ClientConnection::sendEvent(Event& event){
     std::size_t remainingBytes = event.getDataSize();
+    printf("sending %u bytes\n", remainingBytes);
     void* sendingPtr = event.getData();
+
+    int evType = event.getType();
+
+    send(connectionSocket, &remainingBytes, 1, 0);
+    send(connectionSocket, &evType, 1, 0);
+
     while (remainingBytes > 0)
     {
         ssize_t sentBytes = send(connectionSocket, sendingPtr, remainingBytes, 0);

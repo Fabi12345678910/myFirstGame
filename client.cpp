@@ -1,5 +1,6 @@
 #include "NetworkManager.h"
 #include <threads.h>
+#include "Events.h"
 
 int main(int argc, char const *argv[])
 {
@@ -7,9 +8,9 @@ int main(int argc, char const *argv[])
     
     try
     {
-        ClientConnection clientSocket = netMan.createClient();
-
-
+        ClientConnection conn = netMan.createClient();
+        EventDebugMessage ev("hello");
+        conn.sendEvent(ev);
     }
     catch(const std::exception& e)
     {

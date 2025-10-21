@@ -2,7 +2,14 @@
 #include "ServerConnection.h"
 
 void *handleEvents(Event& ev){
-    printf("got a new event!!");
+    printf("type: %d\n", ev.getType());
+    printf("got a new event!!\n");
+    EventDebugMessage *evDebug = dynamic_cast<EventDebugMessage*>(&ev);
+    if(evDebug != NULL){
+        printf("debug message: %s\n", evDebug->getMessage());
+    }else{
+        printf("wasnt a debug message\n");
+    }
     return NULL;
 }
 

@@ -20,8 +20,10 @@ private:
     char* msg;
     size_t msgLength;
 public:
-    EventDebugMessage(size_t msgLength, const char* content);
+    EventDebugMessage(const char* content, size_t msgLength);
+    EventDebugMessage(const char* content);
     ~EventDebugMessage();
+    char* getMessage();
     void* getData() override;
     size_t getDataSize() override;
     int getType() override;
