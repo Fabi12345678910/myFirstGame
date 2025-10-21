@@ -1,16 +1,4 @@
-#include "Event.cpp"
-#include <cstring>
-
-
-#define EVENT_TYPE_DEBUG_MESSAGE 1
-#define EVENT_TYPE_PRESS_LEFT 101
-#define EVENT_TYPE_PRESS_RIGHT 102
-
-class EventPressLeft: public Event{
-    void* getData() override;
-    size_t getDataSize() override;
-    int getType() override;
-};
+#include "Events.h"
 
 void* EventPressLeft::getData(){
     return NULL;
@@ -21,19 +9,6 @@ size_t EventPressLeft::getDataSize(){
 int EventPressLeft::getType(){
     return EVENT_TYPE_PRESS_LEFT;
 }
-
-class EventDebugMessage: public Event
-{
-private:
-    char* msg;
-    size_t msgLength;
-public:
-    EventDebugMessage(size_t msgLength, const char* content);
-    ~EventDebugMessage();
-    void* getData() override;
-    size_t getDataSize() override;
-    int getType() override;
-};
 
 EventDebugMessage::EventDebugMessage(size_t contentLength, const char* content)
 {
@@ -60,17 +35,17 @@ int EventDebugMessage::getType(){
 }
 
 Event& createEventFromEventData(struct event event){
+    Event *ev = NULL;
     switch (event.type)
     {
     case EVENT_TYPE_DEBUG_MESSAGE:{
-        EventDebugMessage ev(event.dataSize, event.dataBuffer);
-        return ev;    
+        ev = new EventDebugMessage(event.dataSize, event.dataBuffer);
     }
     case EVENT_TYPE_PRESS_LEFT:{
-        EventPressLeft ev;
-        return ev;
+        ev = new EventPressLeft();
     }
     default:
         break;
     }
+    return *ev;
 }

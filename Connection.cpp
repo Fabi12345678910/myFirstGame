@@ -1,24 +1,12 @@
-#include "Event.cpp"
-#include <sys/socket.h>
-#include <unistd.h>
-
-class Connection
-{
-private:
-    int connectionSocket;
-    Event& receiveNextEvent();
-public:
-    Connection(int socket):connectionSocket(socket){
-
-    };
-    ~Connection();
-    int sendEvent(Event& event);
-    int setEventHandler(void* handleEvent(Event&));
-};
-
+#include "Connection.h"
+#include <stdio.h>
 
 Connection::~Connection()
 {
+    fprintf(stderr, "destruction Connection with socket %d\n", connectionSocket);
+    if(eventHandler != NULL){
+        pthread_cancel(eventHandlerThread);
+    }
     close(connectionSocket);
 }
 
@@ -33,15 +21,29 @@ int Connection::sendEvent(Event& event){
         }
         remainingBytes -= sentBytes;
     }
+    return 0;
 }
 
 Event& Connection::receiveNextEvent(){
 
     struct event nextEvent;
     recv(connectionSocket, &nextEvent, sizeof(nextEvent), 0);
+    return createEventFromEventData(nextEvent);
+}
+
+void* eventHandlerFunction(void* arg){
+    Connection* conn = (Connection*) arg;
+    while(true){
+        Event& ev = conn->receiveNextEvent();
+        conn->eventHandler(ev);
+    }
 }
 
 int Connection::setEventHandler(void* handleEvent(Event&)){
-    //disable setting a new EventHandler on handling this call
-    //create a new thread which continuously listens on this socket
+    if(this->eventHandler != NULL){
+        return 1;
+    }
+    this->eventHandler = handleEvent;
+    pthread_create(&eventHandlerThread, NULL, eventHandlerFunction, this);
+    return 0;
 }

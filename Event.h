@@ -1,5 +1,6 @@
 #include <cstdlib>
-
+#ifndef _EVENT_H
+#define _EVENT_H
 struct event{
     int type;
     size_t dataSize;
@@ -14,3 +15,5 @@ public:
     virtual size_t getDataSize() = 0;
     virtual int getType() = 0;
 };
+
+#endif

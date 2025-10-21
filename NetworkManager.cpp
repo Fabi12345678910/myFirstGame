@@ -1,37 +1,19 @@
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <unistd.h>     // for close()
-#include <cstring>      // for memset(), etc.
+#include "NetworkManager.h"
 #include <iostream>
 
-#include <Connection.cpp>
-
-
-class NetworkManager
-{
-private:
-public:
-    NetworkManager();
-    ~NetworkManager();
-    Connection createServer();
-    Connection createClient();
-};
-
 NetworkManager::NetworkManager(){
-
+    fprintf(stderr, "constructing NetworkManager\n");
 }
 
 NetworkManager::~NetworkManager(){
-
+    fprintf(stderr, "destructing NetworkManager\n");
 }
 
 Connection NetworkManager::createServer(){
     int serverSocket = socket(AF_INET, SOCK_STREAM, 0);
     if(serverSocket == -1){
         fprintf(stderr, "servercreation: error creating server socket\n");
-        return -1;
+        exit(EXIT_FAILURE);
     };
 
     sockaddr_in address;
@@ -56,8 +38,8 @@ Connection NetworkManager::createClient(){
     int clientSocket = socket(AF_INET, SOCK_STREAM, 0);
 
     if(clientSocket == -1){
-        fprintf(stderr, "servercreation: error creating server socket\n");
-        return -1;
+        fprintf(stderr, "servercreation: error creating client socket\n");
+        exit(EXIT_FAILURE);
     };
 
     sockaddr_in serverAddress;
@@ -68,7 +50,7 @@ Connection NetworkManager::createClient(){
     if(connect(clientSocket, (struct sockaddr*) &serverAddress, sizeof(serverAddress))){
         fprintf(stderr, "servercreation: error connecting to server\n");
         close(clientSocket);
-        return -1;
+        throw std::runtime_error("connection failed");
     };
 
     return Connection(clientSocket);

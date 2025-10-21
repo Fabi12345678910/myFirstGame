@@ -7,6 +7,9 @@ add_executable(server)
 target_sources(server
   PRIVATE
     server.cpp
+    Connection.cpp
+    Events.cpp
+    NetworkManager.cpp
 )
 
 add_executable(client)
@@ -14,4 +17,7 @@ add_executable(client)
 target_sources(client
   PRIVATE
     client.cpp
+    Connection.cpp
+    Events.cpp
+    NetworkManager.cpp
 )
