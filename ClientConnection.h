@@ -1,5 +1,5 @@
-#ifndef _CONNECTION_H
-#define _CONNECTION_H
+#ifndef _CLIENT_CONNECTION_H
+#define _CLIENT_CONNECTION_H
 
 #include "Event.h"
 #include <sys/socket.h>
@@ -7,16 +7,16 @@
 #include <pthread.h>
 #include "Events.h"
 
-class Connection
+class ClientConnection
 {
 private:
     int connectionSocket;
     pthread_t eventHandlerThread;
 public:
-    Connection(int socket):connectionSocket(socket){
+    ClientConnection(int socket):connectionSocket(socket){
 
     };
-    ~Connection();
+    ~ClientConnection();
     Event& receiveNextEvent();
     void* (*eventHandler)(Event&) = NULL;
     int sendEvent(Event& event);

@@ -7,7 +7,7 @@ int main(int argc, char const *argv[])
     
     try
     {
-        Connection clientSocket = netMan.createClient();
+        ClientConnection clientSocket = netMan.createClient();
 
 
     }

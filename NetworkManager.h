@@ -9,7 +9,8 @@
 #include <iostream>
 #include <stdexcept>
 
-#include "Connection.h"
+#include "ClientConnection.h"
+#include "ServerSocket.h"
 
 
 class NetworkManager
@@ -18,7 +19,7 @@ private:
 public:
     NetworkManager();
     ~NetworkManager();
-    Connection createServer();
-    Connection createClient();
+    ServerSocket createServer();
+    ClientConnection createClient();
 };
 #endif

@@ -9,7 +9,7 @@ NetworkManager::~NetworkManager(){
     fprintf(stderr, "destructing NetworkManager\n");
 }
 //
-Connection NetworkManager::createServer(){
+ServerSocket NetworkManager::createServer(){
     int serverSocket = socket(AF_INET, SOCK_STREAM, 0);
     if(serverSocket == -1){
         fprintf(stderr, "servercreation: error creating server socket\n");
@@ -22,19 +22,17 @@ Connection NetworkManager::createServer(){
     address.sin_addr.s_addr = INADDR_ANY;
 
     if(bind(serverSocket, (struct sockaddr*) &address, sizeof(address))){
-        fprintf(stderr, "servercreation: error binding server socket to network port\n");
         close(serverSocket);
-        return -1;
+        throw std::runtime_error("servercreation: error binding server socket to network port");
     };
     if(listen(serverSocket, 10)){
-        fprintf(stderr, "servercreation: error listening on server socket\n");
         close(serverSocket);
-        return -1;
+        throw std::runtime_error("servercreation: error listening on server socket\n");
     };
-    return Connection(serverSocket);
+    return ServerSocket(serverSocket);
 }
 
-Connection NetworkManager::createClient(){
+ClientConnection NetworkManager::createClient(){
     int clientSocket = socket(AF_INET, SOCK_STREAM, 0);
 
     if(clientSocket == -1){
@@ -53,5 +51,5 @@ Connection NetworkManager::createClient(){
         throw std::runtime_error("connection failed");
     };
 
-    return Connection(clientSocket);
+    return ClientConnection(clientSocket);
 }
