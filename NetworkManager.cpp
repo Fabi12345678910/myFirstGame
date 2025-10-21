@@ -8,7 +8,7 @@ NetworkManager::NetworkManager(){
 NetworkManager::~NetworkManager(){
     fprintf(stderr, "destructing NetworkManager\n");
 }
-
+//
 Connection NetworkManager::createServer(){
     int serverSocket = socket(AF_INET, SOCK_STREAM, 0);
     if(serverSocket == -1){
