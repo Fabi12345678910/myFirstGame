@@ -17,7 +17,8 @@ a template for new events will be available, allowing
 
 ## TypeGuidelines
 to preserver the application from total chaos, use the following number ranges for new events:
-- 0-999: Basic Connection information(e.g. login, playerId)
+- 0: reserved for yo mama
+- 1-999: basic connection information(e.g. login, playerId)
 - 1000-1999: client side player updates
 - 2000-2999: server side player updates
 - 3000-3999: world updates

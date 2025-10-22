@@ -1,14 +1,21 @@
-#include <cstdlib>
+#ifndef _EVENT_HPP
+#define _EVENT_HPP
 #include <SFML/Network/Packet.hpp>
-#ifndef _EVENT_H
-#define _EVENT_H
+#include <iostream>
+
+#define DATATYPE_EVENT_TYPE int16_t
 class Event
 {
 public:
-    //returns a pointer to the data of the ClientEvent, which must not be freed
-    virtual void* getData() = 0;
-    virtual std::size_t getDataSize() = 0;
-    virtual int getType() = 0;
+    //creates a network sendable packet from the event
+    virtual sf::Packet& toPacket() = 0;
+    
+    //recreates the event from a packet
+    Event(sf::Packet&){
+        throw std::runtime_error("not implemented");
+    };
+protected:
+    Event() = default;
 };
 
 

@@ -1,8 +1,10 @@
 #include "Events.h"
-#include <stdio.h>
+#include <cstdio>
+#include <cstdlib>
 
 void* EventPressLeft::getData(){
     return NULL;
+    
 }
 size_t EventPressLeft::getDataSize(){
     return 0;
