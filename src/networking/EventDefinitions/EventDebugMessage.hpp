@@ -1,6 +1,10 @@
-#include "../Event.hpp"
+#ifndef _EVENT_DEBUG_MESSAGE_H
+#define _EVENT_DEBUG_MESSAGE_H
 
-class EventDebugMessage:Event
+#include "../Event.hpp"
+#include "../EventTypeList.hpp"
+
+class EventDebugMessage:public Event
 {
 private:
     std::string message;
@@ -13,9 +17,16 @@ public:
     EventDebugMessage(const std::string& msg){
         this->message = msg;
     }
-    sf::Packet& toPacket() override{
+    sf::Packet toPacket() override{
         sf::Packet packet;
+        DATATYPE_EVENT_TYPE s = EVENT_TYPE_DEBUG_MESSAGE;
+        packet << (DATATYPE_EVENT_TYPE) EVENT_TYPE_DEBUG_MESSAGE;
         packet << message;
         return packet;
     }
+    std::string getMessage(){
+        return message;
+    }
 };
+
+#endif

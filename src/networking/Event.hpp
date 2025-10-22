@@ -8,12 +8,13 @@ class Event
 {
 public:
     //creates a network sendable packet from the event
-    virtual sf::Packet& toPacket() = 0;
+    virtual sf::Packet toPacket() = 0;
     
     //recreates the event from a packet
     Event(sf::Packet&){
         throw std::runtime_error("not implemented");
     };
+    virtual ~Event() = default;
 protected:
     Event() = default;
 };

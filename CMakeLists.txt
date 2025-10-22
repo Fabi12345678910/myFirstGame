@@ -12,7 +12,12 @@ FetchContent_Declare(SFML
     SYSTEM)
 FetchContent_MakeAvailable(SFML)
 
-add_executable(main src/testMain.cpp)
+add_executable(eventTest)
 
-target_compile_features(main PRIVATE cxx_std_17)
-target_link_libraries(main PRIVATE SFML::Network)
+target_sources(eventTest 
+  PRIVATE
+    src/eventTest.cpp
+    src/networking/impl/Events.cpp)
+
+target_compile_features(eventTest PRIVATE cxx_std_17)
+target_link_libraries(eventTest PRIVATE SFML::Network)
