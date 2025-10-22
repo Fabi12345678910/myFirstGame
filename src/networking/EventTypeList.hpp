@@ -1,0 +1,6 @@
+#ifndef _EVENT_LIST_HPP
+#define _EVENT_LIST_HPP
+
+#define EVENT_TYPE_DEBUG_MESSAGE 1
+
+#endif
