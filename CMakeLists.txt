@@ -14,10 +14,34 @@ FetchContent_MakeAvailable(SFML)
 
 add_executable(eventTest)
 
-target_sources(eventTest 
+target_sources(eventTest
   PRIVATE
     src/eventTest.cpp
     src/networking/impl/Events.cpp)
 
 target_compile_features(eventTest PRIVATE cxx_std_17)
 target_link_libraries(eventTest PRIVATE SFML::Network)
+
+add_executable(connectionTestClient)
+
+target_sources(connectionTestClient
+  PRIVATE
+    src/connectionTestClient.cpp
+    src/networking/impl/Events.cpp
+    src/networking/impl/Connection.cpp)
+
+target_compile_features(connectionTestClient PRIVATE cxx_std_17)
+target_link_libraries(connectionTestClient PRIVATE SFML::Network)
+
+
+add_executable(connectionTestServer)
+
+target_sources(connectionTestServer
+  PRIVATE
+    src/connectionTestServer.cpp
+    src/networking/impl/Events.cpp
+    src/networking/impl/Connection.cpp
+    src/networking/impl/ServerSocket.cpp)
+
+target_compile_features(connectionTestServer PRIVATE cxx_std_17)
+target_link_libraries(connectionTestServer PRIVATE SFML::Network)

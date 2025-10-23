@@ -6,7 +6,6 @@ The interface provided by the networking classes is based on sending events.
 all type connections do have this properties
 
 provides:
-- setting up a connection
 - sending an event(maybe send multiple events later on)
 - setting an event handler, which will implicitly be run on a new thread
 

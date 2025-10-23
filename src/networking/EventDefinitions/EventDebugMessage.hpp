@@ -17,14 +17,14 @@ public:
     EventDebugMessage(const std::string& msg){
         this->message = msg;
     }
-    sf::Packet toPacket() override{
+    sf::Packet toPacket() const override{
         sf::Packet packet;
         DATATYPE_EVENT_TYPE s = EVENT_TYPE_DEBUG_MESSAGE;
         packet << (DATATYPE_EVENT_TYPE) EVENT_TYPE_DEBUG_MESSAGE;
         packet << message;
         return packet;
     }
-    std::string getMessage(){
+    std::string getMessage() const {
         return message;
     }
 };
