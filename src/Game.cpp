@@ -22,11 +22,13 @@ void Game::run() {
 }
 
 void Game::processEvents() {
-    // sf::Event event;
-    // while (window.pollEvent(event)) {
-    //     if (event.type == sf::Event::Closed)
-    //         window.close();
-    // }
+    while (const std::optional<sf::Event> maybeEvent = window.pollEvent()) {
+        const sf::Event &event = *maybeEvent;
+        if (event.is<sf::Event::Closed>())
+            {
+                window.close();
+            }
+    }
 }
 
 void Game::update(float deltaTime) {
