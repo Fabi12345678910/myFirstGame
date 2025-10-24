@@ -1,5 +1,7 @@
 #include "Player.h"
 #include <SFML/Graphics.hpp>
+#include <iostream>
+using namespace std;
 
 Player::Player(float width, float height, float x, float y){
     shape.setSize(sf::Vector2f(width, height));
@@ -30,22 +32,51 @@ void Player::update(float dt) {
     }
 
     shape.move(velocity * dt);
+    isOnGround = false;
 }
 
 void Player::onCollision(StaticCollidable& other) {
     sf::FloatRect playerBounds = getBounds();
     sf::FloatRect otherBounds = other.getBounds();
 
-    // Check if the collision is from above (landing on top)
-    if (playerBounds.top + playerBounds.height <= otherBounds.top + velocity.y) {
-        // Snap player to top of collidable
-        shape.setPosition(playerBounds.left, otherBounds.top - playerBounds.height);
+    float dx = (playerBounds.left + playerBounds.width / 2.f) - (otherBounds.left + otherBounds.width / 2.f);
+    float dy = (playerBounds.top + playerBounds.height / 2.f) - (otherBounds.top + otherBounds.height / 2.f);
 
-        // Reset vertical velocity
-        velocity.y = 0.f;
+    float combinedHalfWidths = (playerBounds.width / 2.f) + (otherBounds.width / 2.f);
+    float combinedHalfHeights = (playerBounds.height / 2.f) + (otherBounds.height / 2.f);
 
-        // Player is on the ground
-        isOnGround = true;
+    // Only handle if actually colliding
+    if (abs(dx) < combinedHalfWidths && abs(dy) < combinedHalfHeights) {
+        float overlapX = combinedHalfWidths - abs(dx);
+        float overlapY = combinedHalfHeights - abs(dy);
+
+        if (overlapX < overlapY) {
+            // Horizontal collision
+            if (dx > 0.f) {
+                // Player is on the right
+                shape.move(overlapX, 0.f);
+                cout << "Collision from left\n";
+            } else {
+                // Player is on the left
+                shape.move(-overlapX, 0.f);
+                cout << "Collision from right\n";
+            }
+            velocity.x = 0.f;
+        } else {
+            // Vertical collision
+            if (dy > 0.f) {
+                // Player is below
+                shape.move(0.f, overlapY);
+                velocity.y = 0.f;
+                cout << "Collision from above\n";
+            } else {
+                // Player is above
+                shape.move(0.f, -overlapY);
+                velocity.y = 0.f;
+                isOnGround = true;
+                cout << "Collision from below / landed\n";
+            }
+        }
     }
 }
 

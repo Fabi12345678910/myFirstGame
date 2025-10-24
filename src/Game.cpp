@@ -6,6 +6,8 @@ Game::Game()
   player(40.f, 40.f, 400.f, 510.f)
 {
     staticCollidables.push_back(new StageObject(800.f, 50.f, 0.f, 550.f));
+    staticCollidables.push_back(new StageObject(300.f, 50.f, 0.f, 450.f));
+    staticCollidables.push_back(new StageObject(100.f, 50.f, 500.f, 350.f));
 }
 
 void Game::run() {
