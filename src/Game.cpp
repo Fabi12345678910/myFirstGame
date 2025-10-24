@@ -1,9 +1,10 @@
 #include "Game.h"
 #include "StageObject.h"
+#include <iostream>
 
 Game::Game()
-: window(sf::VideoMode(800, 600), "My Game"),
-  player(40.f, 40.f, 400.f, 510.f)
+: window(sf::VideoMode(sf::Vector2u(800, 600)), "My Game"),
+  player(40.f, 40.f, 400.f, 10.f)
 {
     staticCollidables.push_back(new StageObject(800.f, 50.f, 0.f, 550.f));
     staticCollidables.push_back(new StageObject(300.f, 50.f, 0.f, 450.f));
@@ -21,17 +22,18 @@ void Game::run() {
 }
 
 void Game::processEvents() {
-    sf::Event event;
-    while (window.pollEvent(event)) {
-        if (event.type == sf::Event::Closed)
-            window.close();
-    }
+    // sf::Event event;
+    // while (window.pollEvent(event)) {
+    //     if (event.type == sf::Event::Closed)
+    //         window.close();
+    // }
 }
 
 void Game::update(float deltaTime) {
     player.update(deltaTime);
     for (StaticCollidable* c : staticCollidables) {
-        if (player.getBounds().intersects(c->getBounds())) {
+        if (player.getBounds().findIntersection(c->getBounds())) {
+            std::cout << "detected collision\n";
             player.onCollision(*c);
         }
     }

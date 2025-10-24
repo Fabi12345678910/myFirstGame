@@ -1,5 +1,6 @@
-#include "Player.h"
+#include "../include/Player.h"
 #include <SFML/Graphics.hpp>
+#include <SFML/Window.hpp>
 #include <iostream>
 using namespace std;
 
@@ -15,9 +16,9 @@ sf::FloatRect Player::getBounds() const {
 
 void Player::update(float dt) {
     velocity.x = 0.f;
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::A))
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A))
         velocity.x -= speed;
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::D))
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D))
         velocity.x += speed;
 
     if (!isOnGround) {
@@ -26,7 +27,7 @@ void Player::update(float dt) {
         velocity.y = 0.f;
     }
 
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space) && isOnGround) {
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Space) && isOnGround) {
         velocity.y = -400.f;
         isOnGround = false;
     }
@@ -39,43 +40,41 @@ void Player::onCollision(StaticCollidable& other) {
     sf::FloatRect playerBounds = getBounds();
     sf::FloatRect otherBounds = other.getBounds();
 
-    float dx = (playerBounds.left + playerBounds.width / 2.f) - (otherBounds.left + otherBounds.width / 2.f);
-    float dy = (playerBounds.top + playerBounds.height / 2.f) - (otherBounds.top + otherBounds.height / 2.f);
+    float dx = (playerBounds.position.x + playerBounds.size.x / 2.f) - (otherBounds.position.x + otherBounds.position.x / 2.f);
+    float dy = (playerBounds.position.y + playerBounds.size.y / 2.f) - (otherBounds.position.y + otherBounds.size.y / 2.f);
 
-    float combinedHalfWidths = (playerBounds.width / 2.f) + (otherBounds.width / 2.f);
-    float combinedHalfHeights = (playerBounds.height / 2.f) + (otherBounds.height / 2.f);
+    float combinedHalfWidths = (playerBounds.position.x / 2.f) + (otherBounds.position.x / 2.f);
+    float combinedHalfHeights = (playerBounds.size.y / 2.f) + (otherBounds.size.y / 2.f);
 
     // Only handle if actually colliding
-    if (abs(dx) < combinedHalfWidths && abs(dy) < combinedHalfHeights) {
-        float overlapX = combinedHalfWidths - abs(dx);
-        float overlapY = combinedHalfHeights - abs(dy);
+    float overlapX = combinedHalfWidths - abs(dx);
+    float overlapY = combinedHalfHeights - abs(dy);
 
-        if (overlapX < overlapY) {
-            // Horizontal collision
-            if (dx > 0.f) {
-                // Player is on the right
-                shape.move(overlapX, 0.f);
-                cout << "Collision from left\n";
-            } else {
-                // Player is on the left
-                shape.move(-overlapX, 0.f);
-                cout << "Collision from right\n";
-            }
-            velocity.x = 0.f;
+    if (overlapX < overlapY) {
+        // Horizontal collision
+        if (dx > 0.f) {
+            // Player is on the right
+            shape.move(sf::Vector2f(overlapX, 0.f));
+            cout << "Collision from left\n";
         } else {
-            // Vertical collision
-            if (dy > 0.f) {
-                // Player is below
-                shape.move(0.f, overlapY);
-                velocity.y = 0.f;
-                cout << "Collision from above\n";
-            } else {
-                // Player is above
-                shape.move(0.f, -overlapY);
-                velocity.y = 0.f;
-                isOnGround = true;
-                cout << "Collision from below / landed\n";
-            }
+            // Player is on the left
+            shape.move(sf::Vector2f(-overlapX, 0.f));
+            cout << "Collision from right\n";
+        }
+        velocity.x = 0.f;
+    } else {
+        // Vertical collision
+        if (dy > 0.f) {
+            // Player is below
+            shape.move(sf::Vector2f(0.f, overlapY));
+            velocity.y = 0.f;
+            cout << "Collision from above\n";
+        } else {
+            // Player is above
+            shape.move(sf::Vector2f(0.f, -overlapY));
+            velocity.y = 0.f;
+            isOnGround = true;
+            cout << "Collision from below / landed\n";
         }
     }
 }
