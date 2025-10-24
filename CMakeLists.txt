@@ -55,4 +55,4 @@ add_executable(MyGame
     src/StageObject.cpp
 )
 target_compile_features(MyGame PRIVATE cxx_std_17)
-target_link_libraries(MyGame PRIVATE SFML::Network)
+target_link_libraries(MyGame PRIVATE SFML::Network SFML::System SFML::Window SFML::Graphics SFML::Audio)
