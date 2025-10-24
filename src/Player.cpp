@@ -40,10 +40,14 @@ void Player::onCollision(StaticCollidable& other) {
     sf::FloatRect playerBounds = getBounds();
     sf::FloatRect otherBounds = other.getBounds();
 
-    float dx = (playerBounds.position.x + playerBounds.size.x / 2.f) - (otherBounds.position.x + otherBounds.position.x / 2.f);
-    float dy = (playerBounds.position.y + playerBounds.size.y / 2.f) - (otherBounds.position.y + otherBounds.size.y / 2.f);
+    float dx = (playerBounds.position.x + playerBounds.size.x / 2.f) 
+         - (otherBounds.position.x + otherBounds.size.x / 2.f);
 
-    float combinedHalfWidths = (playerBounds.position.x / 2.f) + (otherBounds.position.x / 2.f);
+    float dy = (playerBounds.position.y + playerBounds.size.y / 2.f) 
+         - (otherBounds.position.y + otherBounds.size.y / 2.f);
+
+
+    float combinedHalfWidths = (playerBounds.size.x / 2.f) + (otherBounds.size.x / 2.f);
     float combinedHalfHeights = (playerBounds.size.y / 2.f) + (otherBounds.size.y / 2.f);
 
     // Only handle if actually colliding
