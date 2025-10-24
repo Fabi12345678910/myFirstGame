@@ -45,3 +45,14 @@ target_sources(connectionTestServer
 
 target_compile_features(connectionTestServer PRIVATE cxx_std_17)
 target_link_libraries(connectionTestServer PRIVATE SFML::Network)
+
+include_directories(include)
+
+add_executable(MyGame
+    src/main.cpp
+    src/Game.cpp
+    src/Player.cpp
+    src/StageObject.cpp
+)
+target_compile_features(MyGame PRIVATE cxx_std_17)
+target_link_libraries(MyGame PRIVATE SFML::Network)
