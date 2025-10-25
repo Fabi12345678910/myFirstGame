@@ -11,7 +11,7 @@ id, position, size, texture
 ### Movable(Interface) : GameObject
 velocity
 ### StageObject :: GameObject
-### Player :: Movable
+### Player :: Movable,Collidable
 gravity, health, onGround
 ## Operations(src/operations/...)
 No data, just operations(pure functions)
