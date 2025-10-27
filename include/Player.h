@@ -1,9 +1,9 @@
 #pragma once
 #include <SFML/Graphics.hpp>
-#include "DynamicCollidable.h"
-#include "StaticCollidable.h"
+#include <Collidable.h>
+#include <Movable.h>
 
-class Player : public DynamicCollidable{
+class Player : public Collidable, public Movable {
 private:
     bool isOnGround = false;
     float gravity = 800.f;
@@ -11,8 +11,10 @@ private:
     float health = 10;
 
 public:
-    Player(sf::Vector2f size, sf::Vector2f position)
-        :  {}
+    Player(sf::Vector2f size, sf::Vector2f position) {
+            this->shape.setSize(size);
+            this->shape.setPosition(position);
+        }
 
     float getIsOnGround() const { return isOnGround; }
     void setIsOnGround(bool isOnGround) { this->isOnGround = isOnGround; }
@@ -26,9 +28,9 @@ public:
     float getHealth() const { return health; }
     void setHealth(float health) { this->health = health; }
 
-    Player(float width, float height, float x, float y);
-    sf::FloatRect getBounds() const override;
-    void update(float dt) override;
-    void onCollision(StaticCollidable& other) override;
-    void draw(sf::RenderWindow &window) const override;
+    // Player(float width, float height, float x, float y);
+    // sf::FloatRect getBounds() const override;
+    // void update(float dt) override;
+    // void onCollision(StaticCollidable& other) override;
+    // void draw(sf::RenderWindow &window) const override;
 };
