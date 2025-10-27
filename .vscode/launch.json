@@ -5,7 +5,7 @@
       "name": "Play SFML Game",
       "type": "cppvsdbg",
       "request": "launch",
-      "program": "${command:cmake.buildDirectory}/Debug/MyGame.exe",
+      "program": "${command:cmake.buildDirectory}/MyGame.exe",
       "args": [],
       "stopAtEntry": false,
       "cwd": "${workspaceFolder}",
