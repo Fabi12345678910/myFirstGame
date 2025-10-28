@@ -8,6 +8,7 @@ private:
     std::vector<GameObject> gameObjects;
     Stage stage;
 
+public:
     Player &getPlayer(int id){
         for (auto& player:players)
         {
@@ -17,15 +18,22 @@ private:
         }
         throw std::runtime_error("player not found");
     }
-    
-    GameObject& getGameObject(int id){
+    std::vector<Player>&getPlayers(){
+        return players;
+    }
+    void addPlayer(Player&& player){
+        players.push_back(player);
+    }
+
+/*    GameObject& getGameObject(int id){
 
         //return GameObject... somehow
-    }
+    }*/
     Stage& getStage(){
         return stage;
     }
     void setStage(Stage& stage){
         this->stage = stage;
     }
+    GameState(){};
 };

@@ -12,7 +12,7 @@ public:
         this->spawnPoints = spawnPoints;
     }
 
-    GameObject &getStageObject(int id){
+    StageObject& getStageObject(int id){
         for (auto& stageObject:stageObjects)
         {
             if(stageObject.getId() == id){
@@ -22,7 +22,13 @@ public:
         throw std::runtime_error("stageObject not found");
     }
 
+    std::vector<StageObject> const & getStageObjects(){
+        return stageObjects;
+    }
+
     std::vector<sf::Vector2f>& getSpawnPoints(){
         return spawnPoints;
     }
+    Stage(){};
+    
 };
