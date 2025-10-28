@@ -3,7 +3,7 @@
 #include <Collidable.h>
 #include <Movable.h>
 
-class Player : public Collidable, public Movable {
+class Player : public Collidable, public Movable, public GameObject{
 private:
     bool isOnGround = false;
     float gravity = 800.f;
@@ -11,10 +11,11 @@ private:
     float health = 10;
 
 public:
-    Player(sf::Vector2f size, sf::Vector2f position) {
-            this->shape.setSize(size);
-            this->shape.setPosition(position);
-        }
+    Player(int id, sf::Vector2f size, sf::Vector2f position) : GameObject(id, size, position){
+        shape.setSize(size);
+        shape.setPosition(position);
+    }
+
 
     float getIsOnGround() const { return isOnGround; }
     void setIsOnGround(bool isOnGround) { this->isOnGround = isOnGround; }
