@@ -2,10 +2,7 @@
 #include <SFML/Graphics.hpp>
 #include <Collidable.h>
 
-class StageObject : public Collidable {
+class StageObject : public Collidable, public GameObject {
 public:
-    StageObject(sf::Vector2f size, sf::Vector2f position) {
-        this->shape.setSize(size);
-        this->shape.setPosition(position);
-    }
+    StageObject(int id, sf::Vector2f size, sf::Vector2f position) : GameObject(id, size, position) {}
 };          
