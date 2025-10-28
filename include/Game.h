@@ -15,4 +15,7 @@ private:
     sf::RenderWindow window;
     Player player;
     std::vector<StaticCollidable*> staticCollidables;
+
+    sf::FloatRect voidZone;
 };
+

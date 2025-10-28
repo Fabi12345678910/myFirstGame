@@ -4,7 +4,7 @@
 
 class StageObject : public StaticCollidable {
 public:
-    StageObject(float width, float height, float x, float y);
+    StageObject(float width, float height, float x, float y, TileType type = TileType::Solid);
     sf::FloatRect getBounds() const override;
     void draw(sf::RenderWindow &window) const override;
 };
