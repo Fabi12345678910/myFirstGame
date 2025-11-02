@@ -48,11 +48,9 @@ target_link_libraries(connectionTestServer PRIVATE SFML::Network)
 
 include_directories(include)
 
-add_executable(MyGame
+add_executable(MyGameLocal
     src/main.cpp
     src/Game.cpp
-    src/Player.cpp
-    src/StageObject.cpp
 )
-target_compile_features(MyGame PRIVATE cxx_std_17)
-target_link_libraries(MyGame PRIVATE SFML::Network SFML::System SFML::Window SFML::Graphics SFML::Audio)
+target_compile_features(MyGameLocal PRIVATE cxx_std_17)
+target_link_libraries(MyGameLocal PRIVATE SFML::Network SFML::System SFML::Window SFML::Graphics SFML::Audio)

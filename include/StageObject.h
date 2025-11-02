@@ -1,10 +1,8 @@
 #pragma once
 #include <SFML/Graphics.hpp>
-#include <StaticCollidable.h>
+#include <Collidable.h>
 
-class StageObject : public StaticCollidable {
+class StageObject : public Collidable, public GameObject {
 public:
-    StageObject(float width, float height, float x, float y);
-    sf::FloatRect getBounds() const override;
-    void draw(sf::RenderWindow &window) const override;
-};
+    StageObject(int id, sf::Vector2f size, sf::Vector2f position) : GameObject(id, size, position) {}
+};          
