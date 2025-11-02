@@ -9,7 +9,7 @@ private:
     Stage stage;
 
 public:
-    Player &getPlayer(int id){
+    Player &getPlayer(OBJECT_ID_TYPE id){
         for (auto& player:players)
         {
             if(player.getId() == id){

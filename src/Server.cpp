@@ -1,4 +1,5 @@
 #include "Server.h"
+#include "GameUpdate.h"
 
 #include "../src/networking/EventDefinitions/EventLoginRequest.hpp"
 #include "../src/networking/EventDefinitions/EventLoginConfirmation.hpp"
@@ -51,10 +52,13 @@ void Server::mainLoop(){
     //this is the main loop
     sf::Clock tickClock;
     while(true){
-        int32_t deltaTime = tickClock.restart().asMilliseconds();
+        float deltaTime = tickClock.restart().asSeconds();
         processEvents();
         updateGamestate(deltaTime);
         int32_t sleep_ms = TICKRATE_MS - tickClock.getElapsedTime().asMilliseconds();
+        if(tickClock.getElapsedTime().asMilliseconds() >= 1){
+            std::cout << "Computing tick took " << tickClock.getElapsedTime().asMilliseconds() << "ms\n";
+        }
         sf::sleep(sf::milliseconds(TICKRATE_MS) - tickClock.getElapsedTime());
     }
     printf("exiting main loop\n");
@@ -75,10 +79,15 @@ void Server::processEvents(){
                 //no new SLOT
                 conn.sendEvent(EventLoginDenied(0));
             }else{
+
                 OBJECT_ID_TYPE nextPlayerId = availablePlayerIds.front();
                 availablePlayerIds.pop();
                 conn.setPlayerId(nextPlayerId);
                 conn.sendEvent(EventLoginConfirmation(nextPlayerId));
+
+                gameState.addPlayer(Player(nextPlayerId, sf::Vector2f(40.f, 40.f), sf::Vector2f(400.f, 10.f)));
+                gameState.getPlayer(nextPlayerId).getShape().setFillColor(sf::Color::Magenta);
+
             }
         }
 
@@ -92,8 +101,8 @@ void Server::processEvents(){
     }
 }
 
-void Server::updateGamestate(int32_t deltaTime){
-    //TODO, basically call Game.cpp
+void Server::updateGamestate(float deltaTime){
+    updateGame(gameState, deltaTime);
 }
 
 int main(int argc, char const *argv[])

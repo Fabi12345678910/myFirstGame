@@ -12,7 +12,7 @@ public:
         this->spawnPoints = spawnPoints;
     }
 
-    StageObject& getStageObject(int id){
+    StageObject& getStageObject(OBJECT_ID_TYPE id){
         for (auto& stageObject:stageObjects)
         {
             if(stageObject.getId() == id){

@@ -1,15 +1,16 @@
 #pragma once
 #include <SFML/Graphics.hpp>
 #include <string>
+#include <Types.h>
 
 class GameObject {
 protected:
-    int id;
+    OBJECT_ID_TYPE id;
     sf::RectangleShape shape;
     sf::Texture* texture = nullptr;
 
 public:
-    GameObject(int id, const sf::Vector2f& size, const sf::Vector2f& position)
+    GameObject(OBJECT_ID_TYPE id, const sf::Vector2f& size, const sf::Vector2f& position)
         : id(id)
     {
         shape.setSize(size);
@@ -18,8 +19,8 @@ public:
 
     virtual ~GameObject() = default;
 
-    int getId() const { return id; }
-    void setId(int newId) { id = newId; }
+    OBJECT_ID_TYPE getId() const { return id; }
+    void setId(OBJECT_ID_TYPE newId) { id = newId; }
 
     const sf::RectangleShape& getShape() const { return shape; }
     sf::RectangleShape& getShape() { return shape; } // non-const for modification

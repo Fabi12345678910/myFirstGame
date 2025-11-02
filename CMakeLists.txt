@@ -57,6 +57,7 @@ target_link_libraries(MyGameLocal PRIVATE SFML::Network SFML::System SFML::Windo
 
 add_executable(Server
     src/Server.cpp
+    src/operations/GameUpdate.cpp
     src/networking/impl/Events.cpp
     src/networking/impl/Connection.cpp
     src/networking/impl/ServerSocket.cpp

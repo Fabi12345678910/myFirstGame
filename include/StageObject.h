@@ -4,5 +4,5 @@
 
 class StageObject : public Collidable, public GameObject {
 public:
-    StageObject(int id, sf::Vector2f size, sf::Vector2f position) : GameObject(id, size, position) {}
+    StageObject(OBJECT_ID_TYPE id, sf::Vector2f size, sf::Vector2f position) : GameObject(id, size, position) {}
 };          
