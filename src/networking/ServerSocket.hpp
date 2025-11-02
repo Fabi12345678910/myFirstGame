@@ -12,7 +12,7 @@ private:
 public:
     sf::TcpListener listener;
     std::list<std::unique_ptr<ServerConnection>> connections;
-    void*(*eventHandler)(const Event&, const Connection&) = NULL;
+    void*(*eventHandler)(std::unique_ptr<Event>, Connection&, void* args) = NULL;
     pthread_t connectionHandlerThread;
 
     ServerSocket(unsigned short listenerPort);
@@ -20,7 +20,13 @@ public:
     //not implemented yet, unsure if ever happens
     void sendEventToPlayer(int id, Event& ev) = delete;
     void sendEventToEveryone(Event &ev);
-    void setEventHandler(void* handleEvent(const Event&, const Connection&));
+    void setEventHandler(void* handleEvent(std::unique_ptr<Event>, Connection&, void* args));
+
+    void* args = NULL;
+    void setArgs(void* args);
+    void* getArgs(){
+        return this->args;
+    };
 };
 
 

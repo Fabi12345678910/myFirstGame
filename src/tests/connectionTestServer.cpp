@@ -1,9 +1,10 @@
-#include "networking/ServerSocket.hpp"
-#include "networking/EventDefinitions/EventDebugMessage.hpp"
+#include "../networking/ServerSocket.hpp"
+#include "../networking/EventDefinitions/EventDebugMessage.hpp"
 
-void *handleEvents(const Event& ev, const Connection& conn){
+void *handleEvents(std::unique_ptr<Event> ev, Connection& conn, void* args){
+    (void) args;
     std::cout << "got a new event!!\n";
-    const EventDebugMessage *evDebug = dynamic_cast<const EventDebugMessage*>(&ev);
+    EventDebugMessage *evDebug = dynamic_cast<EventDebugMessage*>(ev.get());
     if(evDebug != NULL){
         std::cout << "debug message: " << evDebug->getMessage() << '\n';
     }else{

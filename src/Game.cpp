@@ -10,6 +10,7 @@ void Game::run() {
         processInputs();
         update(deltaTime);
         render();
+        
     }
 }
 
