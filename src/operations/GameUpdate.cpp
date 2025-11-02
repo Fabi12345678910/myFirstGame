@@ -53,7 +53,7 @@ void onCollision(Player& player, GameObject const & other) {
     }
 }
 
-void updateGame(GameState gameState, float deltaTime){
+void updateGame(GameState& gameState, float deltaTime){
         for(Player& player : gameState.getPlayers()){
 
         player.setIsOnGround(false);

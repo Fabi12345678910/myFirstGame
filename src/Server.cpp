@@ -5,6 +5,8 @@
 #include "../src/networking/EventDefinitions/EventLoginConfirmation.hpp"
 #include "../src/networking/EventDefinitions/EventLoginDenied.hpp"
 #include "../src/networking/EventDefinitions/EventDebugMessage.hpp"
+#include "../src/networking/EventDefinitions/EventSpawnNewPlayer.hpp"
+#include "../src/networking/EventDefinitions/EventPlayerVelocity.hpp"
 
 #define MAX_PLAYERS 4
 #define MAX_GAMEOBJECTS 10000
@@ -84,11 +86,15 @@ void Server::processEvents(){
                 availablePlayerIds.pop();
                 conn.setPlayerId(nextPlayerId);
                 conn.sendEvent(EventLoginConfirmation(nextPlayerId));
-
+                
                 gameState.addPlayer(Player(nextPlayerId, sf::Vector2f(40.f, 40.f), sf::Vector2f(400.f, 10.f)));
-                gameState.getPlayer(nextPlayerId).getShape().setFillColor(sf::Color::Magenta);
-
+                serverSocket.sendEventToEveryone(EventSpawnNewPlayer(gameState.getPlayer(nextPlayerId).getPosition(), nextPlayerId));
             }
+        }
+
+        EventPlayerVelocity *evVelocity = dynamic_cast<EventPlayerVelocity*>(ev);
+        if(evVelocity != NULL){
+            //TODO check velocity bounds
         }
 
         EventDebugMessage *evDebug = dynamic_cast<EventDebugMessage*>(ev);
@@ -96,6 +102,7 @@ void Server::processEvents(){
             std::cout << "got a debug message\n";
             std::cout << "Debug message: " << evDebug->getMessage() << '\n';
         }
+
         printf("processEvents: done processing event\n");
         eventData.connectionEventsQueue.pop();
     }

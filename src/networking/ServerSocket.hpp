@@ -19,7 +19,7 @@ public:
     ~ServerSocket() = default;
     //not implemented yet, unsure if ever happens
     void sendEventToPlayer(int id, Event& ev) = delete;
-    void sendEventToEveryone(Event &ev);
+    void sendEventToEveryone(Event&& ev);
     void setEventHandler(void* handleEvent(std::unique_ptr<Event>, Connection&, void* args));
 
     void* args = NULL;

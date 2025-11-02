@@ -48,7 +48,7 @@ void ServerSocket::setArgs(void* args){
     }
 }
 
-void ServerSocket::sendEventToEveryone(Event &ev){
+void ServerSocket::sendEventToEveryone(Event &&ev){
     for (std::unique_ptr<ServerConnection>& connection : connections){
         if(connection->eventHandler!= NULL){
             connection->sendEvent(ev);
