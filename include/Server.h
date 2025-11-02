@@ -1,3 +1,4 @@
+#pragma once
 #include "GameState.h"
 #include "../src/networking/Event.hpp"
 #include <queue>

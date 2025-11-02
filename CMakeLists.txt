@@ -58,6 +58,7 @@ target_link_libraries(MyGameLocal PRIVATE SFML::Network SFML::System SFML::Windo
 add_executable(Server
     src/Server.cpp
     src/operations/GameUpdate.cpp
+    src/operations/PlayerOperations.cpp
     src/networking/impl/Events.cpp
     src/networking/impl/Connection.cpp
     src/networking/impl/ServerSocket.cpp
@@ -65,6 +66,16 @@ add_executable(Server
 target_compile_features(Server PRIVATE cxx_std_17)
 target_link_libraries(Server PRIVATE SFML::Network SFML::System SFML::Window SFML::Graphics SFML::Audio)
 
+add_executable(Client
+    src/Client.cpp
+    src/operations/GameUpdate.cpp
+    src/operations/PlayerOperations.cpp
+    src/networking/impl/Events.cpp
+    src/networking/impl/Connection.cpp
+    src/networking/impl/ServerSocket.cpp
+)
+target_compile_features(Client PRIVATE cxx_std_17)
+target_link_libraries(Client PRIVATE SFML::Network SFML::System SFML::Window SFML::Graphics SFML::Audio)
 
 add_executable(testLogin
     src/tests/testLogin.cpp

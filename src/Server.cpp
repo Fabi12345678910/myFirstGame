@@ -1,5 +1,6 @@
 #include "Server.h"
 #include "GameUpdate.h"
+#include "PlayerOperations.h"
 
 #include "../src/networking/EventDefinitions/EventLoginRequest.hpp"
 #include "../src/networking/EventDefinitions/EventLoginConfirmation.hpp"
@@ -94,7 +95,8 @@ void Server::processEvents(){
 
         EventPlayerVelocity *evVelocity = dynamic_cast<EventPlayerVelocity*>(ev);
         if(evVelocity != NULL){
-            //TODO check velocity bounds
+            updatePlayerVelocity(gameState, conn.getPlayerId(), evVelocity->getVelocity());
+            serverSocket.sendEventToEveryone(EventPlayerVelocity(evVelocity->getPlayerId(), evVelocity->getVelocity()));
         }
 
         EventDebugMessage *evDebug = dynamic_cast<EventDebugMessage*>(ev);
