@@ -1,6 +1,7 @@
 #include "Client.h"
 #include "PlayerOperations.h"
 #include "GameUpdate.h"
+#include "Renderer.h"
 
 #include "networking/EventDefinitions/EventLoginRequest.hpp"
 #include "networking/EventDefinitions/EventLoginDenied.hpp"
@@ -11,19 +12,6 @@
 
 Client::Client() : conn({127, 0, 0, 1}){
     performLogin();
-}
-
-//TODO move to rendering engine
-void render(sf::RenderWindow& window, GameState& gameState) {
-    window.clear(sf::Color::Yellow);
-    for(Player& player:gameState.getPlayers()){
-        window.draw(player.getShape());
-    }
-    for (StageObject const& stageObject : gameState.getStage().getStageObjects()) {
-        window.draw(stageObject.getShape());
-    }
-
-    window.display();
 }
 
 void* eventHandler(std::unique_ptr<Event> ev, Connection& conn, void* args) {
@@ -80,8 +68,6 @@ void Client::run(){
         Stage s = Stage(stageObjects, spawnPoints);
         gameState.setStage(s);
     }
-
-    window = sf::RenderWindow(sf::VideoMode(sf::Vector2u(800, 600)), "My Game");
     
     //enter the main loop
     mainLoop();
@@ -98,6 +84,11 @@ void Client::processEvents(){
         //somehow handle tha event
         EventSpawnNewPlayer *evSpawnNewPlayer = dynamic_cast<EventSpawnNewPlayer*>(ev);
         if(evSpawnNewPlayer != NULL){
+            if(evSpawnNewPlayer->getPlayerId() == this->playerId){
+                // we have spawned and can now start the game
+                clientState = PLAYING;
+
+            }
             gameState.addPlayer(Player(evSpawnNewPlayer->getPlayerId(), sf::Vector2f(40.f, 40.f),evSpawnNewPlayer->getLocation()));
         }
         EventPlayerVelocity *evPlayerVelocity = dynamic_cast<EventPlayerVelocity*>(ev);
@@ -121,14 +112,48 @@ void Client::mainLoop(){
     while(true){
         float deltaTime = tickClock.restart().asSeconds();
         processEvents();
-//TODO         processInputs();
+        processInputs();
         updateGamestate(deltaTime);
-        render(window, gameState);
+        renderer.render(gameState);
         if(tickClock.getElapsedTime().asMilliseconds() >= 1){
             std::cout << "Computing tick took " << tickClock.getElapsedTime().asMilliseconds() << "ms\n";
         }
+        sf::sleep(sf::milliseconds(100) - tickClock.getElapsedTime());
     }
     printf("exiting main loop\n");
+}
+
+void Client::processInputs(){
+    if(clientState == PLAYING){
+        bool updateVelocity = false;
+        sf::Vector2f playerVelocity = gameState.getPlayer(playerId).getVelocity();
+        playerVelocity.x = 0.f;
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A)){
+            std::cout << "---User pressed A\n";
+            updateVelocity = true;
+            std::cout << "current player velocity: " << playerVelocity.x << '\n';
+            playerVelocity.x -= gameState.getPlayer(playerId).getSpeed();
+            std::cout << "new player velocity: " << playerVelocity.x << '\n';
+        }
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D)){
+            std::cout << "---User pressed D";
+            updateVelocity = true;
+            playerVelocity.x += gameState.getPlayer(playerId).getSpeed();
+        }
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Space) && gameState.getPlayer(playerId).getIsOnGround()) {
+            updateVelocity = true;
+            playerVelocity.y = -400.f;
+            gameState.getPlayer(playerId).setIsOnGround(false);
+        }
+        if(updateVelocity){
+            std::cout << "player has speed" << gameState.getPlayer(playerId).getSpeed() << '\n';
+            std::cout << "setting player velocity to" << playerVelocity.x << ',' << playerVelocity.y << '\n';
+            gameState.getPlayer(playerId).setVelocity(playerVelocity);
+            std::cout << "players gameState Velocity" << gameState.getPlayer(playerId).getVelocity().x << ',' << gameState.getPlayer(playerId).getVelocity().y << '\n';
+            conn.sendEvent(EventPlayerVelocity(playerId, playerVelocity));
+        }
+    }
+
 }
 
 int main(int argc, char const *argv[])

@@ -54,7 +54,7 @@ void onCollision(Player& player, GameObject const & other) {
 }
 
 void updateGame(GameState& gameState, float deltaTime){
-        for(Player& player : gameState.getPlayers()){
+    for(Player& player : gameState.getPlayers()){
 
         player.setIsOnGround(false);
 
@@ -66,6 +66,7 @@ void updateGame(GameState& gameState, float deltaTime){
         }
         player.setVelocity(playerVelocity);
 
+        std::cout << "player has velocity " << player.getVelocity().x << ',' <<player.getVelocity().y << '\n';
         player.getShape().move(player.getVelocity() * deltaTime);
 
         //somehow check all objects, idk how yet
@@ -74,10 +75,11 @@ void updateGame(GameState& gameState, float deltaTime){
             const Collidable *collidable = dynamic_cast<const Collidable*>(&stageObject);
             if(collidable != NULL){
 
-            if (player.getShape().getGlobalBounds().findIntersection(stageObject.getShape().getGlobalBounds())) {
-                std::cout << "detected collision\n";
-                onCollision(player, stageObject);
-            }}
+                if (player.getShape().getGlobalBounds().findIntersection(stageObject.getShape().getGlobalBounds())) {
+                    std::cout << "detected collision\n";
+                    onCollision(player, stageObject);
+                }
+            }
         }
     }
 }

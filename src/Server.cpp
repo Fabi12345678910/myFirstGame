@@ -39,6 +39,19 @@ void Server::run(){
     //set an example Gamestate for now
     //start a corresponding Socket
     //Profit?
+    {
+        std::vector<StageObject> stageObjects;
+        auto so = new StageObject(0, sf::Vector2f(800.f, 50.f), sf::Vector2f(0.f,550.f));
+        stageObjects.push_back(StageObject(0, sf::Vector2f(800.f, 50.f), sf::Vector2f(0.f,550.f)));
+        stageObjects.push_back(StageObject(1, sf::Vector2f(300.f, 50.f), sf::Vector2f(0.f,450.f)));
+        stageObjects.push_back(StageObject(2, sf::Vector2f(100.f, 50.f), sf::Vector2f(500.f,350.f)));
+        stageObjects[0].getShape().setFillColor(sf::Color::Green);
+        stageObjects[1].getShape().setFillColor(sf::Color::Green);
+        stageObjects[2].getShape().setFillColor(sf::Color::Green);
+        std::vector<sf::Vector2f> spawnPoints = {sf::Vector2f(400.f,10.f)};
+        Stage s = Stage(stageObjects, spawnPoints);
+        gameState.setStage(s);
+    }
     serverSocket.setArgs(&eventData);
     serverSocket.setEventHandler(eventHandler);
     for(OBJECT_ID_TYPE i = 1; i<= MAX_PLAYERS; i++){
@@ -62,6 +75,9 @@ void Server::mainLoop(){
         if(tickClock.getElapsedTime().asMilliseconds() >= 1){
             std::cout << "Computing tick took " << tickClock.getElapsedTime().asMilliseconds() << "ms\n";
         }
+        #if ENABLE_SERVER_RENDERING
+        renderer.render(gameState);
+        #endif
         sf::sleep(sf::milliseconds(TICKRATE_MS) - tickClock.getElapsedTime());
     }
     printf("exiting main loop\n");
@@ -95,6 +111,7 @@ void Server::processEvents(){
 
         EventPlayerVelocity *evVelocity = dynamic_cast<EventPlayerVelocity*>(ev);
         if(evVelocity != NULL){
+            std::cout << "received velocity update: " << evVelocity->getVelocity().x << ',' << evVelocity->getVelocity().y << '\n';
             updatePlayerVelocity(gameState, conn.getPlayerId(), evVelocity->getVelocity());
             serverSocket.sendEventToEveryone(EventPlayerVelocity(evVelocity->getPlayerId(), evVelocity->getVelocity()));
         }

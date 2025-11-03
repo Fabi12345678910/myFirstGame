@@ -60,6 +60,7 @@ add_executable(Server
     src/operations/GameUpdate.cpp
     src/operations/PlayerOperations.cpp
     src/networking/impl/Events.cpp
+    src/rendering/Renderer.cpp
     src/networking/impl/Connection.cpp
     src/networking/impl/ServerSocket.cpp
 )
@@ -70,6 +71,7 @@ add_executable(Client
     src/Client.cpp
     src/operations/GameUpdate.cpp
     src/operations/PlayerOperations.cpp
+    src/rendering/Renderer.cpp
     src/networking/impl/Events.cpp
     src/networking/impl/Connection.cpp
     src/networking/impl/ServerSocket.cpp

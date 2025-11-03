@@ -7,6 +7,13 @@
 #include <../src/networking/ServerConnection.hpp>
 #include <../src/networking/ServerSocket.hpp>
 
+#ifndef ENABLE_SERVER_RENDERING
+    #define ENABLE_SERVER_RENDERING true
+#endif
+#if ENABLE_SERVER_RENDERING
+    #include "Renderer.h"
+#endif
+
 struct eventHandlerData{
     std::queue<std::tuple<ServerConnection&, std::unique_ptr<Event>>> connectionEventsQueue;
     std::mutex connectionEventsMutex;
@@ -24,6 +31,9 @@ private:
     struct eventHandlerData eventData;
     ServerSocket serverSocket;
 
+    #if ENABLE_SERVER_RENDERING
+    Renderer renderer;
+    #endif
 public:
     void run();
     Server();
