@@ -119,7 +119,7 @@ void Client::mainLoop(){
         if(tickClock.getElapsedTime().asMilliseconds() >= 1){
             std::cout << "Computing tick took " << tickClock.getElapsedTime().asMilliseconds() << "ms\n";
         }
-        sf::sleep(sf::milliseconds(5) - tickClock.getElapsedTime());
+        sf::sleep(sf::milliseconds(10) - tickClock.getElapsedTime());
     }
     printf("exiting main loop\n");
 }

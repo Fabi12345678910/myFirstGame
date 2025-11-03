@@ -8,6 +8,7 @@
 #include "../src/networking/EventDefinitions/EventDebugMessage.hpp"
 #include "../src/networking/EventDefinitions/EventSpawnNewPlayer.hpp"
 #include "../src/networking/EventDefinitions/EventPlayerVelocity.hpp"
+#include "../src/networking/EventDefinitions/EventPlayerLocation.hpp"
 
 #define MAX_PLAYERS 4
 #define MAX_GAMEOBJECTS 10000
@@ -71,7 +72,7 @@ void Server::mainLoop(){
         float deltaTime = tickClock.restart().asSeconds();
         processEvents();
         updateGamestate(deltaTime);
-//        resync
+        someTimesResyncPlayers();
         int32_t sleep_ms = TICKRATE_MS - tickClock.getElapsedTime().asMilliseconds();
         if(tickClock.getElapsedTime().asMilliseconds() >= 1){
             std::cout << "Computing tick took " << tickClock.getElapsedTime().asMilliseconds() << "ms\n";
@@ -106,7 +107,12 @@ void Server::processEvents(){
                 conn.setPlayerId(nextPlayerId);
                 conn.sendEvent(EventLoginConfirmation(nextPlayerId));
                 
+                //send all players to current player for now, should later be included in a gamestate sync
+                for(Player& p : gameState.getPlayers()){
+                    conn.sendEvent(EventSpawnNewPlayer(p.getPosition(), p.getId()));
+                }
                 gameState.addPlayer(Player(nextPlayerId, sf::Vector2f(40.f, 40.f), sf::Vector2f(400.f, 10.f)));
+                
                 serverSocket.sendEventToEveryone(EventSpawnNewPlayer(gameState.getPlayer(nextPlayerId).getPosition(), nextPlayerId));
             }
         }
@@ -138,4 +144,21 @@ int main(int argc, char const *argv[])
     Server server;
     server.run();
     return 0;
+}
+
+void Server::someTimesResyncPlayers(){
+    #define PLAYERRESYNCTIMER 4
+    static unsigned tickCounter = PLAYERRESYNCTIMER;
+    tickCounter--;
+    if(tickCounter == 0){
+        tickCounter = PLAYERRESYNCTIMER;
+        resyncPlayers();
+    }
+}
+
+void Server::resyncPlayers(){
+    std::cout << "resyncing players\n";
+    for(Player &p : gameState.getPlayers()){
+        serverSocket.sendEventToEveryone(EventPlayerLocation(p.getId(), p.getPosition()));
+    }
 }

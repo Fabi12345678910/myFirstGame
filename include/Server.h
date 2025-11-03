@@ -24,6 +24,8 @@ class Server
 private:
     void processEvents();
     void updateGamestate(float deltaTime);
+    void someTimesResyncPlayers();
+    void resyncPlayers();
     void mainLoop();
     GameState gameState = GameState();
     std::queue<OBJECT_ID_TYPE> availablePlayerIds;
