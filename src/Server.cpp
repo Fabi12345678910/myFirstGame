@@ -71,12 +71,14 @@ void Server::mainLoop(){
         float deltaTime = tickClock.restart().asSeconds();
         processEvents();
         updateGamestate(deltaTime);
+//        resync
         int32_t sleep_ms = TICKRATE_MS - tickClock.getElapsedTime().asMilliseconds();
         if(tickClock.getElapsedTime().asMilliseconds() >= 1){
             std::cout << "Computing tick took " << tickClock.getElapsedTime().asMilliseconds() << "ms\n";
         }
         #if ENABLE_SERVER_RENDERING
         renderer.render(gameState);
+        renderer.processDisplayEvents();
         #endif
         sf::sleep(sf::milliseconds(TICKRATE_MS) - tickClock.getElapsedTime());
     }

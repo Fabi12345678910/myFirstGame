@@ -10,5 +10,6 @@ private:
 public:
     Renderer(): window(sf::VideoMode(sf::Vector2u(800, 600)), "My Game"){};
     ~Renderer(){};
+    void processDisplayEvents();
     void render(GameState& gamestate);
 };

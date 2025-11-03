@@ -115,37 +115,34 @@ void Client::mainLoop(){
         processInputs();
         updateGamestate(deltaTime);
         renderer.render(gameState);
+        renderer.processDisplayEvents();
         if(tickClock.getElapsedTime().asMilliseconds() >= 1){
             std::cout << "Computing tick took " << tickClock.getElapsedTime().asMilliseconds() << "ms\n";
         }
-        sf::sleep(sf::milliseconds(100) - tickClock.getElapsedTime());
+        sf::sleep(sf::milliseconds(5) - tickClock.getElapsedTime());
     }
     printf("exiting main loop\n");
 }
 
 void Client::processInputs(){
     if(clientState == PLAYING){
-        bool updateVelocity = false;
         sf::Vector2f playerVelocity = gameState.getPlayer(playerId).getVelocity();
         playerVelocity.x = 0.f;
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A)){
             std::cout << "---User pressed A\n";
-            updateVelocity = true;
             std::cout << "current player velocity: " << playerVelocity.x << '\n';
             playerVelocity.x -= gameState.getPlayer(playerId).getSpeed();
             std::cout << "new player velocity: " << playerVelocity.x << '\n';
         }
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D)){
             std::cout << "---User pressed D";
-            updateVelocity = true;
             playerVelocity.x += gameState.getPlayer(playerId).getSpeed();
         }
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Space) && gameState.getPlayer(playerId).getIsOnGround()) {
-            updateVelocity = true;
             playerVelocity.y = -400.f;
             gameState.getPlayer(playerId).setIsOnGround(false);
         }
-        if(updateVelocity){
+        if(playerVelocity != gameState.getPlayer(playerId).getVelocity()){
             std::cout << "player has speed" << gameState.getPlayer(playerId).getSpeed() << '\n';
             std::cout << "setting player velocity to" << playerVelocity.x << ',' << playerVelocity.y << '\n';
             gameState.getPlayer(playerId).setVelocity(playerVelocity);
@@ -153,7 +150,6 @@ void Client::processInputs(){
             conn.sendEvent(EventPlayerVelocity(playerId, playerVelocity));
         }
     }
-
 }
 
 int main(int argc, char const *argv[])
