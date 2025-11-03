@@ -8,7 +8,7 @@ class ClientConnection : public Connection
 private:
     /* data */
 public:
-    ClientConnection(sf::IpAddress target): Connection(std::make_unique<sf::TcpSocket>()){
+    ClientConnection(sf::IpAddress target, void* args = NULL): Connection(std::make_unique<sf::TcpSocket>(), args){
 
         sf::Socket::Status status = socket->connect(target, 42069);
         if (status != sf::Socket::Status::Done)

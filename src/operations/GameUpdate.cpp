@@ -1,42 +1,6 @@
-#include "Game.h"
-#include "StageObject.h"
+#include "GameUpdate.h"
+
 #include <iostream>
-
-void Game::run() {
-    sf::Clock clock;
-    while (window.isOpen()) {
-        float deltaTime = clock.restart().asSeconds();
-        processEvents();
-        processInputs();
-        update(deltaTime);
-        render();
-    }
-}
-
-void Game::processInputs(){
-    sf::Vector2f playerVelocity = gameState.getPlayer(activePlayer).getVelocity();
-    playerVelocity.x = 0.f;
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A))
-        playerVelocity.x -= gameState.getPlayer(activePlayer).getSpeed();
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D))
-        playerVelocity.x += gameState.getPlayer(activePlayer).getSpeed();
-
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Space) && gameState.getPlayer(activePlayer).getIsOnGround()) {
-        playerVelocity.y = -400.f;
-        gameState.getPlayer(activePlayer).setIsOnGround(false);
-    }
-    gameState.getPlayer(activePlayer).setVelocity(playerVelocity);
-}
-
-void Game::processEvents() {
-    while (const std::optional<sf::Event> maybeEvent = window.pollEvent()) {
-        const sf::Event &event = *maybeEvent;
-        if (event.is<sf::Event::Closed>())
-            {
-                window.close();
-            }
-    }
-}
 
 void onCollision(Player& player, GameObject const & other) {
     sf::FloatRect playerBounds = player.getShape().getGlobalBounds();
@@ -89,7 +53,7 @@ void onCollision(Player& player, GameObject const & other) {
     }
 }
 
-void Game::update(float deltaTime) {
+void updateGame(GameState& gameState, float deltaTime){
     for(Player& player : gameState.getPlayers()){
 
         player.setIsOnGround(false);
@@ -102,6 +66,7 @@ void Game::update(float deltaTime) {
         }
         player.setVelocity(playerVelocity);
 
+        std::cout << "player has velocity " << player.getVelocity().x << ',' <<player.getVelocity().y << '\n';
         player.getShape().move(player.getVelocity() * deltaTime);
 
         //somehow check all objects, idk how yet
@@ -110,23 +75,11 @@ void Game::update(float deltaTime) {
             const Collidable *collidable = dynamic_cast<const Collidable*>(&stageObject);
             if(collidable != NULL){
 
-            if (player.getShape().getGlobalBounds().findIntersection(stageObject.getShape().getGlobalBounds())) {
-                std::cout << "detected collision\n";
-                onCollision(player, stageObject);
-            }}
+                if (player.getShape().getGlobalBounds().findIntersection(stageObject.getShape().getGlobalBounds())) {
+                    std::cout << "detected collision\n";
+                    onCollision(player, stageObject);
+                }
+            }
         }
     }
-}
-
-
-void Game::render() {
-    window.clear(sf::Color::Yellow);
-    for(Player& player:gameState.getPlayers()){
-        window.draw(player.getShape());
-    }
-    for (StageObject const& stageObject : gameState.getStage().getStageObjects()) {
-        window.draw(stageObject.getShape());
-    }
-
-    window.display();
 }

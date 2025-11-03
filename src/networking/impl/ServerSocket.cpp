@@ -11,7 +11,7 @@ void *connectionAccepter(void * arg){
             continue;
         }
 
-        serverSock->connections.push_back(std::make_unique<ServerConnection>(std::move(sock)));
+        serverSock->connections.push_back(std::make_unique<ServerConnection>(std::move(sock), serverSock->args));
         if (serverSock->eventHandler != NULL){
             serverSock->connections.back()->setEventHandler(serverSock->eventHandler);
         }
@@ -28,7 +28,7 @@ ServerSocket::ServerSocket(unsigned short listenerPort){
     pthread_create(&connectionHandlerThread, NULL, connectionAccepter, this);
 }
 
-void ServerSocket::setEventHandler(void* handleEvent(const Event&, const Connection&)){
+void ServerSocket::setEventHandler(void* handleEvent(std::unique_ptr<Event>, Connection&, void* args)){
     if (this->eventHandler == NULL){
         this->eventHandler = handleEvent;
         for (std::unique_ptr<ServerConnection>& connection : connections){
@@ -41,7 +41,14 @@ void ServerSocket::setEventHandler(void* handleEvent(const Event&, const Connect
     }
 }
 
-void ServerSocket::sendEventToEveryone(Event &ev){
+void ServerSocket::setArgs(void* args){
+    this->args = args;
+    for (std::unique_ptr<ServerConnection>& connection : connections){
+        connection->setArgs(args);
+    }
+}
+
+void ServerSocket::sendEventToEveryone(Event &&ev){
     for (std::unique_ptr<ServerConnection>& connection : connections){
         if(connection->eventHandler!= NULL){
             connection->sendEvent(ev);

@@ -1,5 +1,4 @@
-#ifndef _EVENT_DEBUG_MESSAGE_H
-#define _EVENT_DEBUG_MESSAGE_H
+#pragma once
 
 #include "../Event.hpp"
 #include "../EventTypeList.hpp"
@@ -19,7 +18,6 @@ public:
     }
     sf::Packet toPacket() const override{
         sf::Packet packet;
-        DATATYPE_EVENT_TYPE s = EVENT_TYPE_DEBUG_MESSAGE;
         packet << (DATATYPE_EVENT_TYPE) EVENT_TYPE_DEBUG_MESSAGE;
         packet << message;
         return packet;
@@ -28,5 +26,3 @@ public:
         return message;
     }
 };
-
-#endif

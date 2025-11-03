@@ -2,6 +2,12 @@
 #include <memory>
 
 #include "../EventDefinitions/EventDebugMessage.hpp"
+#include "../EventDefinitions/EventLoginRequest.hpp"
+#include "../EventDefinitions/EventLoginConfirmation.hpp"
+#include "../EventDefinitions/EventLoginDenied.hpp"
+#include "../EventDefinitions/EventPlayerLocation.hpp"
+#include "../EventDefinitions/EventPlayerVelocity.hpp"
+#include "../EventDefinitions/EventSpawnNewPlayer.hpp"
 
 
 std::unique_ptr<Event> getEventFromPacket(sf::Packet& packet){
@@ -14,6 +20,18 @@ std::unique_ptr<Event> getEventFromPacket(sf::Packet& packet){
     {
         case EVENT_TYPE_DEBUG_MESSAGE:
             return std::make_unique<EventDebugMessage>(packet);    
+        case EVENT_TYPE_LOGIN_REQUEST:
+            return std::make_unique<EventLoginRequest>(packet);
+        case EVENT_TYPE_LOGIN_CONFIRMATION:
+            return std::make_unique<EventLoginConfirmation>(packet);
+        case EVENT_TYPE_LOGIN_DENIED:
+            return std::make_unique<EventLoginDenied>(packet);
+        case EVENT_TYPE_PLAYER_LOCATION:
+            return std::make_unique<EventPlayerLocation>(packet);
+        case EVENT_TYPE_PLAYER_VELOCITY:
+            return std::make_unique<EventPlayerVelocity>(packet);
+        case EVENT_TYPE_SPAWN_NEW_PLAYER:
+            return std::make_unique<EventSpawnNewPlayer>(packet);
         default:
             throw std::runtime_error("invalid event type");
     }

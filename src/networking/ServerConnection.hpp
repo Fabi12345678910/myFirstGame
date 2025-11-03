@@ -2,14 +2,21 @@
 #define _SERVER_CONNECTION_HPP
 
 #include "Connection.hpp"
+#include "Types.h"
 
 class ServerConnection : public Connection
 {
 private:
-    /* data */
+    OBJECT_ID_TYPE playerId = 0;
 public:
-    ServerConnection(std::unique_ptr<sf::TcpSocket> ptr)
-        : Connection(std::move(ptr)) {}
+    ServerConnection(std::unique_ptr<sf::TcpSocket> ptr, void* args = NULL)
+        : Connection(std::move(ptr), args) {}
+    OBJECT_ID_TYPE getPlayerId(){
+        return playerId;
+    }
+    void setPlayerId(OBJECT_ID_TYPE id){
+        playerId = id;
+    }
 };
 
 #endif

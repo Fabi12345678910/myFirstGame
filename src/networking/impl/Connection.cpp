@@ -4,6 +4,8 @@
 
 std::unique_ptr<Event> Connection::receiveNextEvent(){
     sf::Packet pack;
+//  TODO: handle disconnect
+//    if(socket->receive(pack) == sf::Socket::Status::Disconnected
     if(socket->receive(pack) != sf::Socket::Status::Done){
         throw std::runtime_error("Error receiving Packet");
     }
@@ -16,7 +18,7 @@ static void* eventHandlerFunction(void* arg){
         try
         {
             std::unique_ptr<Event> ev = conn->receiveNextEvent();
-            conn->eventHandler(*ev, *conn);
+            conn->eventHandler(std::move(ev), *conn, conn->args);
         }
         catch(const std::exception& e)
         {
@@ -26,7 +28,7 @@ static void* eventHandlerFunction(void* arg){
     }
 }
 
-void Connection::setEventHandler(void* handleEvent(const Event&, const Connection&)){
+void Connection::setEventHandler(void* handleEvent(std::unique_ptr<Event>, Connection&, void* args)){
     if(this->eventHandler != NULL){
         throw std::runtime_error("eventHandler already set");
     }

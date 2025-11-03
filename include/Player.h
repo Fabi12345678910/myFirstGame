@@ -11,7 +11,7 @@ private:
     float health = 10;
 
 public:
-    Player(int id, sf::Vector2f size, sf::Vector2f position) : GameObject(id, size, position){}
+    Player(OBJECT_ID_TYPE id, sf::Vector2f size, sf::Vector2f position) : GameObject(id, size, position){}
 
 
     float getIsOnGround() const { return isOnGround; }
