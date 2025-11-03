@@ -1,5 +1,5 @@
-#include "../Connection.hpp"
-#include "../Events.hpp"
+#include "Networking/Connection.h"
+#include "Networking/Events.h"
 #include <SFML/Network.hpp>
 
 std::unique_ptr<Event> Connection::receiveNextEvent(){

@@ -1,18 +1,19 @@
 #pragma once
 
-#include "../Event.hpp"
-#include "../EventTypeList.hpp"
+#include "Networking/Event.h"
+#include "Networking/EventTypeList.h"
 #include <SFML/System/Vector2.hpp>
+#include "Types.h"
 
-class EventPlayerLocation:public Event
+class EventSpawnNewPlayer:public Event
 {
 private:
     OBJECT_ID_TYPE playerId;
     sf::Vector2f location;
 public:
-    EventPlayerLocation(sf::Packet packet){
+    EventSpawnNewPlayer(sf::Packet packet){
         if(!(packet >> playerId)){
-            throw std::runtime_error("failed to read playerId");
+            throw std::runtime_error("failed to new player id");
         }
         if(!(packet >> location.x)){
             throw std::runtime_error("failed to read x location");
@@ -21,11 +22,11 @@ public:
             throw std::runtime_error("failed to read y location");
         };
     };
-    EventPlayerLocation(OBJECT_ID_TYPE playerId, sf::Vector2f location) : playerId(playerId), location(location){
+    EventSpawnNewPlayer(sf::Vector2f location, OBJECT_ID_TYPE playerId) : location(location), playerId(playerId){
     }
     sf::Packet toPacket() const override{
         sf::Packet packet;
-        packet << (DATATYPE_EVENT_TYPE) EVENT_TYPE_PLAYER_LOCATION;
+        packet << (DATATYPE_EVENT_TYPE) EVENT_TYPE_SPAWN_NEW_PLAYER;
         packet << playerId;
         packet << location.x;
         packet << location.y;
@@ -37,6 +38,7 @@ public:
     void setLocation(sf::Vector2f location){
         this->location = location;
     }
+
     OBJECT_ID_TYPE getPlayerId(){
         return playerId;
     }

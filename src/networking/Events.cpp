@@ -1,13 +1,13 @@
-#include "../Events.hpp"
+#include "Networking/Events.h"
 #include <memory>
 
-#include "../EventDefinitions/EventDebugMessage.hpp"
-#include "../EventDefinitions/EventLoginRequest.hpp"
-#include "../EventDefinitions/EventLoginConfirmation.hpp"
-#include "../EventDefinitions/EventLoginDenied.hpp"
-#include "../EventDefinitions/EventPlayerLocation.hpp"
-#include "../EventDefinitions/EventPlayerVelocity.hpp"
-#include "../EventDefinitions/EventSpawnNewPlayer.hpp"
+#include "Networking/EventDefinitions/EventDebugMessage.h"
+#include "Networking/EventDefinitions/EventLoginRequest.h"
+#include "Networking/EventDefinitions/EventLoginConfirmation.h"
+#include "Networking/EventDefinitions/EventLoginDenied.h"
+#include "Networking/EventDefinitions/EventPlayerLocation.h"
+#include "Networking/EventDefinitions/EventPlayerVelocity.h"
+#include "Networking/EventDefinitions/EventSpawnNewPlayer.h"
 
 
 std::unique_ptr<Event> getEventFromPacket(sf::Packet& packet){

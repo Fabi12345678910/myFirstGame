@@ -1,4 +1,4 @@
-#include "../ServerSocket.hpp"
+#include "Networking/ServerSocket.h"
 
 void *connectionAccepter(void * arg){
     ServerSocket *serverSock = (ServerSocket*) arg;

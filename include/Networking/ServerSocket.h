@@ -1,7 +1,6 @@
-#ifndef _SERVER_SOCKET_HPP
-#define _SERVER_SOCKET_HPP
+#pragma once
 
-#include "ServerConnection.hpp"
+#include "Networking/ServerConnection.h"
 #include <SFML/Network/TcpListener.hpp>
 #include <list>
 
@@ -28,6 +27,3 @@ public:
         return this->args;
     };
 };
-
-
-#endif

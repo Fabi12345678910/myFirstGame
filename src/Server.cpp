@@ -2,13 +2,13 @@
 #include "GameUpdate.h"
 #include "PlayerOperations.h"
 
-#include "../src/networking/EventDefinitions/EventLoginRequest.hpp"
-#include "../src/networking/EventDefinitions/EventLoginConfirmation.hpp"
-#include "../src/networking/EventDefinitions/EventLoginDenied.hpp"
-#include "../src/networking/EventDefinitions/EventDebugMessage.hpp"
-#include "../src/networking/EventDefinitions/EventSpawnNewPlayer.hpp"
-#include "../src/networking/EventDefinitions/EventPlayerVelocity.hpp"
-#include "../src/networking/EventDefinitions/EventPlayerLocation.hpp"
+#include "Networking/EventDefinitions/EventLoginRequest.h"
+#include "Networking/EventDefinitions/EventLoginConfirmation.h"
+#include "Networking/EventDefinitions/EventLoginDenied.h"
+#include "Networking/EventDefinitions/EventDebugMessage.h"
+#include "Networking/EventDefinitions/EventSpawnNewPlayer.h"
+#include "Networking/EventDefinitions/EventPlayerVelocity.h"
+#include "Networking/EventDefinitions/EventPlayerLocation.h"
 
 #define MAX_PLAYERS 4
 #define MAX_GAMEOBJECTS 10000

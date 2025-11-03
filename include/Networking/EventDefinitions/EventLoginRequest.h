@@ -1,6 +1,6 @@
 #pragma once
-#include "../Event.hpp"
-#include "../EventTypeList.hpp"
+#include "Networking/Event.h"
+#include "Networking/EventTypeList.h"
 
 class EventLoginRequest:public Event
 {

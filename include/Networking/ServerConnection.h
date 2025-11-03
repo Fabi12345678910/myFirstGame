@@ -1,7 +1,6 @@
-#ifndef _SERVER_CONNECTION_HPP
-#define _SERVER_CONNECTION_HPP
+#pragma once
 
-#include "Connection.hpp"
+#include "Networking/Connection.h"
 #include "Types.h"
 
 class ServerConnection : public Connection
@@ -18,5 +17,3 @@ public:
         playerId = id;
     }
 };
-
-#endif

@@ -1,8 +1,9 @@
 #pragma once
+
 #include "GameState.h"
 #include "Renderer.h"
-#include "../src/networking/ClientConnection.hpp"
-#include "../src/networking/Event.hpp"
+#include "Networking/ClientConnection.h"
+#include "Networking/Event.h"
 
 #include <queue>
 #include <mutex>

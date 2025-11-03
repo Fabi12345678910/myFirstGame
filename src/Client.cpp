@@ -3,12 +3,12 @@
 #include "GameUpdate.h"
 #include "Renderer.h"
 
-#include "networking/EventDefinitions/EventLoginRequest.hpp"
-#include "networking/EventDefinitions/EventLoginDenied.hpp"
-#include "networking/EventDefinitions/EventLoginConfirmation.hpp"
-#include "networking/EventDefinitions/EventPlayerLocation.hpp"
-#include "networking/EventDefinitions/EventPlayerVelocity.hpp"
-#include "networking/EventDefinitions/EventSpawnNewPlayer.hpp"
+#include "Networking/EventDefinitions/EventLoginRequest.h"
+#include "Networking/EventDefinitions/EventLoginDenied.h"
+#include "Networking/EventDefinitions/EventLoginConfirmation.h"
+#include "Networking/EventDefinitions/EventPlayerLocation.h"
+#include "Networking/EventDefinitions/EventPlayerVelocity.h"
+#include "Networking/EventDefinitions/EventSpawnNewPlayer.h"
 
 Client::Client() : conn({127, 0, 0, 1}){
     performLogin();

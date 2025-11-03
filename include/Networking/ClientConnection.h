@@ -1,7 +1,6 @@
-#ifndef _CLIENT_CONNECTION_HPP
-#define _CLIENT_CONNECTION_HPP
+#pragma once
 
-#include "Connection.hpp"
+#include "Networking/Connection.h"
 
 class ClientConnection : public Connection
 {
@@ -17,5 +16,3 @@ public:
         }
     }
 };
-
-#endif

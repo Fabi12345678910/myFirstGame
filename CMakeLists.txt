@@ -19,34 +19,34 @@ add_executable(eventTest)
 target_sources(eventTest
   PRIVATE
     src/eventTest.cpp
-    src/networking/impl/Events.cpp)
+    src/networking/Events.cpp)
 
 target_compile_features(eventTest PRIVATE cxx_std_17)
 target_link_libraries(eventTest PRIVATE SFML::Network)
 
-add_executable(connectionTestClient)
+add_executable(ConnectionTestClient)
 
-target_sources(connectionTestClient
+target_sources(ConnectionTestClient
   PRIVATE
-    src/tests/connectionTestClient.cpp
-    src/networking/impl/Events.cpp
-    src/networking/impl/Connection.cpp)
+    src/tests/ConnectionTestClient.cpp
+    src/networking/Events.cpp
+    src/networking/Connection.cpp)
 
-target_compile_features(connectionTestClient PRIVATE cxx_std_17)
-target_link_libraries(connectionTestClient PRIVATE SFML::Network)
+target_compile_features(ConnectionTestClient PRIVATE cxx_std_17)
+target_link_libraries(ConnectionTestClient PRIVATE SFML::Network)
 
 
-add_executable(connectionTestServer)
+add_executable(ConnectionTestServer)
 
-target_sources(connectionTestServer
+target_sources(ConnectionTestServer
   PRIVATE
-    src/tests/connectionTestServer.cpp
-    src/networking/impl/Events.cpp
-    src/networking/impl/Connection.cpp
-    src/networking/impl/ServerSocket.cpp)
+    src/tests/ConnectionTestServer.cpp
+    src/networking/Events.cpp
+    src/networking/Connection.cpp
+    src/networking/ServerSocket.cpp)
 
-target_compile_features(connectionTestServer PRIVATE cxx_std_17)
-target_link_libraries(connectionTestServer PRIVATE SFML::Network)
+target_compile_features(ConnectionTestServer PRIVATE cxx_std_17)
+target_link_libraries(ConnectionTestServer PRIVATE SFML::Network)
 
 add_executable(MyGameLocal
     src/main.cpp
@@ -59,10 +59,10 @@ add_executable(Server
     src/Server.cpp
     src/operations/GameUpdate.cpp
     src/operations/PlayerOperations.cpp
-    src/networking/impl/Events.cpp
+    src/networking/Events.cpp
     src/rendering/Renderer.cpp
-    src/networking/impl/Connection.cpp
-    src/networking/impl/ServerSocket.cpp
+    src/networking/Connection.cpp
+    src/networking/ServerSocket.cpp
 )
 target_compile_features(Server PRIVATE cxx_std_17)
 target_link_libraries(Server PRIVATE SFML::Network SFML::System SFML::Window SFML::Graphics SFML::Audio)
@@ -72,18 +72,18 @@ add_executable(Client
     src/operations/GameUpdate.cpp
     src/operations/PlayerOperations.cpp
     src/rendering/Renderer.cpp
-    src/networking/impl/Events.cpp
-    src/networking/impl/Connection.cpp
-    src/networking/impl/ServerSocket.cpp
+    src/networking/Events.cpp
+    src/networking/Connection.cpp
+    src/networking/ServerSocket.cpp
 )
 target_compile_features(Client PRIVATE cxx_std_17)
 target_link_libraries(Client PRIVATE SFML::Network SFML::System SFML::Window SFML::Graphics SFML::Audio)
 
-add_executable(testLogin
-    src/tests/testLogin.cpp
-    src/networking/impl/Events.cpp
-    src/networking/impl/Connection.cpp
-    src/networking/impl/ServerSocket.cpp
+add_executable(TestLogin
+    src/tests/TestLogin.cpp
+    src/networking/Events.cpp
+    src/networking/Connection.cpp
+    src/networking/ServerSocket.cpp
 )
-target_compile_features(testLogin PRIVATE cxx_std_17)
-target_link_libraries(testLogin PRIVATE SFML::Network SFML::System SFML::Window SFML::Graphics SFML::Audio)
+target_compile_features(TestLogin PRIVATE cxx_std_17)
+target_link_libraries(TestLogin PRIVATE SFML::Network SFML::System SFML::Window SFML::Graphics SFML::Audio)

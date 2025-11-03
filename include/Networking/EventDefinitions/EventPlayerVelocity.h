@@ -1,7 +1,8 @@
 #pragma once
 
-#include "../Event.hpp"
-#include "../EventTypeList.hpp"
+#include "Networking/Event.h"
+#include "Networking/EventTypeList.h"
+#include "Types.h"
 #include <SFML/System/Vector2.hpp>
 
 class EventPlayerVelocity:public Event

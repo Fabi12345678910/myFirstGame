@@ -1,5 +1,4 @@
-#ifndef _EVENT_HPP
-#define _EVENT_HPP
+#pragma once
 #include <SFML/Network/Packet.hpp>
 #include <iostream>
 
@@ -18,6 +17,3 @@ public:
 protected:
     Event() = default;
 };
-
-
-#endif

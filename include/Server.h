@@ -1,11 +1,11 @@
 #pragma once
 #include "GameState.h"
-#include "../src/networking/Event.hpp"
+#include "Networking/Event.h"
 #include <queue>
 #include <mutex>
 #include <tuple>
-#include <../src/networking/ServerConnection.hpp>
-#include <../src/networking/ServerSocket.hpp>
+#include <Networking/ServerConnection.h>
+#include <Networking/ServerSocket.h>
 
 #ifndef ENABLE_SERVER_RENDERING
     #define ENABLE_SERVER_RENDERING true

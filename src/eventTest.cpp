@@ -1,5 +1,5 @@
-#include "networking/EventDefinitions/EventDebugMessage.hpp"
-#include "networking/Events.hpp"
+#include "Networking/EventDefinitions/EventDebugMessage.h"
+#include "Networking/Events.h"
 #include <cstdio>
 
 

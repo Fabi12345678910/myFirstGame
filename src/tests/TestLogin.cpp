@@ -1,7 +1,7 @@
-#include "../networking/ClientConnection.hpp"
-#include "../networking/EventDefinitions/EventLoginRequest.hpp"
-#include "../networking/EventDefinitions/EventLoginConfirmation.hpp"
-#include "../networking/EventDefinitions/EventLoginDenied.hpp"
+#include "Networking/ClientConnection.h"
+#include "Networking/EventDefinitions/EventLoginRequest.h"
+#include "Networking/EventDefinitions/EventLoginConfirmation.h"
+#include "Networking/EventDefinitions/EventLoginDenied.h"
 
 void* eventHandler(std::unique_ptr<Event> ev, Connection& conn, void* args) {
     (void) args;

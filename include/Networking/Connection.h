@@ -1,6 +1,5 @@
-#ifndef _CONNECTION_HPP
-#define _CONNECTION_HPP
-#include "Event.hpp"
+#pragma once
+#include "Networking/Event.h"
 #include <sys/socket.h>
 #include <unistd.h>
 #include <SFML/Network.hpp>
@@ -32,5 +31,3 @@ public:
     void sendEvent(const Event& ev);
     void setEventHandler(void* handleEvent(std::unique_ptr<Event>, Connection&, void* args));
 };
-
-#endif

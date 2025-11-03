@@ -1,5 +1,5 @@
-#include "../networking/ClientConnection.hpp"
-#include "../networking/EventDefinitions/EventDebugMessage.hpp"
+#include "Networking/ClientConnection.h"
+#include "Networking/EventDefinitions/EventDebugMessage.h"
 
 int main(int argc, char const *argv[])
 {

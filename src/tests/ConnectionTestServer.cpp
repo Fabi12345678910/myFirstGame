@@ -1,5 +1,5 @@
-#include "../networking/ServerSocket.hpp"
-#include "../networking/EventDefinitions/EventDebugMessage.hpp"
+#include "Networking/ServerSocket.h"
+#include "Networking/EventDefinitions/EventDebugMessage.h"
 
 void *handleEvents(std::unique_ptr<Event> ev, Connection& conn, void* args){
     (void) args;
