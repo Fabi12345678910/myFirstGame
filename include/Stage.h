@@ -5,9 +5,11 @@ class Stage {
 private:
     std::vector<StageObject> stageObjects;
     std::vector<sf::Vector2f> spawnPoints;
+    int16_t stageId;
 
 public:
-    Stage(std::vector<StageObject> stageObjects, std::vector<sf::Vector2f> spawnPoints){
+    Stage(int16_t stageId, std::vector<StageObject> stageObjects, std::vector<sf::Vector2f> spawnPoints){
+        this->stageId = stageId;
         this->stageObjects = stageObjects;
         this->spawnPoints = spawnPoints;
     }
@@ -29,6 +31,8 @@ public:
     std::vector<sf::Vector2f>& getSpawnPoints(){
         return spawnPoints;
     }
+
+    int16_t getStageId(){return stageId;};
     Stage(){};
     
 };

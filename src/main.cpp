@@ -13,7 +13,7 @@ GameState createLocalGame(){
     stageObjects[1].getShape().setFillColor(sf::Color::Green);
     stageObjects[2].getShape().setFillColor(sf::Color::Green);
     std::vector<sf::Vector2f> spawnPoints = {sf::Vector2f(400.f,10.f)};
-    Stage s = Stage(stageObjects, spawnPoints);
+    Stage s = Stage(1, stageObjects, spawnPoints);
     GameState gs;
     gs.setStage(s);
     gs.addPlayer(Player(100, sf::Vector2f(40.f, 40.f), sf::Vector2f(400.f, 10.f)));
