@@ -45,6 +45,22 @@ add_executable(eventTest
 target_link_libraries(eventTest PRIVATE SFML::Network)
 enable_autocopy_runtime_dlls(eventTest)
 
+# --- LOCAL sandbox (always build) ---
+add_executable(MyGameLocal
+    src/main.cpp
+    src/Game.cpp
+    src/operations/GameUpdate.cpp
+    src/operations/PlayerOperations.cpp
+    src/maps/Map_TestAll.cpp
+)
+target_link_libraries(MyGameLocal PRIVATE
+    SFML::Network SFML::System SFML::Window SFML::Graphics SFML::Audio
+)
+enable_autocopy_runtime_dlls(MyGameLocal)
+
+# --- Networking & test executables (skip on Windows due to POSIX headers) ---
+if (NOT WIN32)
+
 add_executable(ConnectionTestClient
     src/tests/ConnectionTestClient.cpp
     src/networking/Events.cpp
@@ -61,15 +77,6 @@ add_executable(ConnectionTestServer
 )
 target_link_libraries(ConnectionTestServer PRIVATE SFML::Network)
 enable_autocopy_runtime_dlls(ConnectionTestServer)
-
-add_executable(MyGameLocal
-    src/main.cpp
-    src/Game.cpp
-)
-target_link_libraries(MyGameLocal PRIVATE
-    SFML::Network SFML::System SFML::Window SFML::Graphics SFML::Audio
-)
-enable_autocopy_runtime_dlls(MyGameLocal)
 
 add_executable(Server
     src/Server.cpp
@@ -110,6 +117,8 @@ target_link_libraries(TestLogin PRIVATE
 )
 enable_autocopy_runtime_dlls(TestLogin)
 
+endif() # NOT WIN32
+
 # (Optional) warnings
 if (MSVC)
     add_compile_options(/W4 /permissive-)
@@ -118,6 +127,12 @@ else()
 endif()
 
 # Make running from VS/VSCode look at repo root for assets
-set_property(TARGET MyGameLocal Client Server
-    PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
-)
+# Only set properties for targets that actually exist
+set(_WD "${CMAKE_SOURCE_DIR}")
+set_property(TARGET MyGameLocal PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${_WD}")
+if (TARGET Client)
+    set_property(TARGET Client PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${_WD}")
+endif()
+if (TARGET Server)
+    set_property(TARGET Server PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${_WD}")
+endif()
