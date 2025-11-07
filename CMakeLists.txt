@@ -85,5 +85,15 @@ add_executable(TestLogin
     src/networking/Connection.cpp
     src/networking/ServerSocket.cpp
 )
+
+
+add_executable(test
+    src/test.cpp
+)
+
+add_executable(test2
+    src/test2.cpp
+)
+
 target_compile_features(TestLogin PRIVATE cxx_std_17)
 target_link_libraries(TestLogin PRIVATE SFML::Network SFML::System SFML::Window SFML::Graphics SFML::Audio)
