@@ -29,7 +29,7 @@ public:
             case StageObjectType::Death:          return CollisionKind::Hazard;
             case StageObjectType::JumpPad:        return CollisionKind::Trigger;
             case StageObjectType::MovingPlatform: return CollisionKind::Solid;
-            default:                               return CollisionKind::Solid;
+            default:                              return CollisionKind::Solid;
         }
     }
 };

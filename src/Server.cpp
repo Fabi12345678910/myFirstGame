@@ -9,6 +9,7 @@
 #include "Networking/EventDefinitions/EventSpawnNewPlayer.h"
 #include "Networking/EventDefinitions/EventPlayerVelocity.h"
 #include "Networking/EventDefinitions/EventPlayerLocation.h"
+#include "maps/Map_TestAll.h"
 
 #define MAX_PLAYERS 4
 #define MAX_GAMEOBJECTS 10000
@@ -51,7 +52,8 @@ void Server::run(){
         stageObjects[2].getShape().setFillColor(sf::Color::Green);
         std::vector<sf::Vector2f> spawnPoints = {sf::Vector2f(400.f,10.f)};
         Stage s = Stage(1, stageObjects, spawnPoints);
-        gameState.setStage(s);
+        Stage s2 = createMap_TestAll();
+        gameState.setStage(s2);
     }
     serverSocket.setArgs(&eventData);
     serverSocket.setEventHandler(eventHandler);

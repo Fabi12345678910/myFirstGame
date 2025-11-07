@@ -10,6 +10,8 @@
 #include "Networking/EventDefinitions/EventPlayerVelocity.h"
 #include "Networking/EventDefinitions/EventSpawnNewPlayer.h"
 
+#include "maps/Map_TestAll.h"
+
 Client::Client() : conn({127, 0, 0, 1}){
     performLogin();
 }
@@ -66,7 +68,8 @@ void Client::run(){
         stageObjects[2].getShape().setFillColor(sf::Color::Green);
         std::vector<sf::Vector2f> spawnPoints = {sf::Vector2f(400.f,10.f)};
         Stage s = Stage(1, stageObjects, spawnPoints);
-        gameState.setStage(s);
+        Stage s2 = createMap_TestAll();
+        gameState.setStage(s2);
     }
     
     //enter the main loop

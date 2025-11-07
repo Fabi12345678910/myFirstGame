@@ -5,9 +5,8 @@
 static sf::Color colorForStageType(StageObjectType t) {
     switch (t) {
         case StageObjectType::Solid:      return sf::Color(130, 130, 130);   // gray
-        case StageObjectType::SemiSolid:  return sf::Color(90, 170, 255);    // blue
-        case StageObjectType::HazardLava: return sf::Color(220, 60, 30);     // red/orange
-        case StageObjectType::HazardSpike:return sf::Color(200, 200, 220);   // light gray
+        case StageObjectType::HalfSolid:  return sf::Color(90, 170, 255);    // blue
+        case StageObjectType::Death: return sf::Color(220, 60, 30);     // red/orange
         default:                          return sf::Color::White;
     }
 }
