@@ -1,6 +1,18 @@
 #include "Game.h"
 #include "StageObject.h"
 #include <iostream>
+#include "GameUpdate.h"
+
+static sf::Color colorFor(StageObjectType t) {
+    switch (t) {
+        case StageObjectType::Solid:         return sf::Color{130,130,130};  // gray
+        case StageObjectType::HalfSolid:     return sf::Color{90,170,255};   // blue
+        case StageObjectType::Death:         return sf::Color{220,60,30};    // red
+        case StageObjectType::JumpPad:       return sf::Color{250,220,60};   // yellow
+        case StageObjectType::MovingPlatform:return sf::Color{150,110,200};  // purple
+        default:                             return sf::Color{180,180,180};
+    }
+}
 
 void Game::run() {
     sf::Clock clock;
@@ -38,94 +50,41 @@ void Game::processEvents() {
     }
 }
 
-void onCollision(Player& player, GameObject const & other) {
-    sf::FloatRect playerBounds = player.getShape().getGlobalBounds();
-    sf::FloatRect otherBounds = other.getShape().getGlobalBounds();
-    sf::Vector2f playerVelocity = player.getVelocity();
-
-    float dx = (playerBounds.position.x + playerBounds.size.x / 2.f) 
-         - (otherBounds.position.x + otherBounds.size.x / 2.f);
-
-    float dy = (playerBounds.position.y + playerBounds.size.y / 2.f) 
-         - (otherBounds.position.y + otherBounds.size.y / 2.f);
-
-
-    float combinedHalfWidths = (playerBounds.size.x / 2.f) + (otherBounds.size.x / 2.f);
-    float combinedHalfHeights = (playerBounds.size.y / 2.f) + (otherBounds.size.y / 2.f);
-
-    // Only handle if actually colliding
-    float overlapX = combinedHalfWidths - abs(dx);
-    float overlapY = combinedHalfHeights - abs(dy);
-
-    if (overlapX < overlapY) {
-        // Horizontal collision
-        if (dx > 0.f) {
-            // Player is on the right
-            player.getShape().move(sf::Vector2f(overlapX, 0.f));
-            std::cout << "Collision from left\n";
-        } else {
-            // Player is on the left
-            player.getShape().move(sf::Vector2f(-overlapX, 0.f));
-            std::cout << "Collision from right\n";
-        }
-        playerVelocity.x = 0.f;
-        player.setVelocity(playerVelocity);
-    } else {
-        // Vertical collision
-        if (dy > 0.f) {
-            // Player is below
-            player.getShape().move(sf::Vector2f(0.f, overlapY));
-            playerVelocity.y = 0.f;
-            player.setVelocity(playerVelocity);
-            std::cout << "Collision from above\n";
-        } else {
-            // Player is above
-            player.getShape().move(sf::Vector2f(0.f, -overlapY));
-            playerVelocity.y = 0.f;
-            player.setVelocity(playerVelocity);
-            player.setIsOnGround(true);
-            std::cout << "Collision from below / landed\n";
-        }
-    }
-}
-
 void Game::update(float deltaTime) {
-    for(Player& player : gameState.getPlayers()){
-
-        player.setIsOnGround(false);
-
-        sf::Vector2f playerVelocity = player.getVelocity();
-        if (!player.getIsOnGround()) {
-            playerVelocity.y += player.getGravity() * deltaTime;
-        } else {
-            playerVelocity.y = 0.f;
-        }
-        player.setVelocity(playerVelocity);
-
-        player.getShape().move(player.getVelocity() * deltaTime);
-
-        //somehow check all objects, idk how yet
-        for (StageObject const &stageObject: gameState.getStage().getStageObjects()){
-
-            const Collidable *collidable = dynamic_cast<const Collidable*>(&stageObject);
-            if(collidable != NULL){
-
-            if (player.getShape().getGlobalBounds().findIntersection(stageObject.getShape().getGlobalBounds())) {
-                std::cout << "detected collision\n";
-                onCollision(player, stageObject);
-            }}
-        }
-    }
+    updateGame(gameState, deltaTime);
 }
-
 
 void Game::render() {
-    window.clear(sf::Color::Yellow);
-    for(Player& player:gameState.getPlayers()){
-        window.draw(player.getShape());
+    // 1) Background
+    window.clear(sf::Color{25,25,28}); // dark gray
+
+    // 2) Ground (tiles) — visible rectangles with per-type color
+    for (const StageObject& obj : gameState.getStage().getStageObjects()) {
+        sf::RectangleShape rect = obj.getShape();
+        rect.setFillColor(colorFor(obj.getType()));         // <<< important
+        rect.setOutlineThickness(1.f);
+        rect.setOutlineColor(sf::Color{0,0,0,50});
+        window.draw(rect);
     }
-    for (StageObject const& stageObject : gameState.getStage().getStageObjects()) {
-        window.draw(stageObject.getShape());
+
+    // 3) Players
+    for (const Player& p : gameState.getPlayers()) {
+        sf::RectangleShape rect = p.getShape();
+        rect.setOutlineThickness(1.f);
+        rect.setOutlineColor(sf::Color{20,20,20,90});
+        if (!p.getTexture()) rect.setFillColor(sf::Color{255,220,60});
+        window.draw(rect);
+    }
+
+    // 4) Foreground overlays — none yet
+
+    // spawn points
+    for (const sf::Vector2f& sp : gameState.getStage().getSpawnPoints()) {
+        sf::CircleShape dot{5.f};
+        dot.setOrigin(sf::Vector2f{5.f,5.f});
+        dot.setPosition(sp);
+        dot.setFillColor(sf::Color{60,230,90});
+        window.draw(dot);
     }
 
     window.display();

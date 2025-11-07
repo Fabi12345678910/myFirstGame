@@ -1,2 +1,4 @@
-build/
+/build/
+.vscode/launch.json
 .vscode/settings.json
+CMakePresets.json

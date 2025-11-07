@@ -1,31 +1,31 @@
 #pragma once
+#include "Collidable.h"
+#include "Movable.h"
+#include "GameObject.h"
 #include <SFML/Graphics.hpp>
-#include <Collidable.h>
-#include <Movable.h>
 
-class Player : public Collidable, public Movable, public GameObject{
+class Player : public Collidable, public Movable, public GameObject {
 private:
-    bool isOnGround = false;
-    float gravity = 800.f;
-    float speed = 400.f;
-    float health = 10;
+    bool  isOnGround = false;
+    float gravity    = 800.f;
+    float speed      = 400.f;
+    float health     = 10.f;
 
 public:
-    Player(OBJECT_ID_TYPE id, sf::Vector2f size, sf::Vector2f position) : GameObject(id, size, position){}
+    Player(OBJECT_ID_TYPE id, sf::Vector2f size, sf::Vector2f position)
+        : GameObject(id, size, position) {}
 
-
-    float getIsOnGround() const { return isOnGround; }
-    void setIsOnGround(bool isOnGround) { this->isOnGround = isOnGround; }
+    bool  getIsOnGround() const { return isOnGround; }
+    void  setIsOnGround(bool v) { isOnGround = v; }
 
     float getGravity() const { return gravity; }
-    void setGravity(float gravity) { this->gravity = gravity; }
+    void  setGravity(float g) { gravity = g; }
 
     float getSpeed() const { return speed; }
-    void setSpeed(float gravity) { this->speed = speed; }
+    void  setSpeed(float s) { speed = s; }
 
     float getHealth() const { return health; }
-    void setHealth(float health) { this->health = health; }
-
+    void  setHealth(float h) { health = h; }
     // Player(float width, float height, float x, float y);
     // sf::FloatRect getBounds() const override;
     // void update(float dt) override;
