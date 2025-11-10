@@ -1,5 +1,5 @@
 #pragma once
-#include "Collidable.h"
+#include <collision/Collidable.h>
 #include "Movable.h"
 #include "GameObject.h"
 #include <SFML/Graphics.hpp>
@@ -26,6 +26,11 @@ public:
 
     float getHealth() const { return health; }
     void  setHealth(float h) { health = h; }
+
+    virtual void accept(CollidableVisitor& v) override{
+        v.visit(*this);
+    }
+    
     // Player(float width, float height, float x, float y);
     // sf::FloatRect getBounds() const override;
     // void update(float dt) override;

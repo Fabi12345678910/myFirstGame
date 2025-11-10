@@ -1,13 +1,15 @@
 #pragma once
-#include "Collidable.h"
+#include <collision/Collidable.h>
+#include <collision/CollidableVisitor.h>
 #include "GameObject.h"
 #include <SFML/Graphics.hpp>
 
 enum class StageObjectType {
     Solid,         // This is the full solid block, can't pass through on any side
-    HalfSolid,     // This one is the one where u can jump up from below but still colide from top/sides
-    Death,         // touching this tile kills the player
+    SemiSolid,     // This one is the one where u can jump up from below but still colide from top/sides
+    Hazard,         // touching this tile kills the player
     MovingPlatform,// solid but with motion
+    Trigger,
     JumpPad        // trigger: vertical launch pad
 };
 
@@ -23,13 +25,17 @@ public:
 
     StageObjectType getType() const { return type; }
 
-    CollisionKind collisionKind() const override {
-        switch (type) {
-            case StageObjectType::HalfSolid:      return CollisionKind::SemiSolid;
-            case StageObjectType::Death:          return CollisionKind::Hazard;
-            case StageObjectType::JumpPad:        return CollisionKind::Trigger;
-            case StageObjectType::MovingPlatform: return CollisionKind::Solid;
-            default:                              return CollisionKind::Solid;
-        }
+    // CollisionKind collisionKind() const {
+    //     switch (type) {
+    //         case StageObjectType::SemiSolid:      return CollisionKind::SemiSolid;
+    //         case StageObjectType::Hazard:          return CollisionKind::Hazard;
+    //         case StageObjectType::JumpPad:        return CollisionKind::Trigger;
+    //         case StageObjectType::MovingPlatform: return CollisionKind::Solid;
+    //         default:                              return CollisionKind::Solid;
+    //     }
+    // }
+
+    virtual void accept(CollidableVisitor& v) override{
+        v.visit(*this);
     }
 };

@@ -1,4 +1,5 @@
 #pragma once
+#include <collision/CollidableVisitor.h>
 
 enum class CollisionKind {
     None,
@@ -10,7 +11,7 @@ enum class CollisionKind {
 
 class Collidable {
 public:
-    virtual ~Collidable() = default;
-    // Default behavior; StageObject will override based on its type.
-    virtual CollisionKind collisionKind() const { return CollisionKind::Solid; }
+    virtual void accept(CollidableVisitor&) = 0;
+    static void onCollision(Collidable& c1, Collidable& c2);
+    static void secureReverseCollision(Collidable& c1, Collidable& c2);
 };

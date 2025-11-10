@@ -23,7 +23,7 @@ FetchContent_Declare(SFML
 )
 FetchContent_MakeAvailable(SFML)
 
-include_directories(include)
+include_directories(${CMAKE_SOURCE_DIR}/include)
 
 # Helper function: auto-copy dependent DLLs beside the exe (Windows)
 function(enable_autocopy_runtime_dlls targetName)

@@ -1,7 +1,7 @@
 #include "GameUpdate.h"
 #include <iostream>
 #include "StageObject.h"
-#include "Collidable.h"
+#include <collision/Collidable.h>
 
 void onCollision(Player& player, const GameObject& other);
 
@@ -54,12 +54,12 @@ static void handleTileCollision(Player& player,
                                 float prevBottomY,
                                 const Stage& stage)
 {
-    switch (tile.collisionKind()) {
-        case CollisionKind::Solid: {
+    switch (tile.getType()) {
+        case StageObjectType::Solid: {
             onCollision(player, static_cast<const GameObject&>(tile));
             break;
         }
-        case CollisionKind::SemiSolid: {
+        case StageObjectType::SemiSolid: {
             // One-way platform: only land when falling from above and crossing the top
             const sf::FloatRect pNow = player.getShape().getGlobalBounds();
             const sf::FloatRect tBox = tile.getShape().getGlobalBounds();
@@ -76,11 +76,11 @@ static void handleTileCollision(Player& player,
             }
             break;
         }
-        case CollisionKind::Hazard: {
+        case StageObjectType::Hazard: {
             respawnToFirstSpawn(player, stage);
             break;
         }
-        case CollisionKind::Trigger: {
+        case StageObjectType::JumpPad: {
             const sf::FloatRect pNow = player.getShape().getGlobalBounds();
             const sf::FloatRect tBox = tile.getShape().getGlobalBounds();
             const bool movingDown = player.getVelocity().y > 0.f;

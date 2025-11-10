@@ -6,8 +6,8 @@
 static sf::Color colorFor(StageObjectType t) {
     switch (t) {
         case StageObjectType::Solid:         return sf::Color{130,130,130};  // gray
-        case StageObjectType::HalfSolid:     return sf::Color{90,170,255};   // blue
-        case StageObjectType::Death:         return sf::Color{220,60,30};    // red
+        case StageObjectType::SemiSolid:     return sf::Color{90,170,255};   // blue
+        case StageObjectType::Hazard:         return sf::Color{220,60,30};    // red
         case StageObjectType::JumpPad:       return sf::Color{250,220,60};   // yellow
         case StageObjectType::MovingPlatform:return sf::Color{150,110,200};  // purple
         default:                             return sf::Color{180,180,180};
