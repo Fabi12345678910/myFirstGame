@@ -34,6 +34,7 @@ void Renderer::render(GameState& gameState) {
 
     // ---- Players ----
     for (Player& player : gameState.getPlayers()) {
+        if (player.getIsEliminated()) continue; // don't render eliminated players
         sf::RectangleShape rect = player.getShape();
         rect.setFillColor(sf::Color(255, 220, 60));
         rect.setOutlineThickness(1.f);

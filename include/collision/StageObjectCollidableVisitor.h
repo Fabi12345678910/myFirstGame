@@ -13,9 +13,9 @@ public:
     }
 
     virtual void visit(Player& player) override{
-        std::cout << "stageObject collided with player\n";
+        //std::cout << "stageObject collided with player\n";
     }
     virtual void visit(StageObject& stageObject2){
-        std::cout << "stageObject collided with platform\n";
+        //std::cout << "stageObject collided with platform\n";
     }
 };

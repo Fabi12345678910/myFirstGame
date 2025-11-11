@@ -7,6 +7,7 @@
 class Player : public Collidable, public Movable, public GameObject {
 private:
     bool  isOnGround = false;
+    bool  isEliminated = false; // removed for current round
     float gravity    = 800.f;
     float speed      = 400.f;
     float health     = 10.f;
@@ -17,6 +18,9 @@ public:
 
     bool  getIsOnGround() const { return isOnGround; }
     void  setIsOnGround(bool v) { isOnGround = v; }
+
+    bool  getIsEliminated() const { return isEliminated; }
+    void  setIsEliminated(bool v) { isEliminated = v; }
 
     float getGravity() const { return gravity; }
     void  setGravity(float g) { gravity = g; }

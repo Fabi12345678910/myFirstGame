@@ -52,6 +52,8 @@ add_executable(MyGameLocal
     src/operations/GameUpdate.cpp
     src/operations/PlayerOperations.cpp
     src/maps/Map_TestAll.cpp
+    src/collision/Collidable.cpp
+    src/collision/PlayerCollidableVisitor.cpp
 )
 target_link_libraries(MyGameLocal PRIVATE
     SFML::Network SFML::System SFML::Window SFML::Graphics SFML::Audio
@@ -87,6 +89,8 @@ add_executable(Server
     src/networking/Connection.cpp
     src/networking/ServerSocket.cpp
     src/maps/Map_TestAll.cpp
+    src/collision/Collidable.cpp
+    src/collision/PlayerCollidableVisitor.cpp
 )
 target_link_libraries(Server PRIVATE
     SFML::Network SFML::System SFML::Window SFML::Graphics SFML::Audio
@@ -102,6 +106,8 @@ add_executable(Client
     src/networking/Connection.cpp
     src/networking/ServerSocket.cpp
     src/maps/Map_TestAll.cpp
+    src/collision/Collidable.cpp
+    src/collision/PlayerCollidableVisitor.cpp
 )
 target_link_libraries(Client PRIVATE
     SFML::Network SFML::System SFML::Window SFML::Graphics SFML::Audio
