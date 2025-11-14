@@ -27,7 +27,7 @@ public:
         switch (type) {
             case StageObjectType::HalfSolid:      return CollisionKind::SemiSolid;
             case StageObjectType::Death:          return CollisionKind::Hazard;
-            case StageObjectType::JumpPad:        return CollisionKind::Trigger;
+            case StageObjectType::JumpPad:        return CollisionKind::JumpPad;
             case StageObjectType::MovingPlatform: return CollisionKind::Solid;
             default:                              return CollisionKind::Solid;
         }
