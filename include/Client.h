@@ -7,7 +7,7 @@
 
 #include <queue>
 #include <mutex>
-struct eventHandlerData{
+struct clientEventHandlerData{
     std::queue<std::tuple<ClientConnection&, std::unique_ptr<Event>>> connectionEventsQueue;
     std::mutex connectionEventsMutex;
 };
@@ -25,10 +25,10 @@ private:
     void mainLoop();
     void processInputs();
     GameState gameState = GameState();
-    struct eventHandlerData eventData;
+    struct clientEventHandlerData eventData;
     ClientConnection conn;
 public:
     void run();
-    Client(/* args */);
+    Client();
     ~Client(){};
 };

@@ -16,8 +16,8 @@ Client::Client() : conn({127, 0, 0, 1}){
     performLogin();
 }
 
-void* eventHandler(std::unique_ptr<Event> ev, Connection& conn, void* args) {
-    struct eventHandlerData *handle = (eventHandlerData*) args;
+void* clientEventHandler(std::unique_ptr<Event> ev, Connection& conn, void* args) {
+    struct clientEventHandlerData *handle = (clientEventHandlerData*) args;
     std::lock_guard<std::mutex> queueLockGuard(handle->connectionEventsMutex);
     ClientConnection* clientConn = dynamic_cast<ClientConnection*>(&conn);
     if(clientConn == NULL){
@@ -33,7 +33,7 @@ void Client::performLogin(){
     
     conn.sendEvent(EventLoginRequest());
     conn.setArgs(&eventData);
-    conn.setEventHandler(eventHandler);
+    conn.setEventHandler(clientEventHandler);
     while (true)
     {
         sf::sleep(sf::milliseconds(20));
@@ -153,11 +153,4 @@ void Client::processInputs(){
             conn.sendEvent(EventPlayerVelocity(playerId, playerVelocity));
         }
     }
-}
-
-int main(int argc, char const *argv[])
-{
-    Client client;
-    client.run();
-    return 0;
 }

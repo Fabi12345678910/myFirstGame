@@ -16,8 +16,8 @@
 //Tickrate in milliseconds per ticks
 #define TICKRATE_MS 10
 
-void* eventHandler(std::unique_ptr<Event> ev, Connection& conn, void* args) {
-    struct eventHandlerData *handle = (eventHandlerData*) args;
+void* serverEventHandler(std::unique_ptr<Event> ev, Connection& conn, void* args) {
+    struct serverEventHandlerData *handle = (serverEventHandlerData*) args;
     std::lock_guard<std::mutex> queueLockGuard(handle->connectionEventsMutex);
     ServerConnection* serverConn = dynamic_cast<ServerConnection*>(&conn);
     if(serverConn == NULL){
@@ -56,7 +56,7 @@ void Server::run(){
         gameState.setStage(s2);
     }
     serverSocket.setArgs(&eventData);
-    serverSocket.setEventHandler(eventHandler);
+    serverSocket.setEventHandler(serverEventHandler);
     for(OBJECT_ID_TYPE i = 1; i<= MAX_PLAYERS; i++){
         availablePlayerIds.push(i);
     }
@@ -139,13 +139,6 @@ void Server::processEvents(){
 
 void Server::updateGamestate(float deltaTime){
     updateGame(gameState, deltaTime);
-}
-
-int main(int argc, char const *argv[])
-{
-    Server server;
-    server.run();
-    return 0;
 }
 
 void Server::someTimesResyncPlayers(){

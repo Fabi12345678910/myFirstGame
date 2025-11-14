@@ -46,17 +46,23 @@ target_link_libraries(eventTest PRIVATE SFML::Network)
 enable_autocopy_runtime_dlls(eventTest)
 
 # --- LOCAL sandbox (always build) ---
-add_executable(MyGameLocal
-    src/main.cpp
-    src/Game.cpp
+add_executable(LocalGame
+    src/StartLocalGame.cpp
+    src/Server.cpp
+    src/Client.cpp
     src/operations/GameUpdate.cpp
     src/operations/PlayerOperations.cpp
+    src/networking/Events.cpp
+    src/rendering/Renderer.cpp
+    src/networking/Connection.cpp
+    src/networking/ServerSocket.cpp
     src/maps/Map_TestAll.cpp
+    src/operations/collisions/PlayerCollisions.cpp
 )
-target_link_libraries(MyGameLocal PRIVATE
+target_link_libraries(LocalGame PRIVATE
     SFML::Network SFML::System SFML::Window SFML::Graphics SFML::Audio
 )
-enable_autocopy_runtime_dlls(MyGameLocal)
+enable_autocopy_runtime_dlls(LocalGame)
 
 # --- Networking & test executables (skip on Windows due to POSIX headers) ---
 if (NOT WIN32)
@@ -80,6 +86,7 @@ enable_autocopy_runtime_dlls(ConnectionTestServer)
 
 add_executable(Server
     src/Server.cpp
+    src/StartServer.cpp
     src/operations/GameUpdate.cpp
     src/operations/PlayerOperations.cpp
     src/networking/Events.cpp
@@ -87,6 +94,7 @@ add_executable(Server
     src/networking/Connection.cpp
     src/networking/ServerSocket.cpp
     src/maps/Map_TestAll.cpp
+    src/operations/collisions/PlayerCollisions.cpp
 )
 target_link_libraries(Server PRIVATE
     SFML::Network SFML::System SFML::Window SFML::Graphics SFML::Audio
@@ -95,6 +103,7 @@ enable_autocopy_runtime_dlls(Server)
 
 add_executable(Client
     src/Client.cpp
+    src/StartClient.cpp
     src/operations/GameUpdate.cpp
     src/operations/PlayerOperations.cpp
     src/rendering/Renderer.cpp
@@ -102,6 +111,7 @@ add_executable(Client
     src/networking/Connection.cpp
     src/networking/ServerSocket.cpp
     src/maps/Map_TestAll.cpp
+    src/operations/collisions/PlayerCollisions.cpp
 )
 target_link_libraries(Client PRIVATE
     SFML::Network SFML::System SFML::Window SFML::Graphics SFML::Audio
@@ -131,7 +141,7 @@ endif()
 # Make running from VS/VSCode look at repo root for assets
 # Only set properties for targets that actually exist
 set(_WD "${CMAKE_SOURCE_DIR}")
-set_property(TARGET MyGameLocal PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${_WD}")
+set_property(TARGET LocalGame PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${_WD}")
 if (TARGET Client)
     set_property(TARGET Client PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${_WD}")
 endif()

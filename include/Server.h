@@ -14,7 +14,7 @@
     #include "Renderer.h"
 #endif
 
-struct eventHandlerData{
+struct serverEventHandlerData{
     std::queue<std::tuple<ServerConnection&, std::unique_ptr<Event>>> connectionEventsQueue;
     std::mutex connectionEventsMutex;
 };
@@ -30,7 +30,7 @@ private:
     GameState gameState = GameState();
     std::queue<OBJECT_ID_TYPE> availablePlayerIds;
     std::queue<OBJECT_ID_TYPE> availableObjectIds;
-    struct eventHandlerData eventData;
+    struct serverEventHandlerData eventData;
     ServerSocket serverSocket;
 
     #if ENABLE_SERVER_RENDERING
