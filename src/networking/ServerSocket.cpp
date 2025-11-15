@@ -11,7 +11,7 @@ void *connectionAccepter(void * arg){
             continue;
         }
 
-        serverSock->connections.push_back(std::make_unique<ServerConnection>(std::move(sock), serverSock->args));
+        serverSock->connections.push_back(std::make_unique<ServerConnection>(std::move(sock), serverSock->udpSocket , sock->getRemoteAddress().value(), 0, serverSock->args));
         if (serverSock->eventHandler != NULL){
             serverSock->connections.back()->setEventHandler(serverSock->eventHandler);
         }
@@ -21,9 +21,11 @@ void *connectionAccepter(void * arg){
 
 ServerSocket::ServerSocket(unsigned short listenerPort){
     this->port = listenerPort;
-    if (listener.listen(this->port) != sf::Socket::Status::Done)
-    {
-        throw std::runtime_error("error listening on port");
+    if (listener.listen(this->port) != sf::Socket::Status::Done){
+        throw std::runtime_error("error listening on tcp port");
+    }
+    if(this->udpSocket.bind(listenerPort) != sf::Socket::Status::Done){
+        throw std::runtime_error("error listening on udp port");
     }
     pthread_create(&connectionHandlerThread, NULL, connectionAccepter, this);
 }
@@ -51,7 +53,7 @@ void ServerSocket::setArgs(void* args){
 void ServerSocket::sendEventToEveryone(Event &&ev){
     for (std::unique_ptr<ServerConnection>& connection : connections){
         if(connection->eventHandler!= NULL){
-            connection->sendEvent(ev);
+            connection->sendTcpEvent(ev);
         }
     }
 }

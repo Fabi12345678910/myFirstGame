@@ -10,6 +10,7 @@ private:
     unsigned short port;
 public:
     sf::TcpListener listener;
+    sf::UdpSocket udpSocket;
     std::list<std::unique_ptr<ServerConnection>> connections;
     void*(*eventHandler)(std::unique_ptr<Event>, Connection&, void* args) = NULL;
     pthread_t connectionHandlerThread;

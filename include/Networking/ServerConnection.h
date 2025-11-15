@@ -8,8 +8,9 @@ class ServerConnection : public Connection
 private:
     OBJECT_ID_TYPE playerId = 0;
 public:
-    ServerConnection(std::unique_ptr<sf::TcpSocket> ptr, void* args = NULL)
-        : Connection(std::move(ptr), args) {}
+    ServerConnection(std::unique_ptr<sf::TcpSocket> tcpSocket, sf::UdpSocket& udpSocket, sf::IpAddress udpReceipientIpAdress, unsigned short udpRecipientPort, void* eventHandlerArgs = NULL)
+        : Connection(std::move(tcpSocket), udpSocket, udpReceipientIpAdress, udpRecipientPort, eventHandlerArgs){
+    }
     OBJECT_ID_TYPE getPlayerId(){
         return playerId;
     }

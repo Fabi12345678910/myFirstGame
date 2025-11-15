@@ -101,17 +101,17 @@ void Server::processEvents(){
             std::cout << "got a new login request\n";
             if(availablePlayerIds.empty()){
                 //no new SLOT
-                conn.sendEvent(EventLoginDenied(0));
+                conn.sendTcpEvent(EventLoginDenied(0));
             }else{
 
                 OBJECT_ID_TYPE nextPlayerId = availablePlayerIds.front();
                 availablePlayerIds.pop();
                 conn.setPlayerId(nextPlayerId);
-                conn.sendEvent(EventLoginConfirmation(nextPlayerId));
+                conn.sendTcpEvent(EventLoginConfirmation(nextPlayerId));
                 
                 //send all players to current player for now, should later be included in a gamestate sync
                 for(Player& p : gameState.getPlayers()){
-                    conn.sendEvent(EventSpawnNewPlayer(p.getPosition(), p.getId()));
+                    conn.sendTcpEvent(EventSpawnNewPlayer(p.getPosition(), p.getId()));
                 }
                 gameState.addPlayer(Player(nextPlayerId, sf::Vector2f(40.f, 40.f), sf::Vector2f(400.f, 10.f)));
                 

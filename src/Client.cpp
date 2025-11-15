@@ -12,7 +12,8 @@
 
 #include "maps/Map_TestAll.h"
 
-Client::Client() : conn({127, 0, 0, 1}){
+Client::Client() : conn(ClientConnection::createClientConnection({127, 0, 0, 1}, 42069)){
+    
     performLogin();
 }
 
@@ -31,7 +32,7 @@ void* clientEventHandler(std::unique_ptr<Event> ev, Connection& conn, void* args
 
 void Client::performLogin(){
     
-    conn.sendEvent(EventLoginRequest());
+    conn.sendTcpEvent(EventLoginRequest());
     conn.setArgs(&eventData);
     conn.setEventHandler(clientEventHandler);
     while (true)
@@ -150,7 +151,7 @@ void Client::processInputs(){
             std::cout << "setting player velocity to" << playerVelocity.x << ',' << playerVelocity.y << '\n';
             gameState.getPlayer(playerId).setVelocity(playerVelocity);
             std::cout << "players gameState Velocity" << gameState.getPlayer(playerId).getVelocity().x << ',' << gameState.getPlayer(playerId).getVelocity().y << '\n';
-            conn.sendEvent(EventPlayerVelocity(playerId, playerVelocity));
+            conn.sendTcpEvent(EventPlayerVelocity(playerId, playerVelocity));
         }
     }
 }

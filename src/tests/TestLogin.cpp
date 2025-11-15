@@ -18,8 +18,8 @@ void* eventHandler(std::unique_ptr<Event> ev, Connection& conn, void* args) {
 }
 int main(int argc, char const *argv[])
 {
-    ClientConnection conn({127, 0, 0, 1});
-    conn.sendEvent(EventLoginRequest());
+    ClientConnection conn = ClientConnection::createClientConnection({127, 0, 0, 1}, 42069);
+    conn.sendTcpEvent(EventLoginRequest());
     conn.setEventHandler(eventHandler);
     sleep(1);
     return 0;

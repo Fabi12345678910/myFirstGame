@@ -37,7 +37,7 @@ void Connection::setEventHandler(void* handleEvent(std::unique_ptr<Event>, Conne
     pthread_create(&eventHandlerThread, NULL, eventHandlerFunction, this);
 }
 
-void Connection::sendEvent(const Event& ev){
+void Connection::sendTcpEvent(const Event& ev){
     sf::Packet pack = ev.toPacket();
     if(tcpSocket->send(pack) != sf::Socket::Status::Done){
         throw std::runtime_error("error sending event");
