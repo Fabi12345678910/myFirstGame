@@ -12,7 +12,8 @@
 
 #include "maps/Map_TestAll.h"
 
-Client::Client() : conn({127, 0, 0, 1}){
+Client::Client() : conn(ClientConnection::createClientConnection({127, 0, 0, 1}, 42069)){
+    
     performLogin();
 }
 
@@ -31,7 +32,7 @@ void* clientEventHandler(std::unique_ptr<Event> ev, Connection& conn, void* args
 
 void Client::performLogin(){
     
-    conn.sendEvent(EventLoginRequest());
+    conn.sendTcpEvent(EventLoginRequest(conn.getUdpPort()));
     conn.setArgs(&eventData);
     conn.setEventHandler(clientEventHandler);
     while (true)
@@ -44,7 +45,7 @@ void Client::performLogin(){
             Event* ev = std::get<1>(connEv).get();
             EventLoginConfirmation* evLoginSuccess = dynamic_cast<EventLoginConfirmation*>(ev);
             if(evLoginSuccess != NULL){
-                this->playerId = evLoginSuccess->getPlayerId();
+                this->playerId = evLoginSuccess->playerId;
                 return;
             }
             EventLoginDenied*evLoginDenied  = dynamic_cast<EventLoginDenied*>(ev);
@@ -87,20 +88,20 @@ void Client::processEvents(){
         //somehow handle tha event
         EventSpawnNewPlayer *evSpawnNewPlayer = dynamic_cast<EventSpawnNewPlayer*>(ev);
         if(evSpawnNewPlayer != NULL){
-            if(evSpawnNewPlayer->getPlayerId() == this->playerId){
+            if(evSpawnNewPlayer->playerId == this->playerId){
                 // we have spawned and can now start the game
                 clientState = PLAYING;
 
             }
-            gameState.addPlayer(Player(evSpawnNewPlayer->getPlayerId(), sf::Vector2f(40.f, 40.f),evSpawnNewPlayer->getLocation()));
+            gameState.addPlayer(Player(evSpawnNewPlayer->playerId, sf::Vector2f(40.f, 40.f),evSpawnNewPlayer->location));
         }
         EventPlayerVelocity *evPlayerVelocity = dynamic_cast<EventPlayerVelocity*>(ev);
         if(evPlayerVelocity != NULL){
-            updatePlayerVelocity(gameState, evPlayerVelocity->getPlayerId(),evPlayerVelocity->getVelocity());
+            updatePlayerVelocity(gameState, evPlayerVelocity->playerId,evPlayerVelocity->velocity);
         }
         EventPlayerLocation *evPlayerLocation = dynamic_cast<EventPlayerLocation*>(ev);
         if(evPlayerLocation != NULL){
-            updatePlayerLocation(gameState, evPlayerLocation->getPlayerId(),evPlayerLocation->getLocation());
+            updatePlayerLocation(gameState, evPlayerLocation->playerId,evPlayerLocation->location);
         }
         eventData.connectionEventsQueue.pop();
     }
@@ -150,7 +151,7 @@ void Client::processInputs(){
             std::cout << "setting player velocity to" << playerVelocity.x << ',' << playerVelocity.y << '\n';
             gameState.getPlayer(playerId).setVelocity(playerVelocity);
             std::cout << "players gameState Velocity" << gameState.getPlayer(playerId).getVelocity().x << ',' << gameState.getPlayer(playerId).getVelocity().y << '\n';
-            conn.sendEvent(EventPlayerVelocity(playerId, playerVelocity));
+            conn.sendTcpEvent(EventPlayerVelocity(playerId, playerVelocity));
         }
     }
 }

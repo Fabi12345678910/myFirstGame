@@ -55,6 +55,7 @@ add_executable(LocalGame
     src/networking/Events.cpp
     src/rendering/Renderer.cpp
     src/networking/Connection.cpp
+    src/networking/ClientConnection.cpp
     src/networking/ServerSocket.cpp
     src/maps/Map_TestAll.cpp
     src/operations/collisions/PlayerCollisions.cpp
@@ -71,6 +72,7 @@ add_executable(ConnectionTestClient
     src/tests/ConnectionTestClient.cpp
     src/networking/Events.cpp
     src/networking/Connection.cpp
+    src/networking/ClientConnection.cpp
 )
 target_link_libraries(ConnectionTestClient PRIVATE SFML::Network)
 enable_autocopy_runtime_dlls(ConnectionTestClient)
@@ -80,6 +82,7 @@ add_executable(ConnectionTestServer
     src/networking/Events.cpp
     src/networking/Connection.cpp
     src/networking/ServerSocket.cpp
+    src/networking/ClientConnection.cpp
 )
 target_link_libraries(ConnectionTestServer PRIVATE SFML::Network)
 enable_autocopy_runtime_dlls(ConnectionTestServer)
@@ -109,6 +112,7 @@ add_executable(Client
     src/rendering/Renderer.cpp
     src/networking/Events.cpp
     src/networking/Connection.cpp
+    src/networking/ClientConnection.cpp
     src/networking/ServerSocket.cpp
     src/maps/Map_TestAll.cpp
     src/operations/collisions/PlayerCollisions.cpp
@@ -121,6 +125,7 @@ enable_autocopy_runtime_dlls(Client)
 add_executable(TestLogin
     src/tests/TestLogin.cpp
     src/networking/Events.cpp
+    src/networking/ClientConnection.cpp
     src/networking/Connection.cpp
     src/networking/ServerSocket.cpp
 )

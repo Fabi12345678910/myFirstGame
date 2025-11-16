@@ -1,4 +1,5 @@
 #include "Networking/ServerSocket.h"
+#include "Networking/Events.h"
 
 void *connectionAccepter(void * arg){
     ServerSocket *serverSock = (ServerSocket*) arg;
@@ -11,7 +12,7 @@ void *connectionAccepter(void * arg){
             continue;
         }
 
-        serverSock->connections.push_back(std::make_unique<ServerConnection>(std::move(sock), serverSock->args));
+        serverSock->connections.push_back(std::make_unique<ServerConnection>(std::move(sock), serverSock->udpSocket , sock->getRemoteAddress().value(), 0, serverSock->args));
         if (serverSock->eventHandler != NULL){
             serverSock->connections.back()->setEventHandler(serverSock->eventHandler);
         }
@@ -19,11 +20,28 @@ void *connectionAccepter(void * arg){
     }    
 }
 
+void *udpListener(void* arg){
+    ServerSocket *serverSock = (ServerSocket*) arg;
+    sf::Packet packet;
+    std::optional<sf::IpAddress> remoteAdress;
+    unsigned short remotePort;
+    while (true)
+    {
+        if(serverSock->udpSocket.receive(packet, remoteAdress, remotePort) != sf::Socket::Status::Done){
+            std::cerr << "error reading udp packet";
+        }
+
+        serverSock->udpEventHandler(getEventFromPacket(packet), remoteAdress, remotePort, serverSock->udpArgs);
+    }
+}
+
 ServerSocket::ServerSocket(unsigned short listenerPort){
     this->port = listenerPort;
-    if (listener.listen(this->port) != sf::Socket::Status::Done)
-    {
-        throw std::runtime_error("error listening on port");
+    if (listener.listen(this->port) != sf::Socket::Status::Done){
+        throw std::runtime_error("error listening on tcp port");
+    }
+    if(this->udpSocket.bind(listenerPort) != sf::Socket::Status::Done){
+        throw std::runtime_error("error listening on udp port");
     }
     pthread_create(&connectionHandlerThread, NULL, connectionAccepter, this);
 }
@@ -41,6 +59,16 @@ void ServerSocket::setEventHandler(void* handleEvent(std::unique_ptr<Event>, Con
     }
 }
 
+void ServerSocket::setUdpEventHandler(void* udpEventHandler(std::unique_ptr<Event>, std::optional<sf::IpAddress>& remoteAddress, unsigned short& remotePort, void* args)){
+    if (this->udpEventHandler == NULL){
+        this->udpEventHandler = udpEventHandler;
+
+        pthread_create(&udpEventHandlerThread, NULL, udpListener, this);
+    }else{
+        throw std::runtime_error("udpEventHandler already set");
+    }
+}
+
 void ServerSocket::setArgs(void* args){
     this->args = args;
     for (std::unique_ptr<ServerConnection>& connection : connections){
@@ -51,7 +79,7 @@ void ServerSocket::setArgs(void* args){
 void ServerSocket::sendEventToEveryone(Event &&ev){
     for (std::unique_ptr<ServerConnection>& connection : connections){
         if(connection->eventHandler!= NULL){
-            connection->sendEvent(ev);
+            connection->sendTcpEvent(ev);
         }
     }
 }

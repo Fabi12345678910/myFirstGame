@@ -8,7 +8,7 @@ void* eventHandler(std::unique_ptr<Event> ev, Connection& conn, void* args) {
     std::cout << "got a new event!!\n";
     EventLoginConfirmation *evSuccess = dynamic_cast<EventLoginConfirmation*>(ev.get());
     if(evSuccess != NULL){
-        std::cout << "successfully logged in and got id: " << evSuccess->getPlayerId() << '\n';
+        std::cout << "successfully logged in and got id: " << evSuccess->playerId << '\n';
     }
     EventLoginDenied *evFail = dynamic_cast<EventLoginDenied*>(ev.get());
     if(evFail != NULL){
@@ -18,8 +18,8 @@ void* eventHandler(std::unique_ptr<Event> ev, Connection& conn, void* args) {
 }
 int main(int argc, char const *argv[])
 {
-    ClientConnection conn({127, 0, 0, 1});
-    conn.sendEvent(EventLoginRequest());
+    ClientConnection conn = ClientConnection::createClientConnection({127, 0, 0, 1}, 42069);
+    conn.sendTcpEvent(EventLoginRequest(conn.getUdpPort()));
     conn.setEventHandler(eventHandler);
     sleep(1);
     return 0;

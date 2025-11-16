@@ -101,17 +101,18 @@ void Server::processEvents(){
             std::cout << "got a new login request\n";
             if(availablePlayerIds.empty()){
                 //no new SLOT
-                conn.sendEvent(EventLoginDenied(0));
+                conn.sendTcpEvent(EventLoginDenied(0));
             }else{
 
                 OBJECT_ID_TYPE nextPlayerId = availablePlayerIds.front();
                 availablePlayerIds.pop();
                 conn.setPlayerId(nextPlayerId);
-                conn.sendEvent(EventLoginConfirmation(nextPlayerId));
+                conn.udpRecipientPort = evLoginRequest->udpPort;
+                conn.sendTcpEvent(EventLoginConfirmation(nextPlayerId));
                 
                 //send all players to current player for now, should later be included in a gamestate sync
                 for(Player& p : gameState.getPlayers()){
-                    conn.sendEvent(EventSpawnNewPlayer(p.getPosition(), p.getId()));
+                    conn.sendTcpEvent(EventSpawnNewPlayer(p.getPosition(), p.getId()));
                 }
                 gameState.addPlayer(Player(nextPlayerId, sf::Vector2f(40.f, 40.f), sf::Vector2f(400.f, 10.f)));
                 
@@ -121,15 +122,15 @@ void Server::processEvents(){
 
         EventPlayerVelocity *evVelocity = dynamic_cast<EventPlayerVelocity*>(ev);
         if(evVelocity != NULL){
-            std::cout << "received velocity update: " << evVelocity->getVelocity().x << ',' << evVelocity->getVelocity().y << '\n';
-            updatePlayerVelocity(gameState, conn.getPlayerId(), evVelocity->getVelocity());
-            serverSocket.sendEventToEveryone(EventPlayerVelocity(evVelocity->getPlayerId(), evVelocity->getVelocity()));
+            std::cout << "received velocity update: " << evVelocity->velocity.x << ',' << evVelocity->velocity.y << '\n';
+            updatePlayerVelocity(gameState, conn.getPlayerId(), evVelocity->velocity);
+            serverSocket.sendEventToEveryone(EventPlayerVelocity(evVelocity->playerId, evVelocity->velocity));
         }
 
         EventDebugMessage *evDebug = dynamic_cast<EventDebugMessage*>(ev);
         if(evDebug != NULL){
             std::cout << "got a debug message\n";
-            std::cout << "Debug message: " << evDebug->getMessage() << '\n';
+            std::cout << "Debug message: " << evDebug->message << '\n';
         }
 
         printf("processEvents: done processing event\n");

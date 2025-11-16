@@ -5,9 +5,8 @@
 
 class EventLoginDenied:public Event
 {
-private:
-    std::uint16_t cause;
 public:
+    std::uint16_t cause;
     EventLoginDenied(sf::Packet packet){
         if(!(packet >> cause)){
             throw std::runtime_error("failed to read player Id");
