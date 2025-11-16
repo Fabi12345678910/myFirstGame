@@ -13,7 +13,7 @@ int main(int argc, char const *argv[])
     
     EventDebugMessage *evDebug = dynamic_cast<EventDebugMessage*>(ev.get());
     if(evDebug != NULL){
-        std::cout << "debug_message: " << evDebug->getMessage() << "\n";
+        std::cout << "debug_message: " << evDebug->message << "\n";
     }else{
         printf("wasnt a debug message\n");
     }

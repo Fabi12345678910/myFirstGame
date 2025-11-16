@@ -6,9 +6,8 @@
 
 class EventLoginConfirmation:public Event
 {
-private:
-    OBJECT_ID_TYPE playerId;
 public:
+    OBJECT_ID_TYPE playerId;
     EventLoginConfirmation(sf::Packet packet){
         if(!(packet >> playerId)){
             throw std::runtime_error("failed to read player Id");
@@ -22,11 +21,5 @@ public:
         packet << (DATATYPE_EVENT_TYPE) EVENT_TYPE_LOGIN_CONFIRMATION;
         packet << playerId;
         return packet;
-    }
-    OBJECT_ID_TYPE getPlayerId(){
-        return playerId;
-    }
-    void setPlayerId(OBJECT_ID_TYPE id){
-        this->playerId = id;
     }
 };

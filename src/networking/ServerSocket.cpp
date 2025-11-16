@@ -1,4 +1,5 @@
 #include "Networking/ServerSocket.h"
+#include "Networking/Events.h"
 
 void *connectionAccepter(void * arg){
     ServerSocket *serverSock = (ServerSocket*) arg;
@@ -17,6 +18,21 @@ void *connectionAccepter(void * arg){
         }
         printf("created new client\n");
     }    
+}
+
+void *udpListener(void* arg){
+    ServerSocket *serverSock = (ServerSocket*) arg;
+    sf::Packet packet;
+    std::optional<sf::IpAddress> remoteAdress;
+    unsigned short remotePort;
+    while (true)
+    {
+        if(serverSock->udpSocket.receive(packet, remoteAdress, remotePort) != sf::Socket::Status::Done){
+            std::cerr << "error reading udp packet";
+        }
+
+        serverSock->udpEventHandler(getEventFromPacket(packet), remoteAdress, remotePort, serverSock->udpArgs);
+    }
 }
 
 ServerSocket::ServerSocket(unsigned short listenerPort){
@@ -40,6 +56,16 @@ void ServerSocket::setEventHandler(void* handleEvent(std::unique_ptr<Event>, Con
         }
     }else{
         throw std::runtime_error("eventHandler already set");
+    }
+}
+
+void ServerSocket::setUdpEventHandler(void* udpEventHandler(std::unique_ptr<Event>, std::optional<sf::IpAddress>& remoteAddress, unsigned short& remotePort, void* args)){
+    if (this->udpEventHandler == NULL){
+        this->udpEventHandler = udpEventHandler;
+
+        pthread_create(&udpEventHandlerThread, NULL, udpListener, this);
+    }else{
+        throw std::runtime_error("udpEventHandler already set");
     }
 }
 

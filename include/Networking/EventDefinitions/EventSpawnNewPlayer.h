@@ -7,10 +7,9 @@
 
 class EventSpawnNewPlayer:public Event
 {
-private:
+public:
     OBJECT_ID_TYPE playerId;
     sf::Vector2f location;
-public:
     EventSpawnNewPlayer(sf::Packet packet){
         if(!(packet >> playerId)){
             throw std::runtime_error("failed to new player id");
@@ -31,19 +30,5 @@ public:
         packet << location.x;
         packet << location.y;
         return packet;
-    }
-    sf::Vector2f getLocation(){
-        return location;
-    }
-    void setLocation(sf::Vector2f location){
-        this->location = location;
-    }
-
-    OBJECT_ID_TYPE getPlayerId(){
-        return playerId;
-    }
-
-    void setPlayerId(OBJECT_ID_TYPE playerId){
-        this->playerId = playerId;
     }
 };

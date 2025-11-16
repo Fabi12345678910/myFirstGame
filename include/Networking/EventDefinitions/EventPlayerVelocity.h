@@ -7,10 +7,9 @@
 
 class EventPlayerVelocity:public Event
 {
-private:
+public:
     OBJECT_ID_TYPE playerId;
     sf::Vector2f velocity;
-public:
     EventPlayerVelocity(sf::Packet packet){
         if(!(packet >> playerId)){
             throw std::runtime_error("failed to read playerId");
@@ -31,19 +30,5 @@ public:
         packet << velocity.x;
         packet << velocity.y;
         return packet;
-    }
-    sf::Vector2f getVelocity(){
-        return velocity;
-    }
-    void setVelocity(sf::Vector2f location){
-        this->velocity = location;
-    }
-    
-    OBJECT_ID_TYPE getPlayerId(){
-        return playerId;
-    }
-
-    void setPlayerId(OBJECT_ID_TYPE playerId){
-        this->playerId = playerId;
     }
 };

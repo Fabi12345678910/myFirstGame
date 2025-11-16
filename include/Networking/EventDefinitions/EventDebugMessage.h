@@ -5,9 +5,8 @@
 
 class EventDebugMessage:public Event
 {
-private:
-    std::string message;
 public:
+    std::string message;
     EventDebugMessage(sf::Packet packet){
         if(!(packet >> message)){
             throw std::runtime_error("failed to read debug message");
@@ -21,8 +20,5 @@ public:
         packet << (DATATYPE_EVENT_TYPE) EVENT_TYPE_DEBUG_MESSAGE;
         packet << message;
         return packet;
-    }
-    std::string getMessage() const {
-        return message;
     }
 };
