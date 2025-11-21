@@ -2,6 +2,18 @@
 #include "Networking/EventDefinitions/EventDebugMessage.h"
 #include "Networking/EventDefinitions/EventLoginRequest.h"
 
+#ifdef _WIN32
+int usleep(unsigned long usec){
+    Sleep(usec/1000);
+    return 0;
+}
+
+int sleep(unsigned long sec){
+    Sleep(sec * 1000);
+    return 0;
+}
+#endif
+
 void* udpEventHandler(std::unique_ptr<Event> ev, std::optional<sf::IpAddress>& remoteAddress, unsigned short& remotePort, void* args){
     std::cout << "got a new udp event!!\n";
     if(remoteAddress.has_value()){

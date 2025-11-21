@@ -2,6 +2,18 @@
 #include "Networking/EventDefinitions/EventDebugMessage.h"
 #include "Networking/EventDefinitions/EventLoginRequest.h"
 
+#ifdef _WIN32
+int usleep(unsigned long usec){
+    Sleep(usec/1000);
+    return 0;
+}
+
+int sleep(unsigned long sec){
+    Sleep(sec * 1000);
+    return 0;
+}
+#endif
+
 ServerSocket sock(42069);
 
 void *handleEvents(std::unique_ptr<Event> ev, Connection& conn, void* args){
