@@ -10,7 +10,7 @@ default:
   image: gcc:latest     # or clang, or your own build image
   before_script:
     - apt-get update
-    - apt-get install -y cmake make g++ build-essential
+    - apt-get install -y cmake make g++ build-essential gcc
     - apt-get install -y libx11-dev libxrandr-dev libxcursor-dev libxinerama-dev libxi-dev
     - apt-get install -y libglvnd-dev libglu1-mesa-dev libglx-dev
     - apt-get install -y libudev-dev
