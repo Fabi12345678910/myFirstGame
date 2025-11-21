@@ -1,7 +1,20 @@
 #include "Server.h"
 #include "Client.h"
+#include "Threads/Threads.h"
 pthread_t serverThread;
 pthread_t clientThread;
+
+#ifdef _WIN32
+int usleep(unsigned long usec){
+    Sleep(usec/1000);
+    return 0;
+}
+
+int sleep(unsigned long sec){
+    Sleep(sec * 1000);
+    return 0;
+}
+#endif
 
 void* runServer(void*){
     Server server;

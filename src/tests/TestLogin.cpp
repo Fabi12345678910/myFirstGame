@@ -3,6 +3,18 @@
 #include "Networking/EventDefinitions/EventLoginConfirmation.h"
 #include "Networking/EventDefinitions/EventLoginDenied.h"
 
+#ifdef _WIN32
+int usleep(unsigned long usec){
+    Sleep(usec/1000);
+    return 0;
+}
+
+int sleep(unsigned long sec){
+    Sleep(sec * 1000);
+    return 0;
+}
+#endif
+
 void* eventHandler(std::unique_ptr<Event> ev, Connection& conn, void* args) {
     (void) args;
     std::cout << "got a new event!!\n";

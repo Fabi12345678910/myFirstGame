@@ -1,9 +1,9 @@
 #pragma once
 #include "Networking/Event.h"
-#include <sys/socket.h>
-#include <unistd.h>
+#include "Threads/Threads.h"
 #include <SFML/Network.hpp>
 #include <memory>
+
 
 class Connection
 {

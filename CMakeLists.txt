@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.28)
-project(AdvancedCPP LANGUAGES CXX)
+project(AdvancedCPP LANGUAGES CXX C)
 
 # Global language standard
 set(CMAKE_CXX_STANDARD 17)
@@ -48,6 +48,7 @@ enable_autocopy_runtime_dlls(eventTest)
 # --- LOCAL sandbox (always build) ---
 add_executable(LocalGame
     src/StartLocalGame.cpp
+    src/threads/WinPThread.c
     src/Server.cpp
     src/Client.cpp
     src/operations/GameUpdate.cpp
@@ -66,10 +67,10 @@ target_link_libraries(LocalGame PRIVATE
 enable_autocopy_runtime_dlls(LocalGame)
 
 # --- Networking & test executables (skip on Windows due to POSIX headers) ---
-if (NOT WIN32)
 
 add_executable(ConnectionTestClient
     src/tests/ConnectionTestClient.cpp
+    src/threads/WinPThread.c
     src/networking/Events.cpp
     src/networking/Connection.cpp
     src/networking/ClientConnection.cpp
@@ -79,6 +80,7 @@ enable_autocopy_runtime_dlls(ConnectionTestClient)
 
 add_executable(ConnectionTestServer
     src/tests/ConnectionTestServer.cpp
+    src/threads/WinPThread.c
     src/networking/Events.cpp
     src/networking/Connection.cpp
     src/networking/ServerSocket.cpp
@@ -90,6 +92,7 @@ enable_autocopy_runtime_dlls(ConnectionTestServer)
 add_executable(Server
     src/Server.cpp
     src/StartServer.cpp
+    src/threads/WinPThread.c
     src/operations/GameUpdate.cpp
     src/operations/PlayerOperations.cpp
     src/networking/Events.cpp
@@ -107,6 +110,7 @@ enable_autocopy_runtime_dlls(Server)
 add_executable(Client
     src/Client.cpp
     src/StartClient.cpp
+    src/threads/WinPThread.c
     src/operations/GameUpdate.cpp
     src/operations/PlayerOperations.cpp
     src/rendering/Renderer.cpp
@@ -124,6 +128,7 @@ enable_autocopy_runtime_dlls(Client)
 
 add_executable(TestLogin
     src/tests/TestLogin.cpp
+    src/threads/WinPThread.c
     src/networking/Events.cpp
     src/networking/ClientConnection.cpp
     src/networking/Connection.cpp
@@ -133,8 +138,6 @@ target_link_libraries(TestLogin PRIVATE
     SFML::Network SFML::System SFML::Window SFML::Graphics SFML::Audio
 )
 enable_autocopy_runtime_dlls(TestLogin)
-
-endif() # NOT WIN32
 
 # (Optional) warnings
 if (MSVC)

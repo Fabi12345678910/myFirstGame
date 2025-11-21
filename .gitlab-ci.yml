@@ -1,0 +1,33 @@
+stages:
+  - build
+#  - test
+
+variables:
+  BUILD_DIR: build
+  CMAKE_BUILD_TYPE: Release
+
+default:
+  image: gcc:latest     # or clang, or your own build image
+  before_script:
+    - apt-get update
+    - apt-get install -y cmake make gpp
+    - apt-get install -y libx11-dev libxrandr-dev libxcursor-dev libxinerama-dev libxi-dev
+    - apt-get install -y libglvnd-dev libglu1-mesa-dev libglx-dev
+    - apt-get install -y libudev-dev
+    - mkdir -p $BUILD_DIR
+
+build:
+  stage: build
+  script:
+    - cmake -S . -B $BUILD_DIR -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE
+    - cmake --build $BUILD_DIR --parallel
+  artifacts:
+    paths:
+      - $BUILD_DIR
+
+#test:
+#  stage: test
+#  needs: ["build"]
+#  script:
+#    - cd $BUILD_DIR
+#    - ctest --output-on-failure
