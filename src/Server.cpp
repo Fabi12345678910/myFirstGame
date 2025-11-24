@@ -11,10 +11,11 @@
 #include "Networking/EventDefinitions/EventPlayerLocation.h"
 #include "maps/Map_TestAll.h"
 
-#define MAX_PLAYERS 4
-#define MAX_GAMEOBJECTS 10000
+
+const int MAX_PLAYERS = 4;
+const int MAX_GAMEOBJECTS = 10000;
 //Tickrate in milliseconds per ticks
-#define TICKRATE_MS 10
+const int TICKRATE_MS = 10;
 
 void* serverEventHandler(std::unique_ptr<Event> ev, Connection& conn, void* args) {
     struct serverEventHandlerData *handle = (serverEventHandlerData*) args;
@@ -53,7 +54,7 @@ void Server::run(){
         std::vector<sf::Vector2f> spawnPoints = {sf::Vector2f(400.f,10.f)};
         Stage s = Stage(1, stageObjects, spawnPoints);
         Stage s2 = createMap_TestAll();
-        gameState.setStage(s2);
+        gameStates[0].setStage(s2);
     }
     serverSocket.setArgs(&eventData);
     serverSocket.setEventHandler(serverEventHandler);
@@ -68,19 +69,21 @@ void Server::run(){
 }
 void Server::mainLoop(){
     printf("entering main loop\n");
-    //this is the main loop
     sf::Clock tickClock;
     while(true){
+        currentFrame++;
+        //copy gameState to next gameState
+        gameStates[currentFrame % gameStateBufferSize] = gameStates[(currentFrame - 1) % gameStateBufferSize];
         float deltaTime = tickClock.restart().asSeconds();
         processEvents();
         updateGamestate(deltaTime);
-        someTimesResyncPlayers();
+        someTimesResyncGameState();
         int32_t sleep_ms = TICKRATE_MS - tickClock.getElapsedTime().asMilliseconds();
         if(tickClock.getElapsedTime().asMilliseconds() >= 1){
             std::cout << "Computing tick took " << tickClock.getElapsedTime().asMilliseconds() << "ms\n";
         }
         #if ENABLE_SERVER_RENDERING
-        renderer.render(gameState);
+        renderer.render(gameStates[currentFrame % gameStateBufferSize]);
         renderer.processDisplayEvents();
         #endif
         sf::sleep(sf::milliseconds(TICKRATE_MS) - tickClock.getElapsedTime());
@@ -111,19 +114,19 @@ void Server::processEvents(){
                 conn.sendTcpEvent(EventLoginConfirmation(nextPlayerId));
                 
                 //send all players to current player for now, should later be included in a gamestate sync
-                for(Player& p : gameState.getPlayers()){
+                for(Player& p : gameStates[currentFrame % gameStateBufferSize].getPlayers()){
                     conn.sendTcpEvent(EventSpawnNewPlayer(p.getPosition(), p.getId()));
                 }
-                gameState.addPlayer(Player(nextPlayerId, sf::Vector2f(40.f, 40.f), sf::Vector2f(400.f, 10.f)));
+                gameStates[currentFrame % gameStateBufferSize].addPlayer(Player(nextPlayerId, sf::Vector2f(40.f, 40.f), sf::Vector2f(400.f, 10.f)));
                 
-                serverSocket.sendEventToEveryone(EventSpawnNewPlayer(gameState.getPlayer(nextPlayerId).getPosition(), nextPlayerId));
+                serverSocket.sendEventToEveryone(EventSpawnNewPlayer(gameStates[currentFrame % gameStateBufferSize].getPlayer(nextPlayerId).getPosition(), nextPlayerId));
             }
         }
 
         EventPlayerVelocity *evVelocity = dynamic_cast<EventPlayerVelocity*>(ev);
         if(evVelocity != NULL){
             std::cout << "received velocity update: " << evVelocity->velocity.x << ',' << evVelocity->velocity.y << '\n';
-            updatePlayerVelocity(gameState, conn.getPlayerId(), evVelocity->velocity);
+            updatePlayerVelocity(gameStates[currentFrame % gameStateBufferSize], conn.getPlayerId(), evVelocity->velocity);
             serverSocket.sendEventToEveryone(EventPlayerVelocity(evVelocity->playerId, evVelocity->velocity));
         }
 
@@ -139,22 +142,26 @@ void Server::processEvents(){
 }
 
 void Server::updateGamestate(float deltaTime){
-    updateGame(gameState, deltaTime);
+    updateGame(gameStates[currentFrame % gameStateBufferSize], deltaTime);
 }
 
-void Server::someTimesResyncPlayers(){
-    #define PLAYERRESYNCTIMER 4
+void Server::someTimesResyncGameState(){
+    #define PLAYERRESYNCTIMER 1
     static unsigned tickCounter = PLAYERRESYNCTIMER;
     tickCounter--;
     if(tickCounter == 0){
         tickCounter = PLAYERRESYNCTIMER;
-        resyncPlayers();
+        resyncGameState();
     }
 }
 
-void Server::resyncPlayers(){
+void Server::resyncGameState(){
+    // perspective: this functions should send the most recent gameState
+    // along with every movement in between the gs and the previous one(and perhaps even one before for safety)
+    // so that clients will be able to correctly interfer gameStates between these  
+    // that means we have to include all current data and all new inputs since the last 2 synced gameStates
     std::cout << "resyncing players\n";
-    for(Player &p : gameState.getPlayers()){
+    for(Player &p : gameStates[currentFrame % gameStateBufferSize].getPlayers()){
         serverSocket.sendEventToEveryone(EventPlayerLocation(p.getId(), p.getPosition()));
     }
 }

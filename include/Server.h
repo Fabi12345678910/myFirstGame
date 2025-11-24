@@ -22,12 +22,18 @@ struct serverEventHandlerData{
 class Server
 {
 private:
+    static const int gameStateBufferSize = 64;
+    //defines how many gameState ticks will be sent
+    //e.g. 1 = send every frame
+    //e.g. 8 = send full update every 8th frame
+    static const int gameStateResyncTicks = 4;
+    uint64_t currentFrame = 0;
+    std::array<GameState, gameStateBufferSize> gameStates = {};
     void processEvents();
     void updateGamestate(float deltaTime);
-    void someTimesResyncPlayers();
-    void resyncPlayers();
+    void someTimesResyncGameState();
+    void resyncGameState();
     void mainLoop();
-    GameState gameState = GameState();
     std::queue<OBJECT_ID_TYPE> availablePlayerIds;
     std::queue<OBJECT_ID_TYPE> availableObjectIds;
     struct serverEventHandlerData eventData;
