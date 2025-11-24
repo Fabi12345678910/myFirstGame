@@ -1,5 +1,6 @@
 #include "Client.h"
 #include "PlayerOperations.h"
+#include "Inputs.h"
 #include "Projectile.h"
 #include "GameUpdate.h"
 #include "Renderer.h"
@@ -10,6 +11,7 @@
 #include "Networking/EventDefinitions/EventPlayerLocation.h"
 #include "Networking/EventDefinitions/EventPlayerVelocity.h"
 #include "Networking/EventDefinitions/EventSpawnNewPlayer.h"
+#include "Networking/EventDefinitions/EventUserInput.h"
 
 #include "maps/Map_TestAll.h"
 
@@ -96,14 +98,49 @@ void Client::processEvents(){
             }
             gameState.addPlayer(Player(evSpawnNewPlayer->playerId, sf::Vector2f(40.f, 40.f),evSpawnNewPlayer->location));
         }
-        EventPlayerVelocity *evPlayerVelocity = dynamic_cast<EventPlayerVelocity*>(ev);
-        if(evPlayerVelocity != NULL){
-            updatePlayerVelocity(gameState, evPlayerVelocity->playerId,evPlayerVelocity->velocity);
-        }
+        // EventPlayerVelocity *evPlayerVelocity = dynamic_cast<EventPlayerVelocity*>(ev);
+        // if(evPlayerVelocity != NULL){
+        //     updatePlayerVelocity(gameState, evPlayerVelocity->playerId,evPlayerVelocity->velocity);
+        // }
         EventPlayerLocation *evPlayerLocation = dynamic_cast<EventPlayerLocation*>(ev);
         if(evPlayerLocation != NULL){
             updatePlayerLocation(gameState, evPlayerLocation->playerId,evPlayerLocation->location);
         }
+        EventUserInput *evUserInput = dynamic_cast<EventUserInput*>(ev);
+        if(evUserInput != NULL){
+            std::cout << "received user input\n";
+            playerInput input = evUserInput->playerInput.playerInput;
+            Player& player = gameState.getPlayer(evUserInput->playerInput.playerId);
+            
+            // Horizontal velocity
+            sf::Vector2f v = player.getVelocity();
+            v.x = 0.f;
+            if(input.moveLeft) { player.setFacing(-1); v.x -= player.getSpeed(); }
+            if(input.moveRight) { player.setFacing( 1); v.x += player.getSpeed(); }
+
+            // Jump
+            if(input.jump && player.getIsOnGround() && playerId == player.getId()){
+                v.y = -400.f;
+                player.setIsOnGround(false);
+            }
+
+            // apply velocity
+            player.setVelocity(v);
+
+            // fire projectile
+            if(input.projectile && player.getCooldown() == 0){
+                int projId = gameState.getBulletIDs();
+                gameState.setBulletIDs(projId + 1);
+
+                Projectile proj(projId, {20.f,20.f}, player.getPosition());
+                proj.setSpeed(proj.getSpeed() * player.getFacing());
+                gameState.addProjectile(proj);
+
+                player.setCooldown(100);
+            }
+        }
+
+        printf("processEvents: done processing event\n");
         eventData.connectionEventsQueue.pop();
     }
 }
@@ -131,6 +168,8 @@ void Client::mainLoop(){
 
 void Client::processInputs(){
     if(clientState == PLAYING){
+        playerInputWithId playerInputWithId; //player inputs that are sent to the server
+        playerInputWithId.playerId = playerId;
         sf::Vector2f playerVelocity = gameState.getPlayer(playerId).getVelocity();
         playerVelocity.x = 0.f;
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A)){
@@ -139,15 +178,18 @@ void Client::processInputs(){
             gameState.getPlayer(playerId).setFacing(-1);
             playerVelocity.x -= gameState.getPlayer(playerId).getSpeed();
             std::cout << "new player velocity: " << playerVelocity.x << '\n';
+            playerInputWithId.playerInput.moveLeft = true;
         }
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D)){
             std::cout << "---User pressed D";
             gameState.getPlayer(playerId).setFacing(1);
             playerVelocity.x += gameState.getPlayer(playerId).getSpeed();
+            playerInputWithId.playerInput.moveRight = true;
         }
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Space) && gameState.getPlayer(playerId).getIsOnGround()) {
             playerVelocity.y = -400.f;
             gameState.getPlayer(playerId).setIsOnGround(false);
+            playerInputWithId.playerInput.jump = true;
         }
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::J)) {
             Player& player = gameState.getPlayer(playerId);
@@ -158,15 +200,12 @@ void Client::processInputs(){
                 newProjectile.setSpeed(newProjectile.getSpeed() * player.getFacing());
                 gameState.addProjectile(newProjectile);
                 player.setCooldown(100);
+                playerInputWithId.playerInput.projectile = true;
             }
         }
         if(playerVelocity != gameState.getPlayer(playerId).getVelocity()){
-            std::cout << "player has speed" << gameState.getPlayer(playerId).getSpeed() << '\n';
-            std::cout << "setting player velocity to" << playerVelocity.x << ',' << playerVelocity.y << '\n';
             gameState.getPlayer(playerId).setVelocity(playerVelocity);
-            std::cout << "players gameState Velocity" << gameState.getPlayer(playerId).getVelocity().x << ',' << gameState.getPlayer(playerId).getVelocity().y << '\n';
-            conn.sendTcpEvent(EventPlayerVelocity(playerId, playerVelocity));
-
         }
+        conn.sendTcpEvent(EventUserInput(playerInputWithId));
     }
 }
