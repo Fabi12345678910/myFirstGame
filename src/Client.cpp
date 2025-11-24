@@ -159,7 +159,6 @@ void Client::processInputs(){
                 gameState.addProjectile(newProjectile);
                 player.setCooldown(100);
             }
-            else { player.setCooldown(player.getCooldown()-1); }
         }
         if(playerVelocity != gameState.getPlayer(playerId).getVelocity()){
             std::cout << "player has speed" << gameState.getPlayer(playerId).getSpeed() << '\n';

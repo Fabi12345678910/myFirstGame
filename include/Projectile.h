@@ -7,7 +7,7 @@
 class Projectile : public Collidable, public Movable, public GameObject {
 private:
     bool  isActive = true;
-    float speed    = 400.f;
+    float speed    = 800.f;
 
 public:
     Projectile(OBJECT_ID_TYPE id, sf::Vector2f size, sf::Vector2f position)

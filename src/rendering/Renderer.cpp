@@ -43,11 +43,13 @@ void Renderer::render(GameState& gameState) {
 
     // ---- Projectiles ----
     for (Projectile& projectile : gameState.getProjectiles()) {
-        sf::RectangleShape rect = projectile.getShape();
-        rect.setFillColor(sf::Color(255, 220, 60));
-        rect.setOutlineThickness(1.f);
-        rect.setOutlineColor(sf::Color(0, 0, 0, 70));
-        window.draw(rect);
+        if (projectile.getIsActive()) {
+            sf::RectangleShape rect = projectile.getShape();
+            rect.setFillColor(sf::Color(255, 220, 60));
+            rect.setOutlineThickness(1.f);
+            rect.setOutlineColor(sf::Color(0, 0, 0, 70));
+            window.draw(rect);
+        }
     }
 
     window.display();
