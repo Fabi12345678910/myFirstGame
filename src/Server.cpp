@@ -10,6 +10,7 @@
 #include "Networking/EventDefinitions/EventSpawnNewPlayer.h"
 #include "Networking/EventDefinitions/EventPlayerVelocity.h"
 #include "Networking/EventDefinitions/EventPlayerLocation.h"
+#include "Networking/EventDefinitions/EventUserInput.h"
 #include "maps/Map_TestAll.h"
 
 
@@ -131,19 +132,52 @@ void Server::processEvents(std::vector<playerInputWithId>& playerInputs){
             }
         }
 
-        EventPlayerVelocity *evVelocity = dynamic_cast<EventPlayerVelocity*>(ev);
-        if(evVelocity != NULL){
-            //TODO unused!!
-            std::cout << "received velocity update: " << evVelocity->velocity.x << ',' << evVelocity->velocity.y << '\n';
-            updatePlayerVelocity(gameStates[currentFrame % gameStateBufferSize], conn.getPlayerId(), evVelocity->velocity);
-            serverSocket.sendEventToEveryone(EventPlayerVelocity(evVelocity->playerId, evVelocity->velocity));
-        }
-        //handle new event playerInputs
+        // EventPlayerVelocity *evVelocity = dynamic_cast<EventPlayerVelocity*>(ev);
+        // if(evVelocity != NULL){
+        //     std::cout << "received velocity update: " << evVelocity->velocity.x << ',' << evVelocity->velocity.y << '\n';
+        //     updatePlayerVelocity(gameState, conn.getPlayerId(), evVelocity->velocity);
+        //     serverSocket.sendEventToEveryone(EventPlayerVelocity(evVelocity->playerId, evVelocity->velocity));
+        // }
 
         EventDebugMessage *evDebug = dynamic_cast<EventDebugMessage*>(ev);
         if(evDebug != NULL){
             std::cout << "got a debug message\n";
             std::cout << "Debug message: " << evDebug->message << '\n';
+        }
+
+        EventUserInput *evUserInput = dynamic_cast<EventUserInput*>(ev);
+        if(evUserInput != NULL){
+            std::cout << "received user input\n";
+            playerInput input = evUserInput->playerInput.playerInput;
+            Player& player = gameState.getPlayer(evUserInput->playerInput.playerId);
+            
+            // Horizontal velocity
+            sf::Vector2f v = player.getVelocity();
+            v.x = 0.f;
+            if(input.moveLeft) { player.setFacing(-1); v.x -= player.getSpeed(); }
+            if(input.moveRight) { player.setFacing( 1); v.x += player.getSpeed(); }
+
+            // Jump
+            if(input.jump && player.getIsOnGround()){
+                v.y = -400.f;
+                player.setIsOnGround(false);
+            }
+
+            // apply velocity
+            player.setVelocity(v);
+
+            // fire projectile
+            if(input.projectile && player.getCooldown() == 0){
+                int projId = gameState.getBulletIDs();
+                gameState.setBulletIDs(projId + 1);
+
+                Projectile proj(projId, {20.f,20.f}, player.getPosition());
+                proj.setSpeed(proj.getSpeed() * player.getFacing());
+                gameState.addProjectile(proj);
+
+                player.setCooldown(100);
+            }
+            serverSocket.sendEventToEveryone(EventUserInput(evUserInput->playerInput));
         }
 
         printf("processEvents: done processing event\n");

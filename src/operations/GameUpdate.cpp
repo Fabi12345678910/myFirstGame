@@ -1,6 +1,7 @@
 #include "GameUpdate.h"
 #include <iostream>
 #include "StageObject.h"
+#include "Projectile.h"
 #include "Collidable.h"
 #include "Collisions/PlayerCollisions.h"
 #include "Operations/GameStateUpdater.h"
@@ -94,6 +95,35 @@ void updateGame(GameStateUpdater& gsUpdater, std::vector<playerInputWithId> inpu
 //            std::cout << "moving player because he did not already got handled\n";
             gsUpdater.absoluteMovePlayer(player, newPosition.getPosition());
             gsUpdater.setPlayerVelocity(player, playerVelocity);
+        }
+    }
+    for (Projectile& projectile : gameState.getProjectiles()) {
+        if (projectile.getIsActive()) {
+            projectile.getShape().move(sf::Vector2f(projectile.getSpeed(), 0) * deltaTime);
+            // check collision with players
+            for (Player &player: gameState.getPlayers()){
+            
+                const Collidable *collidable = dynamic_cast<const Collidable*>(&player);
+                if(collidable != NULL){
+                    if (projectile.getShape().getGlobalBounds().findIntersection(player.getShape().getGlobalBounds())) {
+                        //std::cout << "detected collision\n";
+
+                    }
+                }
+                else { std::cout << "projectile collided with a non collidable player"; } 
+            }
+            // check collision with stage objects
+            for (StageObject &stageObject: gameState.getStage().getStageObjects()){
+
+            const Collidable *collidable = dynamic_cast<const Collidable*>(&stageObject);
+            if(collidable != NULL){
+
+                if (projectile.getShape().getGlobalBounds().findIntersection(stageObject.getShape().getGlobalBounds())) {
+                    //std::cout << "detected collision\n";
+                    projectile.setIsActive(false);
+                }
+            }
+        }
         }
     }
 }
