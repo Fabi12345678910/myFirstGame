@@ -21,7 +21,6 @@ private:
     Renderer renderer;
     void performLogin();
     void processEvents();
-    void updateGamestate(float deltaTime);
     void mainLoop();
     void processInputs();
     GameState gameState = GameState();

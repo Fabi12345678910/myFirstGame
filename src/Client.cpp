@@ -4,6 +4,7 @@
 #include "Projectile.h"
 #include "GameUpdate.h"
 #include "Renderer.h"
+#include "Operations/ClientGameStateUpdater.h"
 
 #include "Networking/EventDefinitions/EventLoginRequest.h"
 #include "Networking/EventDefinitions/EventLoginDenied.h"
@@ -29,7 +30,7 @@ void* clientEventHandler(std::unique_ptr<Event> ev, Connection& conn, void* args
     }
     std::tuple<ClientConnection&, std::unique_ptr<Event>> queueEntry(*clientConn, std::move(ev));
     handle->connectionEventsQueue.push(std::move(queueEntry));
-    printf("handling event\n");
+    //printf("handling event\n");
     return NULL;
 };
 
@@ -84,7 +85,7 @@ void Client::processEvents(){
 
     std::lock_guard<std::mutex> queueLockGuard(eventData.connectionEventsMutex);
     while(!eventData.connectionEventsQueue.empty()){
-        std::cout<< "processEvents: processing a new event\n";
+//        std::cout<< "processEvents: processing a new event\n";
         auto& connEv = eventData.connectionEventsQueue.front();
         ClientConnection& conn = std::get<0>(connEv);
         Event* ev = std::get<1>(connEv).get();
@@ -144,9 +145,6 @@ void Client::processEvents(){
         eventData.connectionEventsQueue.pop();
     }
 }
-void Client::updateGamestate(float deltaTime){
-    updateGame(gameState, deltaTime);
-}
 void Client::mainLoop(){
     printf("entering main loop\n");
     //this is the main loop
@@ -155,10 +153,12 @@ void Client::mainLoop(){
         float deltaTime = tickClock.restart().asSeconds();
         processEvents();
         processInputs();
-        updateGamestate(deltaTime);
+        ClientGameStateUpdater updater(gameState);
+        std::vector<playerInputWithId> playerInputs;
+        updateGame(updater, playerInputs, gameState, deltaTime);
         renderer.render(gameState);
         renderer.processDisplayEvents();
-        if(tickClock.getElapsedTime().asMilliseconds() >= 1){
+        if(tickClock.getElapsedTime().asMilliseconds() >= 5){
             std::cout << "Computing tick took " << tickClock.getElapsedTime().asMilliseconds() << "ms\n";
         }
         sf::sleep(sf::milliseconds(10) - tickClock.getElapsedTime());
