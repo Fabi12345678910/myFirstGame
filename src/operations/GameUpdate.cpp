@@ -61,6 +61,11 @@ void updateGame(GameStateUpdater& gsUpdater, std::vector<playerInputWithId> inpu
 
     //move all movable objects
     for(Player& player : gameState.getPlayers()){
+
+        if(player.getCooldown() > 0){
+            player.setCooldown(player.getCooldown() - 1);
+        }
+
         //set player not on ground unless otherwise computed by a collision later
         gsUpdater.setPlayerOnGround(player, false);
 
