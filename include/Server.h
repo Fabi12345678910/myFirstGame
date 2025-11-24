@@ -1,7 +1,7 @@
 #pragma once
 #include "GameState.h"
 #include "Networking/Event.h"
-#include "Inputs2.h"
+#include "Inputs.h"
 #include <queue>
 #include <mutex>
 #include <tuple>

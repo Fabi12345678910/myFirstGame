@@ -149,7 +149,7 @@ void Server::processEvents(std::vector<playerInputWithId>& playerInputs){
         if(evUserInput != NULL){
             std::cout << "received user input\n";
             playerInput input = evUserInput->playerInput.playerInput;
-            Player& player = gameState.getPlayer(evUserInput->playerInput.playerId);
+            Player& player = gameStates[currentFrame % gameStateBufferSize].getPlayer(evUserInput->playerInput.playerId);
             
             // Horizontal velocity
             sf::Vector2f v = player.getVelocity();
@@ -168,12 +168,12 @@ void Server::processEvents(std::vector<playerInputWithId>& playerInputs){
 
             // fire projectile
             if(input.projectile && player.getCooldown() == 0){
-                int projId = gameState.getBulletIDs();
-                gameState.setBulletIDs(projId + 1);
+                int projId = gameStates[currentFrame % gameStateBufferSize].getBulletIDs();
+                gameStates[currentFrame % gameStateBufferSize].setBulletIDs(projId + 1);
 
                 Projectile proj(projId, {20.f,20.f}, player.getPosition());
                 proj.setSpeed(proj.getSpeed() * player.getFacing());
-                gameState.addProjectile(proj);
+                gameStates[currentFrame % gameStateBufferSize].addProjectile(proj);
 
                 player.setCooldown(100);
             }
