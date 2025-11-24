@@ -4,7 +4,7 @@
 #include "Collidable.h"
 #include "Collisions/PlayerCollisions.h"
 #include "Operations/GameStateUpdater.h"
-#include "Inputs.h"
+//#include "Inputs.h"
 
 static bool applyWrapEdgesX(GameStateUpdater& gsUpdater, Player& player, sf::RectangleShape newPosition, sf::Vector2f playerVelocity, const Stage& stage) {
     if (!stage.getWrapEdgesX()) return false;
