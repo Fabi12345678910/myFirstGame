@@ -6,32 +6,39 @@
 #include "Operations/GameStateUpdater.h"
 #include "Inputs.h"
 
-static void applyWrapEdgesX(Player& player, const Stage& stage) {
-    if (!stage.getWrapEdgesX()) return;
-    const auto& b = stage.getBounds();
-    auto r = player.getShape().getGlobalBounds();
+static bool applyWrapEdgesX(GameStateUpdater& gsUpdater, Player& player, sf::RectangleShape newPosition, sf::Vector2f playerVelocity, const Stage& stage) {
+    if (!stage.getWrapEdgesX()) return false;
+    const sf::FloatRect& stageBounds = stage.getBounds();
+    sf::FloatRect newPositionBounds = newPosition.getGlobalBounds();
 
-    if (r.position.x + r.size.x < b.position.x) {
-        player.getShape().setPosition(sf::Vector2f{ b.position.x + b.size.x - r.size.x, r.position.y });
+    if (newPositionBounds.position.x + newPositionBounds.size.x < stageBounds.position.x) {
+        gsUpdater.absoluteMovePlayer(player, sf::Vector2f{stageBounds.position.x + stageBounds.size.x - newPositionBounds.size.x, newPositionBounds.position.y});
+        return true;
+    } else if (newPositionBounds.position.x > stageBounds.position.x + stageBounds.size.x) {
+        gsUpdater.absoluteMovePlayer(player, sf::Vector2f{ stageBounds.position.x, newPositionBounds.position.y });
+        return true;
     }
-    else if (r.position.x > b.position.x + b.size.x) {
-        player.getShape().setPosition(sf::Vector2f{ b.position.x, r.position.y });
-    }
+    return false;
 }
 
-static void applyVoidTeleportY(Player& player, const Stage& stage) {
-    if (!stage.getVoidTeleportY()) return;
-    const auto& b = stage.getBounds();
-    auto r = player.getShape().getGlobalBounds();
+static bool applyVoidTeleportY(GameStateUpdater& gsUpdater, Player& player, sf::RectangleShape newPosition, sf::Vector2f playerVelocity, const Stage& stage) {
+    if (!stage.getVoidTeleportY()) return false;
+    const sf::FloatRect& stageBounds = stage.getBounds();
+    sf::FloatRect newPositionBounds = newPosition.getGlobalBounds();
 
-    if (r.position.y > b.position.y + b.size.y) {
-        const float newY = b.position.y - r.size.y - 1.f;
-        player.getShape().setPosition(sf::Vector2f{ r.position.x, newY });
-        auto v = player.getVelocity();
-        v.y = 0.f;
-        player.setVelocity(v);
-        player.setIsOnGround(false);
+    if (newPositionBounds.position.y > stageBounds.position.y + stageBounds.size.y) {
+        gsUpdater.absoluteMovePlayer(player, sf::Vector2f{newPositionBounds.position.x, stageBounds.position.y - newPositionBounds.size.y - 1.f });
+        
+        playerVelocity.y = 0.f;
+        gsUpdater.setPlayerVelocity(player, playerVelocity);
+        //const float newY = stageBounds.position.y - newPositionBounds.size.y - 1.f;
+        //player.getShape().setPosition(sf::Vector2f{ newPositionBounds.position.x, newY });
+        //auto v = player.getVelocity();
+        //v.y = 0.f;
+        //player.setVelocity(v);
+        return true;
     }
+    return false;
 }
 
 //
@@ -42,16 +49,16 @@ void updateGame(GameStateUpdater& gsUpdater, std::vector<playerInputWithId> inpu
         sf::Vector2f playerVelocity = player.getVelocity();
         if(input.playerInput.moveLeft){
             playerVelocity.x -= player.getSpeed();
-            gsUpdater.setPlayerVelocity(input.playerId, playerVelocity);
+            gsUpdater.setPlayerVelocity(gameState.getPlayer(input.playerId), playerVelocity);
         }
         if(input.playerInput.moveRight){
             playerVelocity.x = player.getSpeed();
-            gsUpdater.setPlayerVelocity(input.playerId, playerVelocity);
+            gsUpdater.setPlayerVelocity(gameState.getPlayer(input.playerId), playerVelocity);
         }
         if(input.playerInput.jump){
             if(player.getIsOnGround()){
                 playerVelocity.y = -400.f;
-                gsUpdater.setPlayerVelocity(input.playerId, playerVelocity);
+                gsUpdater.setPlayerVelocity(gameState.getPlayer(input.playerId), playerVelocity);
             }
         }
     }
@@ -59,7 +66,7 @@ void updateGame(GameStateUpdater& gsUpdater, std::vector<playerInputWithId> inpu
     //move all movable objects
     for(Player& player : gameState.getPlayers()){
         //set player not on ground unless otherwise computed by a collision later
-        gsUpdater.setPlayerOnGround(player.getId(), false);
+        gsUpdater.setPlayerOnGround(player, false);
 
         const sf::FloatRect before = player.getShape().getGlobalBounds();
         const float prevBottomY = before.position.y + before.size.y;
@@ -78,19 +85,30 @@ void updateGame(GameStateUpdater& gsUpdater, std::vector<playerInputWithId> inpu
         sf::RectangleShape newPosition(player.getShape());
         newPosition.move(player.getVelocity() * deltaTime);
 //        player.getShape().move(player.getVelocity() * deltaTime);
-
+        bool movementHandledByCollision = false;
         for (StageObject &stageObject: gameState.getStage().getStageObjects()){
 
             const Collidable *collidable = dynamic_cast<const Collidable*>(&stageObject);
             if(collidable != NULL){
                 if (newPosition.getGlobalBounds().findIntersection(stageObject.getShape().getGlobalBounds())) {
                     //std::cout << "detected collision\n";
-                    handlePlayerCollision(gsUpdater, player, stageObject, newPosition, playerVelocity, gameState);
+                    if(handlePlayerCollision(gsUpdater, player, stageObject, newPosition, playerVelocity, gameState)){
+                        movementHandledByCollision = true;
+                    };
                 }
             }
         }
-        applyWrapEdgesX(player, gameState.getStage());
-        applyVoidTeleportY(player, gameState.getStage());
+        if(applyWrapEdgesX(gsUpdater, player, newPosition, playerVelocity, gameState.getStage())){
+            movementHandledByCollision = true;
+        }
+        if(applyVoidTeleportY(gsUpdater, player, newPosition, playerVelocity, gameState.getStage())){
+            movementHandledByCollision = true;
+        }
+        if(!movementHandledByCollision){
+//            std::cout << "moving player because he did not already got handled\n";
+            gsUpdater.absoluteMovePlayer(player, newPosition.getPosition());
+            gsUpdater.setPlayerVelocity(player, playerVelocity);
+        }
     }
 }
 /*

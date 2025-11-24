@@ -1,6 +1,7 @@
 #pragma once
 #include "GameState.h"
 #include "Networking/Event.h"
+#include "Inputs.h"
 #include <queue>
 #include <mutex>
 #include <tuple>
@@ -28,9 +29,10 @@ private:
     //e.g. 8 = send full update every 8th frame
     static const int gameStateResyncTicks = 4;
     uint64_t currentFrame = 0;
+
+    int numPlayers;
     std::array<GameState, gameStateBufferSize> gameStates = {};
-    void processEvents();
-    void updateGamestate(float deltaTime);
+    void processEvents(std::vector<playerInputWithId>& playerInputs);
     void someTimesResyncGameState();
     void resyncGameState();
     void mainLoop();

@@ -7,18 +7,10 @@ class GameStateUpdater
 private:
     /* data */
 public:
-    GameStateUpdater(/* args */);
-    ~GameStateUpdater();
-    virtual void setPlayerVelocity(OBJECT_ID_TYPE playerId, sf::Vector2f velocity) = 0;
-    virtual void deltaMovePlayer(OBJECT_ID_TYPE playerId, sf::Vector2f deltaPosition) = 0;
-    virtual void absoluteMovePlayer(OBJECT_ID_TYPE playerId, sf::Vector2f absolutePosition) = 0;
-    virtual void setPlayerOnGround(OBJECT_ID_TYPE playerId, bool isOnGround) = 0;
+    GameStateUpdater(/* args */){};
+    ~GameStateUpdater(){};
+    virtual void setPlayerVelocity(Player& player, sf::Vector2f velocity) = 0;
+    virtual void deltaMovePlayer(Player& player, sf::Vector2f deltaPosition) = 0;
+    virtual void absoluteMovePlayer(Player& player, sf::Vector2f absolutePosition) = 0;
+    virtual void setPlayerOnGround(Player& player, bool isOnGround) = 0;
 };
-
-GameStateUpdater::GameStateUpdater(/* args */)
-{
-}
-
-GameStateUpdater::~GameStateUpdater()
-{
-}
