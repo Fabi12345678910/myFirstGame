@@ -31,11 +31,6 @@ static bool applyVoidTeleportY(GameStateUpdater& gsUpdater, Player& player, sf::
         
         playerVelocity.y = 0.f;
         gsUpdater.setPlayerVelocity(player, playerVelocity);
-        //const float newY = stageBounds.position.y - newPositionBounds.size.y - 1.f;
-        //player.getShape().setPosition(sf::Vector2f{ newPositionBounds.position.x, newY });
-        //auto v = player.getVelocity();
-        //v.y = 0.f;
-        //player.setVelocity(v);
         return true;
     }
     return false;
@@ -73,18 +68,9 @@ void updateGame(GameStateUpdater& gsUpdater, std::vector<playerInputWithId> inpu
 
         sf::Vector2f playerVelocity = player.getVelocity();
         playerVelocity.y += player.getGravity() * deltaTime;
-//        if (!player.getIsOnGround()) {
-//            playerVelocity.y += player.getGravity() * deltaTime;
-//        } else {
-//            playerVelocity.y = 0.f;
-//        }
-        
-//        player.setVelocity(playerVelocity);
-
-        //std::cout << "player has velocity " << player.getVelocity().x << ',' << player.getVelocity().y << '\n';
         sf::RectangleShape newPosition(player.getShape());
         newPosition.move(player.getVelocity() * deltaTime);
-//        player.getShape().move(player.getVelocity() * deltaTime);
+
         bool movementHandledByCollision = false;
         for (StageObject &stageObject: gameState.getStage().getStageObjects()){
 
@@ -111,38 +97,3 @@ void updateGame(GameStateUpdater& gsUpdater, std::vector<playerInputWithId> inpu
         }
     }
 }
-/*
-void updateGame(GameState& gameState, float deltaTime){
-    for(Player& player : gameState.getPlayers()){
-
-        player.setIsOnGround(false);
-
-        const sf::FloatRect before = player.getShape().getGlobalBounds();
-        const float prevBottomY = before.position.y + before.size.y;
-
-        sf::Vector2f playerVelocity = player.getVelocity();
-        if (!player.getIsOnGround()) {
-            playerVelocity.y += player.getGravity() * deltaTime;
-        } else {
-            playerVelocity.y = 0.f;
-        }
-        player.setVelocity(playerVelocity);
-
-        //std::cout << "player has velocity " << player.getVelocity().x << ',' << player.getVelocity().y << '\n';
-        player.getShape().move(player.getVelocity() * deltaTime);
-
-        for (StageObject &stageObject: gameState.getStage().getStageObjects()){
-
-            const Collidable *collidable = dynamic_cast<const Collidable*>(&stageObject);
-            if(collidable != NULL){
-
-                if (player.getShape().getGlobalBounds().findIntersection(stageObject.getShape().getGlobalBounds())) {
-                    //std::cout << "detected collision\n";
-                    handlePlayerCollision(player, stageObject, prevBottomY, gameState.getStage());
-                }
-            }
-        }
-        applyWrapEdgesX(player, gameState.getStage());
-        applyVoidTeleportY(player, gameState.getStage());
-    }
-}*/
