@@ -1,6 +1,7 @@
 #include "GameUpdate.h"
 #include <iostream>
 #include "StageObject.h"
+#include "Projectile.h"
 #include "Collidable.h"
 #include "Collisions/PlayerCollisions.hpp"
 
@@ -64,5 +65,9 @@ void updateGame(GameState& gameState, float deltaTime){
         }
         applyWrapEdgesX(player, gameState.getStage());
         applyVoidTeleportY(player, gameState.getStage());
+    }
+    for (Projectile& projectile : gameState.getProjectiles()) {
+        projectile.getShape().move(sf::Vector2f(projectile.getSpeed(), 0) * deltaTime);
+        //std::cout << projectile.getPosition().x;
     }
 }

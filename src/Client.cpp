@@ -1,5 +1,6 @@
 #include "Client.h"
 #include "PlayerOperations.h"
+#include "Projectile.h"
 #include "GameUpdate.h"
 #include "Renderer.h"
 
@@ -135,16 +136,30 @@ void Client::processInputs(){
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A)){
             std::cout << "---User pressed A\n";
             std::cout << "current player velocity: " << playerVelocity.x << '\n';
+            gameState.getPlayer(playerId).setFacing(-1);
             playerVelocity.x -= gameState.getPlayer(playerId).getSpeed();
             std::cout << "new player velocity: " << playerVelocity.x << '\n';
         }
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D)){
             std::cout << "---User pressed D";
+            gameState.getPlayer(playerId).setFacing(1);
             playerVelocity.x += gameState.getPlayer(playerId).getSpeed();
         }
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Space) && gameState.getPlayer(playerId).getIsOnGround()) {
             playerVelocity.y = -400.f;
             gameState.getPlayer(playerId).setIsOnGround(false);
+        }
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::J)) {
+            Player& player = gameState.getPlayer(playerId);
+            if (player.getCooldown() == 0) {
+                std::cout << "--Projectile fired";
+                Projectile newProjectile(gameState.getBulletIDs(), sf::Vector2f(20.0, 20.0), gameState.getPlayer(playerId).getPosition());
+                gameState.setBulletIDs(gameState.getBulletIDs()+1); // increment so the next bullet has new ID
+                newProjectile.setSpeed(newProjectile.getSpeed() * player.getFacing());
+                gameState.addProjectile(newProjectile);
+                player.setCooldown(100);
+            }
+            else { player.setCooldown(player.getCooldown()-1); }
         }
         if(playerVelocity != gameState.getPlayer(playerId).getVelocity()){
             std::cout << "player has speed" << gameState.getPlayer(playerId).getSpeed() << '\n';
@@ -152,6 +167,7 @@ void Client::processInputs(){
             gameState.getPlayer(playerId).setVelocity(playerVelocity);
             std::cout << "players gameState Velocity" << gameState.getPlayer(playerId).getVelocity().x << ',' << gameState.getPlayer(playerId).getVelocity().y << '\n';
             conn.sendTcpEvent(EventPlayerVelocity(playerId, playerVelocity));
+
         }
     }
 }
