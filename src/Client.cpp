@@ -141,7 +141,7 @@ void Client::processEvents(){
             }
         }
 
-        printf("processEvents: done processing event\n");
+//        printf("processEvents: done processing event\n");
         eventData.connectionEventsQueue.pop();
     }
 }

@@ -66,14 +66,11 @@ void updateGame(GameStateUpdater& gsUpdater, std::vector<playerInputWithId> inpu
         if(input.playerInput.projectile && player.getProjectileCooldown() == 0){
             int projId = gameState.getProjectileIds();
             gsUpdater.setProjectileIds(projId + 1);
-//            gameState.setProjectileIds(projId + 1);
 
             Projectile proj(projId, {20.f,20.f}, player.getPosition());
             proj.setSpeed(proj.getSpeed() * (player.getFacing() == Player::FACING_RIGHT ? 1 : -1));
             gsUpdater.addProjectile(proj);
-//            gameState.addProjectile(proj);
             gsUpdater.setPlayerProjectileCooldown(player, 100);
-//            player.setProjectileCooldown(100);
         }
     }
 

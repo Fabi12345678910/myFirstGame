@@ -140,7 +140,7 @@ void Server::processEvents(std::vector<playerInputWithId>& playerInputs){
 
         EventUserInput *evUserInput = dynamic_cast<EventUserInput*>(ev);
         if(evUserInput != NULL){
-            std::cout << "received user input\n";
+//            std::cout << "received user input\n";
             playerInput input = evUserInput->playerInput.playerInput;
             Player& player = gameStates[currentFrame % gameStateBufferSize].getPlayer(evUserInput->playerInput.playerId);
             playerInputs.push_back(evUserInput->playerInput);
@@ -173,7 +173,7 @@ void Server::processEvents(std::vector<playerInputWithId>& playerInputs){
             serverSocket.sendEventToEveryone(EventUserInput(evUserInput->playerInput));
         }
 
-        printf("processEvents: done processing event\n");
+//        printf("processEvents: done processing event\n");
         eventData.connectionEventsQueue.pop();
     }
 }
