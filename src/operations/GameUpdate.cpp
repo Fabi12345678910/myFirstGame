@@ -53,6 +53,10 @@ void updateGame(GameStateUpdater& gsUpdater, std::vector<playerInputWithId> inpu
             gsUpdater.setPlayerVelocity(gameState.getPlayer(input.playerId), playerVelocity);
             gsUpdater.setPlayerFacing(gameState.getPlayer(input.playerId), Player::FACING_RIGHT);
         }
+        if(!input.playerInput.moveLeft&&!input.playerInput.moveRight){
+            playerVelocity.x = 0;
+            gsUpdater.setPlayerVelocity(gameState.getPlayer(input.playerId), playerVelocity);
+        }
         if(input.playerInput.jump){
             if(player.getIsOnGround()){
                 playerVelocity.y = -400.f;

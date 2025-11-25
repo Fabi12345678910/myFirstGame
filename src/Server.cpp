@@ -132,13 +132,6 @@ void Server::processEvents(std::vector<playerInputWithId>& playerInputs){
             }
         }
 
-        // EventPlayerVelocity *evVelocity = dynamic_cast<EventPlayerVelocity*>(ev);
-        // if(evVelocity != NULL){
-        //     std::cout << "received velocity update: " << evVelocity->velocity.x << ',' << evVelocity->velocity.y << '\n';
-        //     updatePlayerVelocity(gameState, conn.getPlayerId(), evVelocity->velocity);
-        //     serverSocket.sendEventToEveryone(EventPlayerVelocity(evVelocity->playerId, evVelocity->velocity));
-        // }
-
         EventDebugMessage *evDebug = dynamic_cast<EventDebugMessage*>(ev);
         if(evDebug != NULL){
             std::cout << "got a debug message\n";
