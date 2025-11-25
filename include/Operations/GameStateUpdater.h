@@ -13,4 +13,8 @@ public:
     virtual void deltaMovePlayer(Player& player, sf::Vector2f deltaPosition) = 0;
     virtual void absoluteMovePlayer(Player& player, sf::Vector2f absolutePosition) = 0;
     virtual void setPlayerOnGround(Player& player, bool isOnGround) = 0;
+    virtual void setPlayerProjectileCooldown(Player& player, int16_t cooldown) = 0;
+    virtual void setPlayerFacing(Player& player, bool facing) = 0;
+    virtual void addProjectile(Projectile& projectile) = 0;
+    virtual void setProjectileIds(OBJECT_ID_TYPE id) = 0;
 };

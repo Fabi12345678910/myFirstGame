@@ -44,12 +44,14 @@ void updateGame(GameStateUpdater& gsUpdater, std::vector<playerInputWithId> inpu
         Player &player = gameState.getPlayer(input.playerId);
         sf::Vector2f playerVelocity = player.getVelocity();
         if(input.playerInput.moveLeft){
-            playerVelocity.x -= player.getSpeed();
+            playerVelocity.x = -player.getSpeed();
             gsUpdater.setPlayerVelocity(gameState.getPlayer(input.playerId), playerVelocity);
+            gsUpdater.setPlayerFacing(gameState.getPlayer(input.playerId), Player::FACING_LEFT);
         }
         if(input.playerInput.moveRight){
             playerVelocity.x = player.getSpeed();
             gsUpdater.setPlayerVelocity(gameState.getPlayer(input.playerId), playerVelocity);
+            gsUpdater.setPlayerFacing(gameState.getPlayer(input.playerId), Player::FACING_RIGHT);
         }
         if(input.playerInput.jump){
             if(player.getIsOnGround()){
@@ -57,13 +59,25 @@ void updateGame(GameStateUpdater& gsUpdater, std::vector<playerInputWithId> inpu
                 gsUpdater.setPlayerVelocity(gameState.getPlayer(input.playerId), playerVelocity);
             }
         }
+        if(input.playerInput.projectile && player.getProjectileCooldown() == 0){
+            int projId = gameState.getProjectileIds();
+            gsUpdater.setProjectileIds(projId + 1);
+//            gameState.setProjectileIds(projId + 1);
+
+            Projectile proj(projId, {20.f,20.f}, player.getPosition());
+            proj.setSpeed(proj.getSpeed() * (player.getFacing() == Player::FACING_RIGHT ? 1 : -1));
+            gsUpdater.addProjectile(proj);
+//            gameState.addProjectile(proj);
+            gsUpdater.setPlayerProjectileCooldown(player, 100);
+//            player.setProjectileCooldown(100);
+        }
     }
 
     //move all movable objects
     for(Player& player : gameState.getPlayers()){
 
-        if(player.getCooldown() > 0){
-            player.setCooldown(player.getCooldown() - 1);
+        if(player.getProjectileCooldown() > 0){
+            gsUpdater.setPlayerProjectileCooldown(player, player.getProjectileCooldown() - 1);
         }
 
         //set player not on ground unless otherwise computed by a collision later

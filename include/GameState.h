@@ -9,7 +9,7 @@ private:
     std::vector<Projectile> projectiles;
     std::vector<GameObject> gameObjects;
     Stage stage;
-    int bulletIDs;
+    OBJECT_ID_TYPE projectileIds = 0;
 
 public:
     Player &getPlayer(OBJECT_ID_TYPE id){
@@ -47,9 +47,9 @@ public:
         projectiles.push_back(projectile);
     }
 
-    int getBulletIDs() { return bulletIDs; }
+    OBJECT_ID_TYPE getProjectileIds() { return projectileIds; }
 
-    void setBulletIDs(int i) { bulletIDs = i; }
+    void setProjectileIds(OBJECT_ID_TYPE i) { projectileIds = i; }
 
 
 /*    GameObject& getGameObject(int id){

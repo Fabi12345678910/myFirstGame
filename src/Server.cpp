@@ -150,33 +150,33 @@ void Server::processEvents(std::vector<playerInputWithId>& playerInputs){
             std::cout << "received user input\n";
             playerInput input = evUserInput->playerInput.playerInput;
             Player& player = gameStates[currentFrame % gameStateBufferSize].getPlayer(evUserInput->playerInput.playerId);
-            
+            playerInputs.push_back(evUserInput->playerInput);
             // Horizontal velocity
-            sf::Vector2f v = player.getVelocity();
-            v.x = 0.f;
-            if(input.moveLeft) { player.setFacing(-1); v.x -= player.getSpeed(); }
-            if(input.moveRight) { player.setFacing( 1); v.x += player.getSpeed(); }
+/*            sf::Vector2f velocity = player.getVelocity();
+            velocity.x = 0.f;
+//            if(input.moveLeft) { player.setFacing(-1); velocity.x -= player.getSpeed(); }
+//            if(input.moveRight) { player.setFacing( 1); velocity.x += player.getSpeed(); }
 
             // Jump
             if(input.jump && player.getIsOnGround()){
-                v.y = -400.f;
+                velocity.y = -400.f;
                 player.setIsOnGround(false);
             }
 
             // apply velocity
-            player.setVelocity(v);
+            player.setVelocity(velocity);
 
             // fire projectile
-            if(input.projectile && player.getCooldown() == 0){
-                int projId = gameStates[currentFrame % gameStateBufferSize].getBulletIDs();
-                gameStates[currentFrame % gameStateBufferSize].setBulletIDs(projId + 1);
+            if(input.projectile && player.getProjectileCooldown() == 0){
+                int projId = gameStates[currentFrame % gameStateBufferSize].getProjectileIds();
+                gameStates[currentFrame % gameStateBufferSize].setProjectileIds(projId + 1);
 
                 Projectile proj(projId, {20.f,20.f}, player.getPosition());
                 proj.setSpeed(proj.getSpeed() * player.getFacing());
                 gameStates[currentFrame % gameStateBufferSize].addProjectile(proj);
 
-                player.setCooldown(100);
-            }
+                player.setProjectileCooldown(100);
+            }*/
             serverSocket.sendEventToEveryone(EventUserInput(evUserInput->playerInput));
         }
 

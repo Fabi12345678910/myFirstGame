@@ -108,7 +108,7 @@ void Client::processEvents(){
             updatePlayerLocation(gameState, evPlayerLocation->playerId,evPlayerLocation->location);
         }
         EventUserInput *evUserInput = dynamic_cast<EventUserInput*>(ev);
-        if(evUserInput != NULL){
+        if(evUserInput != NULL && evUserInput->playerInput.playerId != this->playerId){
             std::cout << "received user input\n";
             playerInput input = evUserInput->playerInput.playerInput;
             Player& player = gameState.getPlayer(evUserInput->playerInput.playerId);
@@ -129,15 +129,15 @@ void Client::processEvents(){
             player.setVelocity(v);
 
             // fire projectile
-            if(input.projectile && player.getCooldown() == 0){
-                int projId = gameState.getBulletIDs();
-                gameState.setBulletIDs(projId + 1);
+            if(input.projectile && player.getProjectileCooldown() == 0){
+                int projId = gameState.getProjectileIds();
+                gameState.setProjectileIds(projId + 1);
 
                 Projectile proj(projId, {20.f,20.f}, player.getPosition());
                 proj.setSpeed(proj.getSpeed() * player.getFacing());
                 gameState.addProjectile(proj);
 
-                player.setCooldown(100);
+                player.setProjectileCooldown(100);
             }
         }
 
@@ -168,21 +168,21 @@ void Client::mainLoop(){
 
 void Client::processInputs(){
     if(clientState == PLAYING){
-        playerInputWithId playerInputWithId; //player inputs that are sent to the server
+        playerInputWithId playerInputWithId = {0}; //player inputs that are sent to the server
         playerInputWithId.playerId = playerId;
         sf::Vector2f playerVelocity = gameState.getPlayer(playerId).getVelocity();
         playerVelocity.x = 0.f;
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A)){
             std::cout << "---User pressed A\n";
             std::cout << "current player velocity: " << playerVelocity.x << '\n';
-            gameState.getPlayer(playerId).setFacing(-1);
+            gameState.getPlayer(playerId).setFacing(Player::FACING_LEFT);
             playerVelocity.x -= gameState.getPlayer(playerId).getSpeed();
             std::cout << "new player velocity: " << playerVelocity.x << '\n';
             playerInputWithId.playerInput.moveLeft = true;
         }
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D)){
             std::cout << "---User pressed D";
-            gameState.getPlayer(playerId).setFacing(1);
+            gameState.getPlayer(playerId).setFacing(Player::FACING_RIGHT);
             playerVelocity.x += gameState.getPlayer(playerId).getSpeed();
             playerInputWithId.playerInput.moveRight = true;
         }
@@ -193,13 +193,13 @@ void Client::processInputs(){
         }
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::J)) {
             Player& player = gameState.getPlayer(playerId);
-            if (player.getCooldown() == 0) {
+            if (player.getProjectileCooldown() == 0) {
                 std::cout << "--Projectile fired";
-                Projectile newProjectile(gameState.getBulletIDs(), sf::Vector2f(20.0, 20.0), gameState.getPlayer(playerId).getPosition());
-                gameState.setBulletIDs(gameState.getBulletIDs()+1); // increment so the next bullet has new ID
-                newProjectile.setSpeed(newProjectile.getSpeed() * player.getFacing());
+                Projectile newProjectile(gameState.getProjectileIds(), sf::Vector2f(20.0, 20.0), gameState.getPlayer(playerId).getPosition());
+                gameState.setProjectileIds(gameState.getProjectileIds()+1); // increment so the next bullet has new ID
+                newProjectile.setSpeed(newProjectile.getSpeed() * (player.getFacing() == Player::FACING_RIGHT ? 1 : -1));
                 gameState.addProjectile(newProjectile);
-                player.setCooldown(100);
+                player.setProjectileCooldown(100);
                 playerInputWithId.playerInput.projectile = true;
             }
         }

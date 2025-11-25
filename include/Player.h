@@ -10,10 +10,13 @@ private:
     float gravity    = 800.f;
     float speed      = 400.f;
     float health     = 10.f;
-    int   cooldown   = 0; // bullet cooldown
-    int   facing     = 1; // -1 if looking left, 1 if looking right
+    int16_t  projectileCooldown   = 0; // bullet cooldown
+    bool  facing     = FACING_LEFT; // -1 if looking left, 1 if looking right
 
 public:
+    static const bool FACING_LEFT = false;
+    static const bool FACING_RIGHT = true;
+
     Player(OBJECT_ID_TYPE id, sf::Vector2f size, sf::Vector2f position)
         : GameObject(id, size, position) {}
 
@@ -29,11 +32,11 @@ public:
     float getHealth() const { return health; }
     void  setHealth(float h) { health = h; }
 
-    int getCooldown() const { return cooldown; }
-    void setCooldown(int c) { cooldown = c; }
+    int16_t getProjectileCooldown() const { return projectileCooldown; }
+    void setProjectileCooldown(int16_t c) { projectileCooldown = c; }
 
-    int getFacing() const { return facing; }
-    void setFacing(int f) { facing = f; }
+    bool getFacing() const { return facing; }
+    void setFacing(bool f) { facing = f; }
     // Player(float width, float height, float x, float y);
     // sf::FloatRect getBounds() const override;
     // void update(float dt) override;
