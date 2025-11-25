@@ -12,7 +12,7 @@
 #include "Networking/EventDefinitions/EventPlayerLocation.h"
 #include "Networking/EventDefinitions/EventUserInput.h"
 #include "maps/Map_TestAll.h"
-
+#include <algorithm>
 
 const int MAX_PLAYERS = 4;
 const int MAX_GAMEOBJECTS = 10000;
@@ -81,6 +81,29 @@ void Server::mainLoop(){
         float deltaTime = tickClock.restart().asSeconds();
         processEvents(playerInputs);
         //assumeInputs for each Player
+        for (Player& player : gameStates[currentFrame % gameStateBufferSize].getPlayers()){
+            auto it = std::find_if(playerInputs.begin(), playerInputs.end(),
+                [player](const playerInputWithId& p){ return p.playerId == player.getId(); });
+            if(it == playerInputs.end()){
+                if(currentFrame == 0){
+                    //no inputs yet, just use an empty one
+                    playerInputs.push_back((struct playerInputWithId){.playerId = player.getId()});
+                }
+                //no input received, copy input from last input
+                auto& lastInput = inputHistory[(currentFrame-1) % gameStateBufferSize];
+                auto itLastInput = std::find_if(lastInput.begin(), lastInput.end(),
+                [player](const playerInputWithId& p){ return p.playerId == player.getId(); });
+                if(itLastInput != playerInputs.end()){
+                    playerInputs.emplace(itLastInput);
+                }else{
+                    //no last inputs, use empty one
+                    playerInputs.push_back((struct playerInputWithId){.playerId = player.getId()});
+                }
+            }
+        }        
+
+        //store playerInputs
+        this->inputHistory[currentFrame % gameStateBufferSize] = playerInputs;
         ServerGameStateUpdater updater(gameStates[currentFrame % gameStateBufferSize]);
         updateGame(updater, playerInputs, gameStates[currentFrame % gameStateBufferSize], deltaTime);
         someTimesResyncGameState();
@@ -112,7 +135,6 @@ void Server::processEvents(std::vector<playerInputWithId>& playerInputs){
                 //no new SLOT
                 conn.sendTcpEvent(EventLoginDenied(0));
             }else{
-
                 OBJECT_ID_TYPE nextPlayerId = availablePlayerIds.front();
                 availablePlayerIds.pop();
                 conn.setPlayerId(nextPlayerId);
@@ -143,34 +165,7 @@ void Server::processEvents(std::vector<playerInputWithId>& playerInputs){
 //            std::cout << "received user input\n";
             playerInput input = evUserInput->playerInput.playerInput;
             Player& player = gameStates[currentFrame % gameStateBufferSize].getPlayer(evUserInput->playerInput.playerId);
-            playerInputs.push_back(evUserInput->playerInput);
-            // Horizontal velocity
-/*            sf::Vector2f velocity = player.getVelocity();
-            velocity.x = 0.f;
-//            if(input.moveLeft) { player.setFacing(-1); velocity.x -= player.getSpeed(); }
-//            if(input.moveRight) { player.setFacing( 1); velocity.x += player.getSpeed(); }
-
-            // Jump
-            if(input.jump && player.getIsOnGround()){
-                velocity.y = -400.f;
-                player.setIsOnGround(false);
-            }
-
-            // apply velocity
-            player.setVelocity(velocity);
-
-            // fire projectile
-            if(input.projectile && player.getProjectileCooldown() == 0){
-                int projId = gameStates[currentFrame % gameStateBufferSize].getProjectileIds();
-                gameStates[currentFrame % gameStateBufferSize].setProjectileIds(projId + 1);
-
-                Projectile proj(projId, {20.f,20.f}, player.getPosition());
-                proj.setSpeed(proj.getSpeed() * player.getFacing());
-                gameStates[currentFrame % gameStateBufferSize].addProjectile(proj);
-
-                player.setProjectileCooldown(100);
-            }*/
-            serverSocket.sendEventToEveryone(EventUserInput(evUserInput->playerInput));
+            conn.enqueueNextInput(evUserInput->playerInput.playerInput);
         }
 
 //        printf("processEvents: done processing event\n");

@@ -31,6 +31,7 @@ private:
     uint64_t currentFrame = 0;
 
     int numPlayers;
+    std::array<std::vector<struct playerInputWithId>, gameStateBufferSize> inputHistory = {};
     std::array<GameState, gameStateBufferSize> gameStates = {};
     void processEvents(std::vector<playerInputWithId>& playerInputs);
     void someTimesResyncGameState();
