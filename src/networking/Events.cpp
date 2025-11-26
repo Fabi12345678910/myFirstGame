@@ -9,6 +9,7 @@
 #include "Networking/EventDefinitions/EventPlayerVelocity.h"
 #include "Networking/EventDefinitions/EventSpawnNewPlayer.h"
 #include "Networking/EventDefinitions/EventUserInput.h"
+#include "Networking/EventDefinitions/EventGamestatePlayerInputHistory.h"
 
 
 std::unique_ptr<Event> getEventFromPacket(sf::Packet& packet){
@@ -35,6 +36,8 @@ std::unique_ptr<Event> getEventFromPacket(sf::Packet& packet){
             return std::make_unique<EventSpawnNewPlayer>(packet);
         case EVENT_TYPE_USER_INPUT:
             return std::make_unique<EventUserInput>(packet);
+        case EVENT_TYPE_GAMESTATE_PLAYERINPUT_HISTORY:
+            return std::make_unique<EventGamestatePlayerInputHistory>(packet);
         default:
             throw std::runtime_error("invalid event type");
     }

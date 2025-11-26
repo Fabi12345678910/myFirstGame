@@ -76,10 +76,14 @@ void ServerSocket::setArgs(void* args){
     }
 }
 
-void ServerSocket::sendEventToEveryone(Event &&ev){
+void ServerSocket::sendTcpEventToEveryone(Event &&ev){
     for (std::unique_ptr<ServerConnection>& connection : connections){
-        if(connection->eventHandler!= NULL){
-            connection->sendTcpEvent(ev);
-        }
+        connection->sendTcpEvent(ev);
+    }
+}
+
+void ServerSocket::sendUdpEventToEveryone(Event &&ev){
+    for (std::unique_ptr<ServerConnection>& connection : connections){
+        connection->sendUdpEvent(ev);
     }
 }

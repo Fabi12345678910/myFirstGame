@@ -41,6 +41,8 @@ static bool applyVoidTeleportY(GameStateUpdater& gsUpdater, Player& player, sf::
 void updateGame(GameStateUpdater& gsUpdater, std::vector<playerInputWithId> inputs, GameState& gameState, float deltaTime){
     //handleInputs
     for(auto& input: inputs){
+
+        std::cout << "debug: handling user input" << input.playerId << "\n";
         Player &player = gameState.getPlayer(input.playerId);
         sf::Vector2f playerVelocity = player.getVelocity();
         if(input.playerInput.moveLeft){

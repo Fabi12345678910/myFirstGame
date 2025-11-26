@@ -31,6 +31,17 @@ public:
     std::vector<Projectile> &getProjectiles(){
         return projectiles;
     }
+    
+    Projectile &getProjectile(OBJECT_ID_TYPE id){
+        for (auto& projectile: projectiles)
+        {
+            if(projectile.getId() == id){
+                return projectile;
+            }
+        }
+        throw std::runtime_error("projectile not found");
+    }
+
     std::vector<Projectile> getActiveProjectiles() {
         std::vector<Projectile> active;
         active.reserve(projectiles.size());

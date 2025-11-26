@@ -28,7 +28,7 @@ private:
     //e.g. 1 = send every frame
     //e.g. 8 = send full update every 8th frame
     static const int gameStateResyncTicks = 4;
-    uint64_t currentFrame = 0;
+    uint64_t currentTick = 0;
 
     int numPlayers;
     std::array<std::vector<struct playerInputWithId>, gameStateBufferSize> inputHistory = {};
