@@ -224,13 +224,15 @@ void Server::resyncGameState(){
     syncEvent.startingGameTick = currentTick - TOTAL_INFOS_TO_SEND + 1;
 
     for (TICK_TYPE i = syncEvent.startingGameTick; i <= currentTick; i++){
-        if(i%SNAPSHOT_DISTANCE == 0){
+        if((i-syncEvent.startingGameTick)%SNAPSHOT_DISTANCE == 0){
             auto& eventInputs = syncEvent.createCombinedUpdateInfo(gameStates[i % gameStateBufferSize]);
             eventInputs.reserve(inputHistory[i % gameStateBufferSize].size());
             for (auto& pInput : inputHistory[i % gameStateBufferSize])
             {
                 eventInputs.emplace_back(pInput);
             }
+
+            std::cout << "server: playerInfosSize: " << syncEvent.updateInfos.back().gsUpdate.playerInfos.size() << '\n';
         }else{
             auto& eventInputs = syncEvent.createNewPlayerInputs();
             eventInputs.reserve(inputHistory[i % gameStateBufferSize].size());
@@ -241,6 +243,6 @@ void Server::resyncGameState(){
         }
     }
 
-    std::cout << "sending " << syncEvent.updateInfos.size() << " updates\n";
+    std::cout << "sending " << syncEvent.updateInfos.size() << " updates at starting tick " << syncEvent.startingGameTick << "\n";
     serverSocket.sendUdpEventToEveryone(std::move(syncEvent));
 }

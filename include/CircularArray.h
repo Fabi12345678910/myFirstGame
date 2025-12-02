@@ -35,4 +35,12 @@ public:
             throw std::out_of_range("index out of range");
         return buffer[idx % N];
     }
+
+    size_t getSize(){
+        return max;
+    }
+
+    size_t getMinIndex(){
+        return min;
+    }
 };

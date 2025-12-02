@@ -17,40 +17,42 @@
 
 #include "maps/Map_TestAll.h"
 
+void* clientEventHandler(std::unique_ptr<Event> evPtr, Connection& conn, void* args) {
+    struct clientEventHandlerData *handle = (clientEventHandlerData*) args;
+    std::lock_guard<std::mutex> queueLockGuard(handle->connectionEventsMutex);
+    handle->connectionEventsQueue.push(std::move(evPtr));
+    return NULL;
+
+};
+
+void* udpClientEventHandler(std::unique_ptr<Event> evPtr, std::optional<sf::IpAddress> &remoteAddress, unsigned short &remotePort, void *args){
+    std::cout << "got udp event\n";
+    struct clientEventHandlerData *handle = (clientEventHandlerData*) args;
+    std::lock_guard<std::mutex> queueLockGuard(handle->connectionEventsMutex);
+    handle->connectionEventsQueue.push(std::move(evPtr));
+    return NULL;
+}
+
 Client::Client() : conn(ClientConnection::createClientConnection({127, 0, 0, 1}, 42069)){
+    conn.setArgs(&eventData);
+    conn.setEventHandler(clientEventHandler);
     performLogin();
 }
 
-void* clientEventHandler(std::unique_ptr<Event> ev, Connection& conn, void* args) {
-    struct clientEventHandlerData *handle = (clientEventHandlerData*) args;
-    std::lock_guard<std::mutex> queueLockGuard(handle->connectionEventsMutex);
-    ClientConnection* clientConn = dynamic_cast<ClientConnection*>(&conn);
-    if(clientConn == NULL){
-        throw std::runtime_error("did not get a server connection");
-    }
-    std::tuple<ClientConnection&, std::unique_ptr<Event>> queueEntry(*clientConn, std::move(ev));
-    handle->connectionEventsQueue.push(std::move(queueEntry));
-    //printf("handling event\n");
-    return NULL;
-};
-
 void Client::performLogin(){
-    
     conn.sendTcpEvent(EventLoginRequest(conn.getUdpPort()));
-    conn.setArgs(&eventData);
-    conn.setEventHandler(clientEventHandler);
     while (true)
     {
-        sf::sleep(sf::milliseconds(20));
         std::lock_guard<std::mutex> queueLockGuard(eventData.connectionEventsMutex);
         while(!eventData.connectionEventsQueue.empty()){
-            auto& connEv = eventData.connectionEventsQueue.front();
-            ClientConnection& conn = std::get<0>(connEv);
-            Event* ev = std::get<1>(connEv).get();
+            auto& evPtr = eventData.connectionEventsQueue.front();
+            Event* ev = evPtr.get();
             EventLoginConfirmation* evLoginSuccess = dynamic_cast<EventLoginConfirmation*>(ev);
             if(evLoginSuccess != NULL){
                 this->playerId = evLoginSuccess->playerId;
                 clientState = AWAITING_SPAWN;
+                conn.setUdpArgs(&eventData);
+                conn.setUdpEventHandler(udpClientEventHandler);
                 return;
             }
             EventLoginDenied*evLoginDenied  = dynamic_cast<EventLoginDenied*>(ev);
@@ -59,6 +61,7 @@ void Client::performLogin(){
             }
         }
     }
+    sf::sleep(sf::milliseconds(20));
 }
 
 void Client::run(){
@@ -88,9 +91,8 @@ void Client::processEventsAwaitingSpawn(){
     std::lock_guard<std::mutex> queueLockGuard(eventData.connectionEventsMutex);
     while(!eventData.connectionEventsQueue.empty()){
 //        std::cout<< "processEvents: processing a new event\n";
-        auto& connEv = eventData.connectionEventsQueue.front();
-        ClientConnection& conn = std::get<0>(connEv);
-        Event* ev = std::get<1>(connEv).get();
+        auto& evPtr = eventData.connectionEventsQueue.front();
+        Event* ev = evPtr.get();
         //somehow handle tha event
         EventSpawnNewPlayer *evSpawnNewPlayer = dynamic_cast<EventSpawnNewPlayer*>(ev);
         if(evSpawnNewPlayer != NULL){
@@ -111,11 +113,11 @@ void Client::processEventsPlaying(){
     std::lock_guard<std::mutex> queueLockGuard(eventData.connectionEventsMutex);
     while(!eventData.connectionEventsQueue.empty()){
 //        std::cout<< "processEvents: processing a new event\n";
-        auto& connEv = eventData.connectionEventsQueue.front();
-        ClientConnection& conn = std::get<0>(connEv);
-        Event* ev = std::get<1>(connEv).get();
+        auto& evPtr = eventData.connectionEventsQueue.front();
+        Event* ev = evPtr.get();
         EventGamestatePlayerInputHistory *eventGamestatePlayerInputHistory = dynamic_cast<EventGamestatePlayerInputHistory*>(ev);
         if(eventGamestatePlayerInputHistory != NULL){
+            std::cout << "handling gameStateUpdate\n";
             updateGameStates(*eventGamestatePlayerInputHistory);
         }
         
@@ -171,21 +173,38 @@ void Client::processEventsPlaying(){
 //  Player   localPlayer;
 //  inputs   clientInputs
 //}
-
 void Client::updateGameStates(EventGamestatePlayerInputHistory& ev){
     TICK_TYPE currentTickInfo = ev.startingGameTick;
     while (ev.hasNextInfo())
     {
+        std::cout << "handling update info for tick " << currentTickInfo << '\n';
         LabeledUpdateInfo update = ev.getNextInfo();
-        switch(update.type){
-            case UpdateInfo::PLAYER_INPUT:
-                std::cout << currentTickInfo << ": got pi update\n";
-                currentTickInfo++;
-                break;
-            case UpdateInfo::GAMESTATE_PLAYER_INPUT:
-                std::cout << currentTickInfo << ": got gs update\n";
-                break;
+
+        //size == 1 -> highestIndex(0) currentTickInfo == 1:
+        while(gameStates.getSize() <= currentTickInfo){
+            std::cout << "pushing new gameState\n";
+            gameStates.push(ClientGameState());
         }
+
+        if(gameStates[currentTickInfo].state == ClientGameState::UNINITIALIZED){
+            gameStates[currentTickInfo].playerInputs = update.info.pInput;
+            gameStates[currentTickInfo].state == ClientGameState::READY_FOR_GENERATION;
+        }
+        if(update.type == UpdateInfo::GAMESTATE_PLAYER_INPUT && gameStates[currentTickInfo].state != ClientGameState::GENERATED){
+            std::cout << "got whole update for tick " << currentTickInfo << '\n';
+            
+            
+            std::cout << "update playerInfos size: " << update.info.gsUpdate.playerInfos.size() << '\n';
+            if(latestRenderedTick < gameStates.getMinIndex()){
+                //TODO aaah were fucked
+                throw std::runtime_error("latestRenderedTick unavailable");
+            }
+            gameStates[currentTickInfo].gameState = gameStates[latestRenderedTick].gameState;
+            update.info.gsUpdate.applyUpdate(gameStates[currentTickInfo].gameState);
+            gameStates[currentTickInfo].state == ClientGameState::GENERATED;
+            latestRenderedTick = currentTickInfo;
+        }
+        currentTickInfo++;
     }
 }
 
@@ -214,11 +233,13 @@ void Client::mainLoop(){
             ClientGameStateUpdater updater(gameStates[latestRenderedTick].gameState);
             std::vector<playerInputWithId> playerInputs;
             updateGame(updater, playerInputs, gameStates[latestRenderedTick].gameState, deltaTime);
+            std::cout << "rendering tick "<< latestRenderedTick << '\n';
             renderer.render(gameStates[latestRenderedTick].gameState);
             renderer.processDisplayEvents();
             if(tickClock.getElapsedTime().asMilliseconds() >= 5){
                 std::cout << "Computing tick took " << tickClock.getElapsedTime().asMilliseconds() << "ms\n";
             }
+
             sf::sleep(sf::milliseconds(10) - tickClock.getElapsedTime());
         }
         else if(clientState == AWAITING_SPAWN){

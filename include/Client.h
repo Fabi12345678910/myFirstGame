@@ -10,15 +10,21 @@
 #include <queue>
 #include <mutex>
 struct clientEventHandlerData{
-    std::queue<std::tuple<ClientConnection&, std::unique_ptr<Event>>> connectionEventsQueue;
+    std::queue<std::unique_ptr<Event>> connectionEventsQueue;
     std::mutex connectionEventsMutex;
 };
 enum clientState{CONNECTING, PLAYING, AWAITING_SPAWN};
 
 struct ClientGameState{
+    enum State{
+        UNINITIALIZED, READY_FOR_GENERATION, GENERATED
+    };
+    State state;
     Player localPlayer;
     playerInput input;
     GameState gameState;
+    std::vector<struct playerInputWithId> playerInputs;
+    ClientGameState() : state(UNINITIALIZED){}
     //uint32_t tick == position in Array
 };
 constexpr unsigned int clientGameStateBufferSize = 64;
@@ -31,7 +37,6 @@ private:
     Renderer renderer;
     uint64_t latestRenderedTick = 0;
     uint64_t latestPreRenderedTick = 0;
-
     void performLogin();
     void processEventsPlaying();
     void processEventsAwaitingSpawn();

@@ -32,11 +32,7 @@ inline sf::Packet& operator >>(
 
     for (uint32_t i = 0; i < count; ++i)
     {
-        playerInputWithId pInput;
-
-        packet >> pInput;
-
-        vec.emplace_back(pInput);
+        packet >> vec[i];;
     }
 
     return packet;
@@ -63,7 +59,7 @@ struct LabeledUpdateInfo{
 class EventGamestatePlayerInputHistory:public Event
 {
 private:
-    size_t nextInfoIndex;
+    size_t nextInfoIndex = 0;
     const GameState* baseLineGameState = NULL;
 public:
     // The Tick on which the first playerInput is based
@@ -115,6 +111,7 @@ public:
         auto& updateInfo = updateInfos.emplace_back();
         for (Player& p : gameState.getPlayers()){
             updateInfo.gsUpdate.playerInfos.emplace_back(p);
+            std::cout << "added player " << p.getId() <<" to playerInfos\n";
         }
         for (Projectile &p : gameState.getProjectiles()){
             updateInfo.gsUpdate.projectileInfos.emplace_back(p);

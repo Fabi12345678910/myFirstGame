@@ -24,6 +24,7 @@ struct playerUpdateInfo{
         projectileCooldown = p.getProjectileCooldown();
     }
     void applyUpdate(Player &player){
+        std::cout << "update player position to " << position.x << ":" << position.y << '\n';
         player.setPosition(position);
         player.setVelocity(velocity);
         player.setFacing(facing);
@@ -150,6 +151,7 @@ inline sf::Packet& operator <<(sf::Packet& packet, const gsUpdateInfo& gs)
 {
     // Players
     packet << static_cast<uint32_t>(gs.playerInfos.size());
+    std::cout << "writing " << static_cast<uint32_t>(gs.playerInfos.size()) << "players\n";
     for (const auto& p : gs.playerInfos)
         packet << p;
 
@@ -167,29 +169,29 @@ inline sf::Packet& operator >>(sf::Packet& packet, gsUpdateInfo& gs)
 
     // Players
     packet >> count;
+    std::cout << "reading " << count << "players\n";
     gs.playerInfos.resize(count);
-    for (uint32_t i = 0; i < count; ++i)
+    for (uint32_t i = 0; i < count; i++)
         packet >> gs.playerInfos[i];
 
     // Projectiles
     packet >> count;
     gs.projectileInfos.resize(count);
-    for (uint32_t i = 0; i < count; ++i)
+    for (uint32_t i = 0; i < count; i++)
         packet >> gs.projectileInfos[i];
 
     return packet;
 }
 
-inline sf::Packet& operator <<(
+/*inline sf::Packet& operator <<(
     sf::Packet& packet,
-    const std::vector<std::pair<int32_t, gsUpdateInfo>>& vec)
+    const std::vector<gsUpdateInfo>& vec)
 {
     packet << static_cast<uint32_t>(vec.size());
 
-    for (const auto& [key, value] : vec)
+    for (const auto& updateInfo : vec)
     {
-        packet << key;     // int32_t
-        packet << value;   // gsUpdateInfo
+        packet << updateInfo;   // gsUpdateInfo
     }
 
     return packet;
@@ -197,7 +199,7 @@ inline sf::Packet& operator <<(
 
 inline sf::Packet& operator >>(
     sf::Packet& packet,
-    std::vector<std::pair<int32_t, gsUpdateInfo>>& vec)
+    std::vector<gsUpdateInfo>& vec)
 {
     uint32_t count;
     packet >> count;
@@ -206,14 +208,8 @@ inline sf::Packet& operator >>(
 
     for (uint32_t i = 0; i < count; ++i)
     {
-        int32_t key;
-        gsUpdateInfo value;
-
-        packet >> key;
-        packet >> value;
-
-        vec[i] = {key, value};
+        packet >> vec[i];
     }
 
     return packet;
-}
+}*/
