@@ -37,9 +37,7 @@ static bool applyVoidTeleportY(GameStateUpdater& gsUpdater, Player& player, sf::
     return false;
 }
 
-//
-void updateGame(GameStateUpdater& gsUpdater, std::vector<playerInputWithId> inputs, GameState& gameState, float deltaTime){
-    //handleInputs
+void updateGame(GameStateUpdater& gsUpdater, std::vector<playerInputWithId> inputs, GameState& gameState, float deltaTime, std::vector<Player*> playersToUpdate, std::vector<Projectile*> projectilesToUpdate){
     for(auto& input: inputs){
 
         std::cout << "debug: handling user input" << input.playerId << "\n";
@@ -77,22 +75,22 @@ void updateGame(GameStateUpdater& gsUpdater, std::vector<playerInputWithId> inpu
     }
 
     //move all movable objects
-    for(Player& player : gameState.getPlayers()){
+    for(Player* player : playersToUpdate){
 
-        if(player.getProjectileCooldown() > 0){
-            gsUpdater.setPlayerProjectileCooldown(player, player.getProjectileCooldown() - 1);
+        if(player->getProjectileCooldown() > 0){
+            gsUpdater.setPlayerProjectileCooldown(*player, player->getProjectileCooldown() - 1);
         }
 
         //set player not on ground unless otherwise computed by a collision later
-        gsUpdater.setPlayerOnGround(player, false);
+        gsUpdater.setPlayerOnGround(*player, false);
 
-        const sf::FloatRect before = player.getShape().getGlobalBounds();
+        const sf::FloatRect before = player->getShape().getGlobalBounds();
         const float prevBottomY = before.position.y + before.size.y;
 
-        sf::Vector2f playerVelocity = player.getVelocity();
-        playerVelocity.y += player.getGravity() * deltaTime;
-        sf::RectangleShape newPosition(player.getShape());
-        newPosition.move(player.getVelocity() * deltaTime);
+        sf::Vector2f playerVelocity = player->getVelocity();
+        playerVelocity.y += player->getGravity() * deltaTime;
+        sf::RectangleShape newPosition(player->getShape());
+        newPosition.move(player->getVelocity() * deltaTime);
 
         bool movementHandledByCollision = false;
         for (StageObject &stageObject: gameState.getStage().getStageObjects()){
@@ -101,33 +99,33 @@ void updateGame(GameStateUpdater& gsUpdater, std::vector<playerInputWithId> inpu
             if(collidable != NULL){
                 if (newPosition.getGlobalBounds().findIntersection(stageObject.getShape().getGlobalBounds())) {
                     //std::cout << "detected collision\n";
-                    if(handlePlayerCollision(gsUpdater, player, stageObject, newPosition, playerVelocity, gameState)){
+                    if(handlePlayerCollision(gsUpdater, *player, stageObject, newPosition, playerVelocity, gameState)){
                         movementHandledByCollision = true;
                     };
                 }
             }
         }
-        if(applyWrapEdgesX(gsUpdater, player, newPosition, playerVelocity, gameState.getStage())){
+        if(applyWrapEdgesX(gsUpdater, *player, newPosition, playerVelocity, gameState.getStage())){
             movementHandledByCollision = true;
         }
-        if(applyVoidTeleportY(gsUpdater, player, newPosition, playerVelocity, gameState.getStage())){
+        if(applyVoidTeleportY(gsUpdater, *player, newPosition, playerVelocity, gameState.getStage())){
             movementHandledByCollision = true;
         }
         if(!movementHandledByCollision){
 //            std::cout << "moving player because he did not already got handled\n";
-            gsUpdater.absoluteMovePlayer(player, newPosition.getPosition());
-            gsUpdater.setPlayerVelocity(player, playerVelocity);
+            gsUpdater.absoluteMovePlayer(*player, newPosition.getPosition());
+            gsUpdater.setPlayerVelocity(*player, playerVelocity);
         }
     }
-    for (Projectile& projectile : gameState.getProjectiles()) {
-        if (projectile.getIsActive()) {
-            projectile.getShape().move(sf::Vector2f(projectile.getSpeed(), 0) * deltaTime);
+    for (Projectile* projectile : projectilesToUpdate) {
+        if (projectile->getIsActive()) {
+            projectile->getShape().move(sf::Vector2f(projectile->getSpeed(), 0) * deltaTime);
             // check collision with players
             for (Player &player: gameState.getPlayers()){
             
                 const Collidable *collidable = dynamic_cast<const Collidable*>(&player);
                 if(collidable != NULL){
-                    if (projectile.getShape().getGlobalBounds().findIntersection(player.getShape().getGlobalBounds())) {
+                    if (projectile->getShape().getGlobalBounds().findIntersection(player.getShape().getGlobalBounds())) {
                         //std::cout << "detected collision\n";
 
                     }
@@ -137,15 +135,44 @@ void updateGame(GameStateUpdater& gsUpdater, std::vector<playerInputWithId> inpu
             // check collision with stage objects
             for (StageObject &stageObject: gameState.getStage().getStageObjects()){
 
-            const Collidable *collidable = dynamic_cast<const Collidable*>(&stageObject);
-            if(collidable != NULL){
+                const Collidable *collidable = dynamic_cast<const Collidable*>(&stageObject);
+                if(collidable != NULL){
 
-                if (projectile.getShape().getGlobalBounds().findIntersection(stageObject.getShape().getGlobalBounds())) {
-                    //std::cout << "detected collision\n";
-                    projectile.setIsActive(false);
+                    if (projectile->getShape().getGlobalBounds().findIntersection(stageObject.getShape().getGlobalBounds())) {
+                        //std::cout << "detected collision\n";
+                        projectile->setIsActive(false);
+                    }
                 }
             }
         }
+    }
+}
+
+void updateGame(GameStateUpdater& gsUpdater, std::vector<playerInputWithId> inputs, GameState& gameState, float deltaTime){
+    std::vector<Player*> playersToUpdate;
+    std::vector<Projectile*> projectilesToUpdate;
+    for (Player& p : gameState.getPlayers())
+    {
+        if(!p.getIsGhostPlayer()){
+            playersToUpdate.push_back(&p);
         }
     }
+    for (Projectile& p : gameState.getProjectiles()){
+        projectilesToUpdate.push_back(&p);
+    }
+    
+    updateGame(gsUpdater, inputs, gameState, deltaTime, playersToUpdate, projectilesToUpdate);
+}
+
+void updateGameGhostPlayer(GameStateUpdater& gsUpdater, std::vector<playerInputWithId> inputs, GameState& gameState, float deltaTime){
+    std::vector<Player*> playersToUpdate;
+    std::vector<Projectile*> projectilesToUpdate;
+    for (Player& p : gameState.getPlayers())
+    {
+        if(p.getIsGhostPlayer()){
+            playersToUpdate.push_back(&p);
+        }
+    }
+    
+    updateGame(gsUpdater, inputs, gameState, deltaTime, playersToUpdate, projectilesToUpdate);
 }

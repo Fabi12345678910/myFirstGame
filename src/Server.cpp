@@ -215,25 +215,32 @@ void Server::resyncGameState(){
     // that means we have to include all current data and all new inputs since the last 2 synced gameStates
     // std::cout << "resyncing players\n";
     
+    static constexpr int SNAPSHOT_DISTANCE = 5;
+    static constexpr int TOTAL_INFOS_TO_SEND = SNAPSHOT_DISTANCE * 2;
+
     EventGamestatePlayerInputHistory syncEvent;
-    static constexpr int STATES_TO_SEND = 2;
-    static constexpr int INPUTS_BETWEEN_STATES = 4;
-    for (int i = 0; i < STATES_TO_SEND; i++)
-    {
-        int stateToSend = currentTick - i * (1 + INPUTS_BETWEEN_STATES);
-        if(stateToSend < 0){break;}
-        syncEvent.addGameState(stateToSend, gameStates[stateToSend % gameStateBufferSize]);
-//        gameStates[(currentTick - i * (1 + INPUTS_BETWEEN_STATES)) & gameStateBufferSize];
-        for(int j = 0; j < INPUTS_BETWEEN_STATES; j++){
-            int inputToSend = currentTick - i * (1 + INPUTS_BETWEEN_STATES) - j;
-            if(inputToSend < 0){break;}
-            for (auto & pInput : inputHistory[inputToSend % gameStateBufferSize])
+    syncEvent.snapShotDistance = SNAPSHOT_DISTANCE;
+    syncEvent.latestAcknowledgedPlayerInput = 0;
+    syncEvent.startingGameTick = currentTick - TOTAL_INFOS_TO_SEND + 1;
+
+    for (TICK_TYPE i = syncEvent.startingGameTick; i <= currentTick; i++){
+        if(i%SNAPSHOT_DISTANCE == 0){
+            auto& eventInputs = syncEvent.createCombinedUpdateInfo(gameStates[i % gameStateBufferSize]);
+            eventInputs.reserve(inputHistory[i % gameStateBufferSize].size());
+            for (auto& pInput : inputHistory[i % gameStateBufferSize])
             {
-                syncEvent.addPlayerInput(inputToSend, pInput);
+                eventInputs.emplace_back(pInput);
+            }
+        }else{
+            auto& eventInputs = syncEvent.createNewPlayerInputs();
+            eventInputs.reserve(inputHistory[i % gameStateBufferSize].size());
+            for (auto& pInput : inputHistory[i % gameStateBufferSize])
+            {
+                eventInputs.emplace_back(pInput);
             }
         }
     }
-    std::cout << "sending " << syncEvent.getGameStateSnapShots().size() << " snapshots with"
-        << syncEvent.getPlayerInputs().size() << " inputs\n";
+
+    std::cout << "sending " << syncEvent.updateInfos.size() << " updates\n";
     serverSocket.sendUdpEventToEveryone(std::move(syncEvent));
 }

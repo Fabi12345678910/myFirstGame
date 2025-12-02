@@ -13,11 +13,11 @@
 #include "Networking/EventDefinitions/EventPlayerVelocity.h"
 #include "Networking/EventDefinitions/EventSpawnNewPlayer.h"
 #include "Networking/EventDefinitions/EventUserInput.h"
+#include "Networking/EventDefinitions/EventGamestatePlayerInputHistory.h"
 
 #include "maps/Map_TestAll.h"
 
 Client::Client() : conn(ClientConnection::createClientConnection({127, 0, 0, 1}, 42069)){
-    
     performLogin();
 }
 
@@ -50,6 +50,7 @@ void Client::performLogin(){
             EventLoginConfirmation* evLoginSuccess = dynamic_cast<EventLoginConfirmation*>(ev);
             if(evLoginSuccess != NULL){
                 this->playerId = evLoginSuccess->playerId;
+                clientState = AWAITING_SPAWN;
                 return;
             }
             EventLoginDenied*evLoginDenied  = dynamic_cast<EventLoginDenied*>(ev);
@@ -61,6 +62,7 @@ void Client::performLogin(){
 }
 
 void Client::run(){
+    gameStates.push(ClientGameState());
     //create a fake(e.g. default) stage, has to be reworked
     {
         std::vector<StageObject> stageObjects;
@@ -74,14 +76,14 @@ void Client::run(){
         std::vector<sf::Vector2f> spawnPoints = {sf::Vector2f(400.f,10.f)};
         Stage s = Stage(1, stageObjects, spawnPoints);
         Stage s2 = createMap_TestAll();
-        gameState.setStage(s2);
+        gameStates[latestRenderedTick].gameState.setStage(s2);
     }
     
     //enter the main loop
     mainLoop();
 }
 
-void Client::processEvents(){
+void Client::processEventsAwaitingSpawn(){
 
     std::lock_guard<std::mutex> queueLockGuard(eventData.connectionEventsMutex);
     while(!eventData.connectionEventsQueue.empty()){
@@ -95,19 +97,37 @@ void Client::processEvents(){
             if(evSpawnNewPlayer->playerId == this->playerId){
                 // we have spawned and can now start the game
                 clientState = PLAYING;
-
+                eventData.connectionEventsQueue.pop();
+                return;
             }
-            gameState.addPlayer(Player(evSpawnNewPlayer->playerId, sf::Vector2f(40.f, 40.f),evSpawnNewPlayer->location));
+            gameStates[latestRenderedTick].gameState.addPlayer(Player(evSpawnNewPlayer->playerId, sf::Vector2f(40.f, 40.f),evSpawnNewPlayer->location));
         }
+        eventData.connectionEventsQueue.pop();
+    }
+}
+
+void Client::processEventsPlaying(){
+
+    std::lock_guard<std::mutex> queueLockGuard(eventData.connectionEventsMutex);
+    while(!eventData.connectionEventsQueue.empty()){
+//        std::cout<< "processEvents: processing a new event\n";
+        auto& connEv = eventData.connectionEventsQueue.front();
+        ClientConnection& conn = std::get<0>(connEv);
+        Event* ev = std::get<1>(connEv).get();
+        EventGamestatePlayerInputHistory *eventGamestatePlayerInputHistory = dynamic_cast<EventGamestatePlayerInputHistory*>(ev);
+        if(eventGamestatePlayerInputHistory != NULL){
+            updateGameStates(*eventGamestatePlayerInputHistory);
+        }
+        
         // EventPlayerVelocity *evPlayerVelocity = dynamic_cast<EventPlayerVelocity*>(ev);
         // if(evPlayerVelocity != NULL){
         //     updatePlayerVelocity(gameState, evPlayerVelocity->playerId,evPlayerVelocity->velocity);
         // }
-        EventPlayerLocation *evPlayerLocation = dynamic_cast<EventPlayerLocation*>(ev);
+/*        EventPlayerLocation *evPlayerLocation = dynamic_cast<EventPlayerLocation*>(ev);
         if(evPlayerLocation != NULL){
             updatePlayerLocation(gameState, evPlayerLocation->playerId,evPlayerLocation->location);
-        }
-        EventUserInput *evUserInput = dynamic_cast<EventUserInput*>(ev);
+        }*/
+/*        EventUserInput *evUserInput = dynamic_cast<EventUserInput*>(ev);
         if(evUserInput != NULL && evUserInput->playerInput.playerId != this->playerId){
             std::cout << "received user input\n";
             playerInput input = evUserInput->playerInput.playerInput;
@@ -139,60 +159,109 @@ void Client::processEvents(){
 
                 player.setProjectileCooldown(100);
             }
-        }
+        }*/
 
 //        printf("processEvents: done processing event\n");
         eventData.connectionEventsQueue.pop();
     }
 }
+
+//local GameStateAddons{
+//  uint32_t localInputId; //this might just be the client tick
+//  Player   localPlayer;
+//  inputs   clientInputs
+//}
+
+void Client::updateGameStates(EventGamestatePlayerInputHistory& ev){
+    TICK_TYPE currentTickInfo = ev.startingGameTick;
+    while (ev.hasNextInfo())
+    {
+        LabeledUpdateInfo update = ev.getNextInfo();
+        switch(update.type){
+            case UpdateInfo::PLAYER_INPUT:
+                std::cout << currentTickInfo << ": got pi update\n";
+                currentTickInfo++;
+                break;
+            case UpdateInfo::GAMESTATE_PLAYER_INPUT:
+                std::cout << currentTickInfo << ": got gs update\n";
+                break;
+        }
+    }
+}
+
 void Client::mainLoop(){
+    //float deltaTime = ...
+    //if deltaTime > tickrate:
+    //  deltaTime -= tickrate
+    //  processInputs(keypresses)
+    //  processEvents(//this may build several new local GameStates)
+    //  if(latestGameState().getPlayer(this->playerId)) != gameStates{acknowledgedClientInputs}.localPlayer
+    //      gameStates{acknowledgedClientInputs}.localPlayer = latestGameState().getPlayer(this->playerId))
+    //      for all gameStates>acknowledgedClientInputs: recalculate ghostPlayer
+    //  else{updateGhostPlayer on gameStateToDisplay+1 using tickrate}
+    //  updateGame(gameStateToDisplay+1, tickrate)
+    //displayGameState = updateGame_interpolate(gameStateToDisplay, deltaTime)
+    //render(displayGameState)
     printf("entering main loop\n");
     //this is the main loop
     sf::Clock tickClock;
     while(true){
-        float deltaTime = tickClock.restart().asSeconds();
-        processEvents();
-        processInputs();
-        ClientGameStateUpdater updater(gameState);
-        std::vector<playerInputWithId> playerInputs;
-        updateGame(updater, playerInputs, gameState, deltaTime);
-        renderer.render(gameState);
-        renderer.processDisplayEvents();
-        if(tickClock.getElapsedTime().asMilliseconds() >= 5){
-            std::cout << "Computing tick took " << tickClock.getElapsedTime().asMilliseconds() << "ms\n";
+        if(clientState == PLAYING){
+            printf("be playing\n");
+            float deltaTime = tickClock.restart().asSeconds();
+            processEventsPlaying();
+            processInputs();
+            ClientGameStateUpdater updater(gameStates[latestRenderedTick].gameState);
+            std::vector<playerInputWithId> playerInputs;
+            updateGame(updater, playerInputs, gameStates[latestRenderedTick].gameState, deltaTime);
+            renderer.render(gameStates[latestRenderedTick].gameState);
+            renderer.processDisplayEvents();
+            if(tickClock.getElapsedTime().asMilliseconds() >= 5){
+                std::cout << "Computing tick took " << tickClock.getElapsedTime().asMilliseconds() << "ms\n";
+            }
+            sf::sleep(sf::milliseconds(10) - tickClock.getElapsedTime());
         }
-        sf::sleep(sf::milliseconds(10) - tickClock.getElapsedTime());
+        else if(clientState == AWAITING_SPAWN){
+            printf("be awaiting spawn\n");
+            processEventsAwaitingSpawn();
+            sf::sleep(sf::milliseconds(10));
+        }
     }
     printf("exiting main loop\n");
 }
 
-void Client::processInputs(){
+playerInput Client::processInputs(){
+    playerInput input;
     if(clientState == PLAYING){
         playerInputWithId playerInputWithId = {0}; //player inputs that are sent to the server
         playerInputWithId.playerId = playerId;
-        sf::Vector2f playerVelocity = gameState.getPlayer(playerId).getVelocity();
-        playerVelocity.x = 0.f;
+//        sf::Vector2f playerVelocity = gameState.getPlayer(playerId).getVelocity();
+//        playerVelocity.x = 0.f;
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A)){
-            std::cout << "---User pressed A\n";
+            input.moveLeft = true;
+/*            std::cout << "---User pressed A\n";
             std::cout << "current player velocity: " << playerVelocity.x << '\n';
             gameState.getPlayer(playerId).setFacing(Player::FACING_LEFT);
             playerVelocity.x -= gameState.getPlayer(playerId).getSpeed();
             std::cout << "new player velocity: " << playerVelocity.x << '\n';
-            playerInputWithId.playerInput.moveLeft = true;
+            playerInputWithId.playerInput.moveLeft = true;*/
         }
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D)){
-            std::cout << "---User pressed D";
+            input.moveRight = true;
+/*            std::cout << "---User pressed D";
             gameState.getPlayer(playerId).setFacing(Player::FACING_RIGHT);
             playerVelocity.x += gameState.getPlayer(playerId).getSpeed();
-            playerInputWithId.playerInput.moveRight = true;
+            playerInputWithId.playerInput.moveRight = true;*/
         }
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Space) && gameState.getPlayer(playerId).getIsOnGround()) {
-            playerVelocity.y = -400.f;
-            gameState.getPlayer(playerId).setIsOnGround(false);
-            playerInputWithId.playerInput.jump = true;
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Space)) {
+            input.jump = true;
+            //playerVelocity.y = -400.f;
+            //gameState.getPlayer(playerId).setIsOnGround(false);
+//            playerInputWithId.playerInput.jump = true;
         }
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::J)) {
-            Player& player = gameState.getPlayer(playerId);
+            input.projectile = true;
+/*            Player& player = gameState.getPlayer(playerId);
             if (player.getProjectileCooldown() == 0) {
                 std::cout << "--Projectile fired";
                 Projectile newProjectile(gameState.getProjectileIds(), sf::Vector2f(20.0, 20.0), gameState.getPlayer(playerId).getPosition());
@@ -201,11 +270,16 @@ void Client::processInputs(){
                 gameState.addProjectile(newProjectile);
                 player.setProjectileCooldown(100);
                 playerInputWithId.playerInput.projectile = true;
-            }
+            }*/
         }
-        if(playerVelocity != gameState.getPlayer(playerId).getVelocity()){
+/*        if(playerVelocity != gameState.getPlayer(playerId).getVelocity()){
             gameState.getPlayer(playerId).setVelocity(playerVelocity);
-        }
-        conn.sendTcpEvent(EventUserInput(playerInputWithId));
+        }*/
+        playerInputWithId.playerId = this->playerId;
+        playerInputWithId.playerInput = input;
+        EventUserInput ev = EventUserInput(playerInputWithId);
+        conn.sendTcpEvent(ev);
+        return input;
     }
+    return playerInput();
 }

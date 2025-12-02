@@ -17,6 +17,8 @@ public:
         shape.setPosition(position);
     }
 
+    GameObject(){};
+
     virtual ~GameObject() = default;
 
     OBJECT_ID_TYPE getId() const { return id; }

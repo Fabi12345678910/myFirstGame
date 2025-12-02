@@ -9,14 +9,13 @@
 
 inline sf::Packet& operator <<(
     sf::Packet& packet,
-    const std::vector<std::pair<int32_t, playerInputWithId>>& vec)
+    const std::vector<playerInputWithId>& vec)
 {
     packet << static_cast<uint32_t>(vec.size());
 
-    for (const auto& pair : vec)
+    for (const auto& pInput : vec)
     {
-        packet << pair.first;   // int32_t
-        packet << pair.second;  // playerInputWithId
+        packet << pInput;
     }
 
     return packet;
@@ -24,7 +23,7 @@ inline sf::Packet& operator <<(
 
 inline sf::Packet& operator >>(
     sf::Packet& packet,
-    std::vector<std::pair<int32_t, playerInputWithId>>& vec)
+    std::vector<playerInputWithId>& vec)
 {
     uint32_t count;
     packet >> count;
@@ -33,30 +32,76 @@ inline sf::Packet& operator >>(
 
     for (uint32_t i = 0; i < count; ++i)
     {
-        int32_t key;
-        playerInputWithId value;
+        playerInputWithId pInput;
 
-        packet >> key;
-        packet >> value;
+        packet >> pInput;
 
-        vec[i] = {key, value};
+        vec.emplace_back(pInput);
     }
 
     return packet;
 }
 
+struct UpdateInfo{
+    enum activeComponent{GAMESTATE_PLAYER_INPUT, PLAYER_INPUT};
+    gsUpdateInfo gsUpdate;
+    std::vector<playerInputWithId> pInput;
+
+    UpdateInfo(){}
+    UpdateInfo(gsUpdateInfo gsUpdate) : gsUpdate(gsUpdate){}
+    UpdateInfo(std::vector<playerInputWithId> pInput) : pInput(pInput){}
+};
+
+struct LabeledUpdateInfo{
+    UpdateInfo::activeComponent type;
+    UpdateInfo& info;
+    LabeledUpdateInfo(UpdateInfo::activeComponent type,
+    UpdateInfo& info): type(type), info(info){}
+};
+
 //this will send the latest snapshots and the inputs used to create those snapshots
 class EventGamestatePlayerInputHistory:public Event
 {
-public:
+private:
+    size_t nextInfoIndex;
     const GameState* baseLineGameState = NULL;
-    std::vector<std::pair<int32_t, gsUpdateInfo>> gameStateSnapShots;
-    std::vector<std::pair<int32_t, playerInputWithId>> playerInputs;
+public:
+    // The Tick on which the first playerInput is based
+    TICK_TYPE startingGameTick;
+    std::uint8_t snapShotDistance;
+    PLAYER_INPUT_NO_TYPE latestAcknowledgedPlayerInput;
+    std::vector<UpdateInfo> updateInfos;
+
+    bool hasNextInfo(){
+        return nextInfoIndex < updateInfos.size();
+    }
+
+    LabeledUpdateInfo getNextInfo(){
+        nextInfoIndex++;
+        if((nextInfoIndex-1) % snapShotDistance == 0){
+            return LabeledUpdateInfo(UpdateInfo::GAMESTATE_PLAYER_INPUT, updateInfos[nextInfoIndex - 1]);
+        }else{
+            return LabeledUpdateInfo(UpdateInfo::PLAYER_INPUT, updateInfos[nextInfoIndex - 1]);
+        }
+    }
 
     EventGamestatePlayerInputHistory(sf::Packet packet){
-        if(!(packet >> gameStateSnapShots >> playerInputs)){
-            throw std::runtime_error("failed to packetContents");
+        uint32_t size;
+        if(!(packet >> startingGameTick >> snapShotDistance >> latestAcknowledgedPlayerInput >> size)){
+            throw std::runtime_error("failed to read updateInfos metadata");
         }
+        updateInfos.reserve(size);
+        for (size_t i = 0; i < size; i++)
+        {
+            updateInfos.emplace_back();
+            if(i%snapShotDistance == 0){
+                packet >> updateInfos[i].gsUpdate;
+                packet >> updateInfos[i].pInput;
+            }else{
+                packet >> updateInfos[i].pInput;
+            }
+        }
+
     };
     EventGamestatePlayerInputHistory() {}
 
@@ -65,33 +110,46 @@ public:
     void setBaseLineGameState(const GameState* gameState){
         baseLineGameState = gameState;
     }
-    void addGameState(int32_t tick, GameState& gameState){
-        //for now no delta GameStates
-        auto& updateInfos = gameStateSnapShots.emplace_back();
-        updateInfos.first = tick;
+
+    std::vector<playerInputWithId>& createCombinedUpdateInfo(GameState& gameState){
+        auto& updateInfo = updateInfos.emplace_back();
         for (Player& p : gameState.getPlayers()){
-            updateInfos.second.playerInfos.emplace_back(p);
+            updateInfo.gsUpdate.playerInfos.emplace_back(p);
         }
         for (Projectile &p : gameState.getProjectiles()){
-            updateInfos.second.projectileInfos.emplace_back(p);
+            updateInfo.gsUpdate.projectileInfos.emplace_back(p);
         }
+        return updateInfo.pInput;
     }
-    void addPlayerInput(int32_t tick, playerInputWithId pInput){
-        playerInputs.push_back(std::make_pair(tick, pInput));
+
+    std::vector<playerInputWithId>& createNewPlayerInputs(){
+        auto& updateInfo = updateInfos.emplace_back((std::vector<playerInputWithId>){});
+        updateInfo.pInput = std::vector<playerInputWithId>();
+        return updateInfo.pInput;
+    }
+
+    void addPlayerInputs(std::vector<playerInputWithId> pInput){
+        auto& updateInfo = updateInfos.emplace_back(pInput);
     }
 
     sf::Packet toPacket() const override{
         sf::Packet packet;
         packet << (DATATYPE_EVENT_TYPE) EVENT_TYPE_GAMESTATE_PLAYERINPUT_HISTORY;
-        packet << gameStateSnapShots;
-        packet << playerInputs;
-        return packet;
-    }
-    const std::vector<std::pair<int32_t, playerInputWithId>>& getPlayerInputs(){
-        return playerInputs;
-    }
+        packet << startingGameTick;
+        packet << snapShotDistance;
+        packet << latestAcknowledgedPlayerInput;
+        packet << static_cast<uint32_t>(updateInfos.size());
 
-    const std::vector<std::pair<int32_t, gsUpdateInfo>>& getGameStateSnapShots(){
-        return gameStateSnapShots;
+        for (size_t i = 0; i < updateInfos.size(); i++)
+        {
+            if(i%snapShotDistance == 0){
+                packet << updateInfos[i].gsUpdate;
+                packet << updateInfos[i].pInput;
+            }else{
+                packet << updateInfos[i].pInput;
+            }
+        }
+        
+        return packet;
     }
 };
