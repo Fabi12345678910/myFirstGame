@@ -94,13 +94,13 @@ void Client::processEventsAwaitingSpawn(){
         //somehow handle tha event
         EventSpawnNewPlayer *evSpawnNewPlayer = dynamic_cast<EventSpawnNewPlayer*>(ev);
         if(evSpawnNewPlayer != NULL){
+            gameStates[latestRenderedTick].gameState.addPlayer(Player(evSpawnNewPlayer->playerId, sf::Vector2f(40.f, 40.f),evSpawnNewPlayer->location));
             if(evSpawnNewPlayer->playerId == this->playerId){
                 // we have spawned and can now start the game
                 clientState = PLAYING;
                 eventData.connectionEventsQueue.pop();
                 return;
             }
-            gameStates[latestRenderedTick].gameState.addPlayer(Player(evSpawnNewPlayer->playerId, sf::Vector2f(40.f, 40.f),evSpawnNewPlayer->location));
         }
         eventData.connectionEventsQueue.pop();
     }
