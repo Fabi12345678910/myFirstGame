@@ -69,7 +69,9 @@ struct gsUpdateInfo{
             }
             catch(const std::runtime_error& e)
             {
-                std::cerr << "did not found player with id"<< playerInfo.id <<" for update\n";
+                gameState.addPlayer(Player(playerInfo.id, sf::Vector2f(40.f, 40.f), playerInfo.position));
+                playerInfo.applyUpdate(gameState.getPlayer(playerInfo.id));
+//                std::cerr << "did not found player with id"<< playerInfo.id <<" for update\n";
             }
             
             gameState.getPlayer(playerInfo.id);
@@ -83,7 +85,10 @@ struct gsUpdateInfo{
             }
             catch(const std::runtime_error& e)
             {
-                std::cerr << "did not found player with id"<< projectileInfo.id <<" for update\n";
+                Projectile proj(projectileInfo.id, {20.f,20.f}, projectileInfo.position);
+                gameState.addProjectile(proj);
+                projectileInfo.applyUpdate(gameState.getProjectile(projectileInfo.id));
+//                std::cerr << "did not found player with id"<< projectileInfo.id <<" for update\n";
             }
             
             gameState.getPlayer(projectileInfo.id);

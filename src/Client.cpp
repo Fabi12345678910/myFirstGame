@@ -50,6 +50,11 @@ void Client::performLogin(){
             EventLoginConfirmation* evLoginSuccess = dynamic_cast<EventLoginConfirmation*>(ev);
             if(evLoginSuccess != NULL){
                 this->playerId = evLoginSuccess->playerId;
+                this->tickrateMs = evLoginSuccess->serverTickRateMs;
+                tickToDisplay = evLoginSuccess->latestServerTick - displayTickDifference;
+                if(evLoginSuccess->latestServerTick < displayTickDifference){
+                    tickToDisplay = 0;
+                }
                 clientState = AWAITING_SPAWN;
                 conn.setUdpArgs(&eventData);
                 conn.setUdpEventHandler(udpClientEventHandler);
@@ -79,7 +84,8 @@ void Client::run(){
         std::vector<sf::Vector2f> spawnPoints = {sf::Vector2f(400.f,10.f)};
         Stage s = Stage(1, stageObjects, spawnPoints);
         Stage s2 = createMap_TestAll();
-        gameStates[latestRenderedTick].gameState.setStage(s2);
+        gameStates[latestGeneratedTick].gameState.setStage(s2);
+        baseGameState.setStage(s2);
     }
     
     //enter the main loop
@@ -96,7 +102,7 @@ void Client::processEventsAwaitingSpawn(){
         //somehow handle tha event
         EventSpawnNewPlayer *evSpawnNewPlayer = dynamic_cast<EventSpawnNewPlayer*>(ev);
         if(evSpawnNewPlayer != NULL){
-            gameStates[latestRenderedTick].gameState.addPlayer(Player(evSpawnNewPlayer->playerId, sf::Vector2f(40.f, 40.f),evSpawnNewPlayer->location));
+            gameStates[latestGeneratedTick].gameState.addPlayer(Player(evSpawnNewPlayer->playerId, sf::Vector2f(40.f, 40.f),evSpawnNewPlayer->location));
             if(evSpawnNewPlayer->playerId == this->playerId){
                 // we have spawned and can now start the game
                 clientState = PLAYING;
@@ -188,21 +194,21 @@ void Client::updateGameStates(EventGamestatePlayerInputHistory& ev){
 
         if(gameStates[currentTickInfo].state == ClientGameState::UNINITIALIZED){
             gameStates[currentTickInfo].playerInputs = update.info.pInput;
-            gameStates[currentTickInfo].state == ClientGameState::READY_FOR_GENERATION;
+            gameStates[currentTickInfo].state = ClientGameState::READY_FOR_GENERATION;
         }
         if(update.type == UpdateInfo::GAMESTATE_PLAYER_INPUT && gameStates[currentTickInfo].state != ClientGameState::GENERATED){
             std::cout << "got whole update for tick " << currentTickInfo << '\n';
             
             
             std::cout << "update playerInfos size: " << update.info.gsUpdate.playerInfos.size() << '\n';
-            if(latestRenderedTick < gameStates.getMinIndex()){
-                //TODO aaah were fucked
-                throw std::runtime_error("latestRenderedTick unavailable");
+            if(latestGeneratedTick < gameStates.getMinIndex()){
+                gameStates[currentTickInfo].gameState = baseGameState;
+            }else{
+                gameStates[currentTickInfo].gameState = gameStates[latestGeneratedTick].gameState;
             }
-            gameStates[currentTickInfo].gameState = gameStates[latestRenderedTick].gameState;
             update.info.gsUpdate.applyUpdate(gameStates[currentTickInfo].gameState);
-            gameStates[currentTickInfo].state == ClientGameState::GENERATED;
-            latestRenderedTick = currentTickInfo;
+            gameStates[currentTickInfo].state = ClientGameState::GENERATED;
+            latestGeneratedTick = currentTickInfo;
         }
         currentTickInfo++;
     }
@@ -224,23 +230,72 @@ void Client::mainLoop(){
     printf("entering main loop\n");
     //this is the main loop
     sf::Clock tickClock;
+    sf::Time tickRate = sf::milliseconds(tickrateMs);
+    
     while(true){
         if(clientState == PLAYING){
+            sf::Time deltaTime = tickClock.restart();
             printf("be playing\n");
-            float deltaTime = tickClock.restart().asSeconds();
+
             processEventsPlaying();
             processInputs();
-            ClientGameStateUpdater updater(gameStates[latestRenderedTick].gameState);
+/*            ClientGameStateUpdater updater(gameStates[latestRenderedTick].gameState);
             std::vector<playerInputWithId> playerInputs;
-            updateGame(updater, playerInputs, gameStates[latestRenderedTick].gameState, deltaTime);
-            std::cout << "rendering tick "<< latestRenderedTick << '\n';
-            renderer.render(gameStates[latestRenderedTick].gameState);
-            renderer.processDisplayEvents();
+            updateGame(updater, playerInputs, gameStates[latestRenderedTick].gameState, deltaTime);*/
+
+            bool canRenderTick = true;
+            while (deltaTime >= tickRate){
+                deltaTime-= tickRate;
+                tickToDisplay++;
+                std::cout << "client display info(tickToDisplay, latestGeneratedTick, gameStatesSize): " << tickToDisplay << " " << latestGeneratedTick << " " << gameStates.getSize() << '\n';
+                if (gameStates.getSize() <= tickToDisplay){
+                    std::cout << "nothing to generate yet, backing out\n";
+                    canRenderTick = false;
+                    continue;
+                }
+                //find baseGameState tick to generate from
+                bool foundTickToUse = false;
+                TICK_TYPE generatedTickToUse = 0;
+                for (TICK_TYPE t = tickToDisplay; t >= gameStates.getMinIndex(); t--)
+                {
+                    if(gameStates[t].state == ClientGameState::GENERATED){
+                        generatedTickToUse = t;
+                        std::cout << "foundTickToUs\n";
+                        foundTickToUse = true;
+                        break;
+                    }else if(gameStates[t].state == ClientGameState::UNINITIALIZED){
+                        //were missing playerInputs and cannot generate
+                        std::cout << "foundUninitializedTick at "<< t << '\n';
+                        canRenderTick = false;
+                        break;
+                    }
+                }
+                if(!foundTickToUse){
+                    //well were fucked, nothing to display as we have no known state
+                    canRenderTick = false;
+                    continue;
+                }
+                //generate all ticks from baseTick till we have the current one
+                for (TICK_TYPE t = generatedTickToUse + 1; t <= tickToDisplay; t++)
+                {
+                    gameStates[t].gameState = gameStates[t-1].gameState;
+                    ClientGameStateUpdater gsUpdater(gameStates[t].gameState);
+                    updateGame(gsUpdater, gameStates[t].playerInputs, gameStates[t].gameState, tickrateMs);
+                }
+                canRenderTick = true;
+            }
+            if(canRenderTick){
+                std::cout << "rendering tick "<< tickToDisplay << '\n';
+                renderer.render(gameStates[tickToDisplay].gameState);
+                renderer.processDisplayEvents();
+            }else{
+                std::cout << "can't render tick:(\n";
+            }
             if(tickClock.getElapsedTime().asMilliseconds() >= 5){
                 std::cout << "Computing tick took " << tickClock.getElapsedTime().asMilliseconds() << "ms\n";
             }
 
-            sf::sleep(sf::milliseconds(10) - tickClock.getElapsedTime());
+            sf::sleep(tickRate - tickClock.getElapsedTime());
         }
         else if(clientState == AWAITING_SPAWN){
             printf("be awaiting spawn\n");

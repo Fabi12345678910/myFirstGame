@@ -7,6 +7,7 @@
 #include <tuple>
 #include <Networking/ServerConnection.h>
 #include <Networking/ServerSocket.h>
+#include "CircularArray.h"
 
 #ifndef ENABLE_SERVER_RENDERING
     #define ENABLE_SERVER_RENDERING true
@@ -22,17 +23,23 @@ struct serverEventHandlerData{
 
 class Server
 {
+    
 private:
+
+    static constexpr int MAX_PLAYERS = 4;
+    static constexpr int MAX_GAMEOBJECTS = 10000;
+    //Tickrate in milliseconds per ticks
+    static constexpr std::uint16_t TICKRATE_MS = 10;
     static const int gameStateBufferSize = 64;
     //defines how many gameState ticks will be sent
     //e.g. 1 = send every frame
     //e.g. 8 = send full update every 8th frame
     static const int gameStateResyncTicks = 4;
-    uint64_t currentTick = 0;
+    TICK_TYPE currentTick = 0;
 
     int numPlayers;
-    std::array<std::vector<struct playerInputWithId>, gameStateBufferSize> inputHistory = {};
-    std::array<GameState, gameStateBufferSize> gameStates = {};
+    CircularArray<std::vector<struct playerInputWithId>, gameStateBufferSize> inputHistory;
+    CircularArray<GameState, gameStateBufferSize> gameStates;
     void processEvents(std::vector<playerInputWithId>& playerInputs);
     void someTimesResyncGameState();
     void resyncGameState();

@@ -34,9 +34,14 @@ class Client
 private:
     enum clientState clientState = CONNECTING;
     int playerId;
+    GameState baseGameState;
     Renderer renderer;
-    uint64_t latestRenderedTick = 0;
+    uint64_t latestGeneratedTick = 0;
     uint64_t latestPreRenderedTick = 0;
+    std::uint16_t tickrateMs = 100;
+    TICK_TYPE tickToDisplay = 0;
+    //the targeted Tick to display(higher means)
+    TICK_TYPE displayTickDifference = 10;
     void performLogin();
     void processEventsPlaying();
     void processEventsAwaitingSpawn();
