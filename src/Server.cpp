@@ -57,6 +57,7 @@ void Server::run(){
             gameStates.push(GameState());
             gameStates[i].setStage(s2);
             inputHistory.push(std::vector<playerInputWithId>());
+            currentTick = i;
         }
     }
     serverSocket.setArgs(&eventData);

@@ -260,7 +260,7 @@ void Client::mainLoop(){
                 {
                     if(gameStates[t].state == ClientGameState::GENERATED){
                         generatedTickToUse = t;
-                        std::cout << "foundTickToUs\n";
+                        std::cout << "foundTickToUse at " << t << '\n';
                         foundTickToUse = true;
                         break;
                     }else if(gameStates[t].state == ClientGameState::UNINITIALIZED){
@@ -280,7 +280,8 @@ void Client::mainLoop(){
                 {
                     gameStates[t].gameState = gameStates[t-1].gameState;
                     ClientGameStateUpdater gsUpdater(gameStates[t].gameState);
-                    updateGame(gsUpdater, gameStates[t].playerInputs, gameStates[t].gameState, tickrateMs);
+                    updateGame(gsUpdater, gameStates[t].playerInputs, gameStates[t].gameState, tickRate.asSeconds());
+                    gameStates[t].state = ClientGameState::GENERATED;
                 }
                 canRenderTick = true;
             }
