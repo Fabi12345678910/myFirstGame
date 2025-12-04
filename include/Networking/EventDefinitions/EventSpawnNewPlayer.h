@@ -1,0 +1,34 @@
+#pragma once
+
+#include "Networking/Event.h"
+#include "Networking/EventTypeList.h"
+#include <SFML/System/Vector2.hpp>
+#include "Types.h"
+
+class EventSpawnNewPlayer:public Event
+{
+public:
+    OBJECT_ID_TYPE playerId;
+    sf::Vector2f location;
+    EventSpawnNewPlayer(sf::Packet packet){
+        if(!(packet >> playerId)){
+            throw std::runtime_error("failed to new player id");
+        }
+        if(!(packet >> location.x)){
+            throw std::runtime_error("failed to read x location");
+        };
+        if(!(packet >> location.y)){
+            throw std::runtime_error("failed to read y location");
+        };
+    };
+    EventSpawnNewPlayer(sf::Vector2f location, OBJECT_ID_TYPE playerId) : location(location), playerId(playerId){
+    }
+    sf::Packet toPacket() const override{
+        sf::Packet packet;
+        packet << (DATATYPE_EVENT_TYPE) EVENT_TYPE_SPAWN_NEW_PLAYER;
+        packet << playerId;
+        packet << location.x;
+        packet << location.y;
+        return packet;
+    }
+};
