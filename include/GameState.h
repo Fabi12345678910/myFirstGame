@@ -24,7 +24,7 @@ public:
     std::vector<Player>&getPlayers(){
         return players;
     }
-    void addPlayer(Player&& player){
+    void addPlayer(Player& player){
         players.push_back(player);
     }
 

@@ -186,31 +186,10 @@ void Client::updateGameStates(EventGamestatePlayerInputHistory& ev){
         std::cout << "handling update info for tick " << currentTickInfo << '\n';
         LabeledUpdateInfo update = ev.getNextInfo();
 
-        //size == 1 -> highestIndex(0) currentTickInfo == 1:
-        while(gameStates.getSize() <= currentTickInfo){
-            std::cout << "pushing new gameState\n";
-            gameStates.push(ClientGameState());
+        gameStore.setPlayerInputs(currentTickInfo, update.info.pInput);
+        if(update.type == UpdateInfo::GAMESTATE_PLAYER_INPUT){
+            gameStore.applyGameStateUpdate(currentTickInfo, update.info.gsUpdate);
         }
-
-        if(gameStates[currentTickInfo].state == ClientGameState::UNINITIALIZED){
-            gameStates[currentTickInfo].playerInputs = update.info.pInput;
-            gameStates[currentTickInfo].state = ClientGameState::READY_FOR_GENERATION;
-        }
-        if(update.type == UpdateInfo::GAMESTATE_PLAYER_INPUT && gameStates[currentTickInfo].state != ClientGameState::GENERATED){
-            std::cout << "got whole update for tick " << currentTickInfo << '\n';
-            
-            
-            std::cout << "update playerInfos size: " << update.info.gsUpdate.playerInfos.size() << '\n';
-            if(latestGeneratedTick < gameStates.getMinIndex()){
-                gameStates[currentTickInfo].gameState = baseGameState;
-            }else{
-                gameStates[currentTickInfo].gameState = gameStates[latestGeneratedTick].gameState;
-            }
-            update.info.gsUpdate.applyUpdate(gameStates[currentTickInfo].gameState);
-            gameStates[currentTickInfo].state = ClientGameState::GENERATED;
-            latestGeneratedTick = currentTickInfo;
-        }
-        currentTickInfo++;
     }
 }
 
