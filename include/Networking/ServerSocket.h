@@ -26,7 +26,8 @@ public:
     ~ServerSocket() = default;
     //not implemented yet, unsure if ever happens
     void sendEventToPlayer(int id, Event& ev) = delete;
-    void sendEventToEveryone(Event&& ev);
+    void sendTcpEventToEveryone(Event&& ev);
+    void sendUdpEventToEveryone(Event&& ev);
     void setEventHandler(void* handleEvent(std::unique_ptr<Event>, Connection&, void* args));
     void setUdpEventHandler(void* udpEventHandler(std::unique_ptr<Event>, std::optional<sf::IpAddress>& remoteAddress, unsigned short& remotePort, void* args));
 

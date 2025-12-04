@@ -1,6 +1,7 @@
 #include "Server.h"
 #include "GameUpdate.h"
 #include "PlayerOperations.h"
+#include "Operations/ServerGameStateUpdater.h"
 
 #include "Networking/EventDefinitions/EventLoginRequest.h"
 #include "Networking/EventDefinitions/EventLoginConfirmation.h"
@@ -9,12 +10,10 @@
 #include "Networking/EventDefinitions/EventSpawnNewPlayer.h"
 #include "Networking/EventDefinitions/EventPlayerVelocity.h"
 #include "Networking/EventDefinitions/EventPlayerLocation.h"
+#include "Networking/EventDefinitions/EventUserInput.h"
+#include "Networking/EventDefinitions/EventGamestatePlayerInputHistory.h"
 #include "maps/Map_TestAll.h"
-
-#define MAX_PLAYERS 4
-#define MAX_GAMEOBJECTS 10000
-//Tickrate in milliseconds per ticks
-#define TICKRATE_MS 10
+#include <algorithm>
 
 void* serverEventHandler(std::unique_ptr<Event> ev, Connection& conn, void* args) {
     struct serverEventHandlerData *handle = (serverEventHandlerData*) args;
@@ -25,7 +24,7 @@ void* serverEventHandler(std::unique_ptr<Event> ev, Connection& conn, void* args
     }
     std::tuple<ServerConnection&, std::unique_ptr<Event>> queueEntry(*serverConn, std::move(ev));
     handle->connectionEventsQueue.push(std::move(queueEntry));
-    printf("handling event\n");
+    //printf("handling event\n");
     return NULL;
 };
 
@@ -53,7 +52,13 @@ void Server::run(){
         std::vector<sf::Vector2f> spawnPoints = {sf::Vector2f(400.f,10.f)};
         Stage s = Stage(1, stageObjects, spawnPoints);
         Stage s2 = createMap_TestAll();
-        gameState.setStage(s2);
+        //just push a few gameStates so clients actually have something to display
+        for(int i = 0; i < 32; i++){
+            gameStates.push(GameState());
+            gameStates[i].setStage(s2);
+            inputHistory.push(std::vector<playerInputWithId>());
+            currentTick = i;
+        }
     }
     serverSocket.setArgs(&eventData);
     serverSocket.setEventHandler(serverEventHandler);
@@ -68,19 +73,72 @@ void Server::run(){
 }
 void Server::mainLoop(){
     printf("entering main loop\n");
-    //this is the main loop
     sf::Clock tickClock;
     while(true){
+        currentTick++;
+        std::vector<playerInputWithId> playerInputs;
+        playerInputs.reserve(numPlayers);
+        //copy gameState to next gameState
+        gameStates.push(gameStates[currentTick-1]);
+        gameStates[currentTick] = gameStates[currentTick-1];
+        
+        //debug print all players
+/*        std::cout << "GameStateDebugInfo:\n";
+        for (Player& p: gameStates[currentTick % gameStateBufferSize].getPlayers()){
+            std::cout << "  player present: " << p.getId() << '\n';
+        }*/
+        
         float deltaTime = tickClock.restart().asSeconds();
-        processEvents();
-        updateGamestate(deltaTime);
-        someTimesResyncPlayers();
+        processEvents(playerInputs);
+        //apply inputs for players
+        for(auto& conn: serverSocket.connections){
+            auto pInput = conn->getNextPlayerInput();
+            if(pInput.has_value()){
+                playerInputWithId input = {.playerId = conn->getPlayerId(), .playerInput = pInput.value()};
+                playerInputs.push_back(input);
+            }
+        }
+
+        //assumeInputs for each Player
+        for (Player& player : gameStates[currentTick].getPlayers()){
+            auto it = std::find_if(playerInputs.begin(), playerInputs.end(),
+                [player](const playerInputWithId& p){ return p.playerId == player.getId(); });
+            if(it == playerInputs.end()){
+                if(currentTick == 0){
+                    //no inputs yet, just use an empty one
+                    std::cout << "first frame, using empty userInput\n";
+                    playerInputs.push_back((struct playerInputWithId){.playerId = player.getId()});
+                    continue;
+                }
+                //no input received, copy input from last input
+                auto& lastInputs = inputHistory[currentTick-1];
+                auto itLastInput = std::find_if(lastInputs.begin(), lastInputs.end(),
+                [player](const playerInputWithId& p){ return p.playerId == player.getId(); });
+                if(itLastInput != lastInputs.end()){
+                    std::cout << "reusing last userInput with userId: " << itLastInput->playerId <<"\n";
+                    playerInputs.push_back(*itLastInput);
+//                    std::cout << "emplaced: " << playerInputs.back().playerId << '\n';
+                }else{
+                    //no last inputs, use empty one
+//                    std::cout << "no last inputs, use empty one\n";
+                    playerInputs.push_back((struct playerInputWithId){.playerId = player.getId()});
+                }
+            }else{
+//                std::cout << "already have input provided by the user\n";
+            }
+        }
+
+        //store playerInputs
+        inputHistory.push(playerInputs);
+        ServerGameStateUpdater updater(gameStates[currentTick]);
+        updateGame(updater, playerInputs, gameStates[currentTick], deltaTime);
+        someTimesResyncGameState();
         int32_t sleep_ms = TICKRATE_MS - tickClock.getElapsedTime().asMilliseconds();
         if(tickClock.getElapsedTime().asMilliseconds() >= 1){
             std::cout << "Computing tick took " << tickClock.getElapsedTime().asMilliseconds() << "ms\n";
         }
         #if ENABLE_SERVER_RENDERING
-        renderer.render(gameState);
+        renderer.render(gameStates[currentTick]);
         renderer.processDisplayEvents();
         #endif
         sf::sleep(sf::milliseconds(TICKRATE_MS) - tickClock.getElapsedTime());
@@ -88,10 +146,10 @@ void Server::mainLoop(){
     printf("exiting main loop\n");
 }
 
-void Server::processEvents(){
+void Server::processEvents(std::vector<playerInputWithId>& playerInputs){
     std::lock_guard<std::mutex> queueLockGuard(eventData.connectionEventsMutex);
     while(!eventData.connectionEventsQueue.empty()){
-        std::cout<< "processEvents: processing a new event\n";
+//        std::cout<< "processEvents: processing a new event\n";
         auto& connEv = eventData.connectionEventsQueue.front();
         ServerConnection& conn = std::get<0>(connEv);
         Event* ev = std::get<1>(connEv).get();
@@ -103,28 +161,23 @@ void Server::processEvents(){
                 //no new SLOT
                 conn.sendTcpEvent(EventLoginDenied(0));
             }else{
-
                 OBJECT_ID_TYPE nextPlayerId = availablePlayerIds.front();
                 availablePlayerIds.pop();
                 conn.setPlayerId(nextPlayerId);
                 conn.udpRecipientPort = evLoginRequest->udpPort;
-                conn.sendTcpEvent(EventLoginConfirmation(nextPlayerId));
+                conn.sendTcpEvent(EventLoginConfirmation(nextPlayerId, currentTick, TICKRATE_MS));
                 
                 //send all players to current player for now, should later be included in a gamestate sync
-                for(Player& p : gameState.getPlayers()){
+                for(Player& p : gameStates[currentTick].getPlayers()){
                     conn.sendTcpEvent(EventSpawnNewPlayer(p.getPosition(), p.getId()));
                 }
-                gameState.addPlayer(Player(nextPlayerId, sf::Vector2f(40.f, 40.f), sf::Vector2f(400.f, 10.f)));
-                
-                serverSocket.sendEventToEveryone(EventSpawnNewPlayer(gameState.getPlayer(nextPlayerId).getPosition(), nextPlayerId));
-            }
-        }
+                gameStates[currentTick].addPlayer(Player(nextPlayerId, sf::Vector2f(40.f, 40.f), sf::Vector2f(400.f, 10.f)));
+                numPlayers++;
+                //generate empty inputData for new player
+                playerInputs.push_back((playerInputWithId){.playerId = nextPlayerId, .playerInput = (playerInput){.moveLeft = false, .moveRight = false, .jump = false}});
 
-        EventPlayerVelocity *evVelocity = dynamic_cast<EventPlayerVelocity*>(ev);
-        if(evVelocity != NULL){
-            std::cout << "received velocity update: " << evVelocity->velocity.x << ',' << evVelocity->velocity.y << '\n';
-            updatePlayerVelocity(gameState, conn.getPlayerId(), evVelocity->velocity);
-            serverSocket.sendEventToEveryone(EventPlayerVelocity(evVelocity->playerId, evVelocity->velocity));
+                serverSocket.sendTcpEventToEveryone(EventSpawnNewPlayer(gameStates[currentTick].getPlayer(nextPlayerId).getPosition(), nextPlayerId));
+            }
         }
 
         EventDebugMessage *evDebug = dynamic_cast<EventDebugMessage*>(ev);
@@ -133,28 +186,73 @@ void Server::processEvents(){
             std::cout << "Debug message: " << evDebug->message << '\n';
         }
 
-        printf("processEvents: done processing event\n");
+        EventUserInput *evUserInput = dynamic_cast<EventUserInput*>(ev);
+        if(evUserInput != NULL){
+//            std::cout << "received user input\n";
+            playerInput input = evUserInput->playerInput.playerInput;
+            Player& player = gameStates[currentTick].getPlayer(evUserInput->playerInput.playerId);
+            conn.enqueueNextInput(evUserInput->playerInput.playerInput);
+        }
+
+//        printf("processEvents: done processing event\n");
         eventData.connectionEventsQueue.pop();
     }
 }
 
-void Server::updateGamestate(float deltaTime){
-    updateGame(gameState, deltaTime);
-}
-
-void Server::someTimesResyncPlayers(){
-    #define PLAYERRESYNCTIMER 4
-    static unsigned tickCounter = PLAYERRESYNCTIMER;
+void Server::someTimesResyncGameState(){
+    #define PLAYERRESYNCTIMER 5
+    static unsigned tickCounter = 1;
     tickCounter--;
     if(tickCounter == 0){
         tickCounter = PLAYERRESYNCTIMER;
-        resyncPlayers();
+        resyncGameState();
     }
 }
 
-void Server::resyncPlayers(){
-    std::cout << "resyncing players\n";
-    for(Player &p : gameState.getPlayers()){
-        serverSocket.sendEventToEveryone(EventPlayerLocation(p.getId(), p.getPosition()));
+void Server::resyncGameState(){
+    // perspective: this functions should send the most recent gameState
+    // along with every movement in between the gs and the previous one(and perhaps even one before for safety)
+    // so that clients will be able to correctly interfer gameStates between these  
+    // that means we have to include all current data and all new inputs since the last 2 synced gameStates
+    // std::cout << "resyncing players\n";
+    
+    static constexpr int SNAPSHOT_DISTANCE = 5;
+    static constexpr int MAX_TOTAL_INFOS_TO_SEND = SNAPSHOT_DISTANCE * 2;
+
+    int infosToSend = MAX_TOTAL_INFOS_TO_SEND;
+    //current Tick = 1 == can send 2 ticks
+    if(currentTick + 1 < MAX_TOTAL_INFOS_TO_SEND){
+        infosToSend = currentTick + 1;
     }
+
+    EventGamestatePlayerInputHistory syncEvent;
+    syncEvent.snapShotDistance = SNAPSHOT_DISTANCE;
+    syncEvent.latestAcknowledgedPlayerInput = 0;
+    syncEvent.startingGameTick = currentTick + 1 - infosToSend;
+
+//    for (TICK_TYPE i = syncEvent.startingGameTick; i <= currentTick; i++){
+    for (TICK_TYPE i = 0; i < infosToSend; i++){
+        TICK_TYPE currentTickToSend = syncEvent.startingGameTick + i;
+        std::cout << "tick(current, currentToSend, i): " << currentTick << ' ' << currentTickToSend << ' ' << i << '\n';
+        if((i)%SNAPSHOT_DISTANCE == 0){
+            auto& eventInputs = syncEvent.createCombinedUpdateInfo(gameStates[currentTickToSend]);
+            eventInputs.reserve(inputHistory[currentTickToSend].size());
+            for (auto& pInput : inputHistory[currentTickToSend])
+            {
+                eventInputs.emplace_back(pInput);
+            }
+
+            std::cout << "server: playerInfosSize: " << syncEvent.updateInfos.back().gsUpdate.playerInfos.size() << '\n';
+        }else{
+            auto& eventInputs = syncEvent.createNewPlayerInputs();
+            eventInputs.reserve(inputHistory[currentTickToSend].size());
+            for (auto& pInput : inputHistory[currentTickToSend])
+            {
+                eventInputs.emplace_back(pInput);
+            }
+        }
+    }
+
+    std::cout << "sending " << syncEvent.updateInfos.size() << " updates at starting tick " << syncEvent.startingGameTick << "\n";
+    serverSocket.sendUdpEventToEveryone(std::move(syncEvent));
 }
