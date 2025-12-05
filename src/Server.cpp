@@ -94,7 +94,7 @@ void Server::mainLoop(){
         for(auto& conn: serverSocket.connections){
             auto pInput = conn->getNextPlayerInput();
             if(pInput.has_value()){
-                playerInputWithId input = {.playerId = conn->getPlayerId(), .playerInput = pInput.value()};
+                playerInputWithId input(conn->getPlayerId(), pInput.value());
                 playerInputs.push_back(input);
             }
         }
@@ -107,7 +107,7 @@ void Server::mainLoop(){
                 if(currentTick == 0){
                     //no inputs yet, just use an empty one
                     std::cout << "first frame, using empty userInput\n";
-                    playerInputs.push_back((struct playerInputWithId){.playerId = player.getId()});
+                    playerInputs.emplace_back(player.getId(), playerInput());
                     continue;
                 }
                 //no input received, copy input from last input
@@ -121,7 +121,7 @@ void Server::mainLoop(){
                 }else{
                     //no last inputs, use empty one
 //                    std::cout << "no last inputs, use empty one\n";
-                    playerInputs.push_back((struct playerInputWithId){.playerId = player.getId()});
+                    playerInputs.emplace_back(player.getId(), playerInput());
                 }
             }else{
 //                std::cout << "already have input provided by the user\n";
@@ -131,7 +131,10 @@ void Server::mainLoop(){
         //store playerInputs
         inputHistory.push(playerInputs);
         ServerGameStateUpdater updater(gameStates[currentTick]);
-        updateGame(updater, playerInputs, gameStates[currentTick], deltaTime);
+        for(auto& input : playerInputs){
+            input.applyUpdate(updater, gameStates[currentTick]);
+        }
+        updateGame(updater, gameStates[currentTick], deltaTime);
         someTimesResyncGameState();
         int32_t sleep_ms = TICKRATE_MS - tickClock.getElapsedTime().asMilliseconds();
         if(tickClock.getElapsedTime().asMilliseconds() >= 1){
@@ -174,7 +177,7 @@ void Server::processEvents(std::vector<playerInputWithId>& playerInputs){
                 gameStates[currentTick].addPlayer(Player(nextPlayerId, sf::Vector2f(40.f, 40.f), sf::Vector2f(400.f, 10.f)));
                 numPlayers++;
                 //generate empty inputData for new player
-                playerInputs.push_back((playerInputWithId){.playerId = nextPlayerId, .playerInput = (playerInput){.moveLeft = false, .moveRight = false, .jump = false}});
+                playerInputs.emplace_back(nextPlayerId, playerInput());
 
                 serverSocket.sendTcpEventToEveryone(EventSpawnNewPlayer(gameStates[currentTick].getPlayer(nextPlayerId).getPosition(), nextPlayerId));
             }

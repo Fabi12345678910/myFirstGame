@@ -1,5 +1,6 @@
 #pragma once
 #include <SFML/Graphics.hpp>
+#include <SFML/System.hpp>
 #include <string>
 #include <Types.h>
 
@@ -11,9 +12,8 @@ protected:
 
 public:
     GameObject(OBJECT_ID_TYPE id, const sf::Vector2f& size, const sf::Vector2f& position)
-        : id(id)
+        : id(id), shape(size)
     {
-        shape.setSize(size);
         shape.setPosition(position);
     }
 

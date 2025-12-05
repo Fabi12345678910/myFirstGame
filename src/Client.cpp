@@ -70,8 +70,9 @@ void Client::performLogin(){
 }
 
 void Client::run(){
-    gameStates.push(ClientGameState());
+//    gameStates.push(ClientGameState());
     //create a fake(e.g. default) stage, has to be reworked
+    GameState baseGameState = GameState();
     {
         std::vector<StageObject> stageObjects;
         auto so = new StageObject(0, sf::Vector2f(800.f, 50.f), sf::Vector2f(0.f,550.f));
@@ -84,10 +85,11 @@ void Client::run(){
         std::vector<sf::Vector2f> spawnPoints = {sf::Vector2f(400.f,10.f)};
         Stage s = Stage(1, stageObjects, spawnPoints);
         Stage s2 = createMap_TestAll();
-        gameStates[latestGeneratedTick].gameState.setStage(s2);
         baseGameState.setStage(s2);
     }
-    
+    gameStore = ClientGameStateStore<clientGameStateBufferSize>(1, baseGameState);
+    gameStore.setTickrate(sf::milliseconds(this->tickrateMs).asSeconds());
+                
     //enter the main loop
     mainLoop();
 }
@@ -102,13 +104,15 @@ void Client::processEventsAwaitingSpawn(){
         //somehow handle tha event
         EventSpawnNewPlayer *evSpawnNewPlayer = dynamic_cast<EventSpawnNewPlayer*>(ev);
         if(evSpawnNewPlayer != NULL){
-            gameStates[latestGeneratedTick].gameState.addPlayer(Player(evSpawnNewPlayer->playerId, sf::Vector2f(40.f, 40.f),evSpawnNewPlayer->location));
+            clientState = PLAYING;
+//TODO
+/*            gameStates[latestGeneratedTick].gameState.addPlayer(Player(evSpawnNewPlayer->playerId, sf::Vector2f(40.f, 40.f),evSpawnNewPlayer->location));
             if(evSpawnNewPlayer->playerId == this->playerId){
                 // we have spawned and can now start the game
                 clientState = PLAYING;
                 eventData.connectionEventsQueue.pop();
                 return;
-            }
+            }*/
         }
         eventData.connectionEventsQueue.pop();
     }
@@ -185,11 +189,14 @@ void Client::updateGameStates(EventGamestatePlayerInputHistory& ev){
     {
         std::cout << "handling update info for tick " << currentTickInfo << '\n';
         LabeledUpdateInfo update = ev.getNextInfo();
-
-        gameStore.setPlayerInputs(currentTickInfo, update.info.pInput);
-        if(update.type == UpdateInfo::GAMESTATE_PLAYER_INPUT){
-            gameStore.applyGameStateUpdate(currentTickInfo, update.info.gsUpdate);
+        for(auto &pInput : update.info.pInput){
+            gameStore.addUpdateInfo(currentTickInfo, pInput);
         }
+        if(update.type == UpdateInfo1::GAMESTATE_PLAYER_INPUT){
+            gameStore.addUpdateInfo(currentTickInfo, update.info.gsUpdate);
+        }
+        gameStore.finalizeUpdateInfos(currentTickInfo);
+        currentTickInfo++;
     }
 }
 
@@ -221,52 +228,22 @@ void Client::mainLoop(){
 /*            ClientGameStateUpdater updater(gameStates[latestRenderedTick].gameState);
             std::vector<playerInputWithId> playerInputs;
             updateGame(updater, playerInputs, gameStates[latestRenderedTick].gameState, deltaTime);*/
-
+            GameState* generatedGameState;
             bool canRenderTick = true;
             while (deltaTime >= tickRate){
-                deltaTime-= tickRate;
                 tickToDisplay++;
-                std::cout << "client display info(tickToDisplay, latestGeneratedTick, gameStatesSize): " << tickToDisplay << " " << latestGeneratedTick << " " << gameStates.getSize() << '\n';
-                if (gameStates.getSize() <= tickToDisplay){
-                    std::cout << "nothing to generate yet, backing out\n";
-                    canRenderTick = false;
-                    continue;
-                }
-                //find baseGameState tick to generate from
-                bool foundTickToUse = false;
-                TICK_TYPE generatedTickToUse = 0;
-                for (TICK_TYPE t = tickToDisplay; t >= gameStates.getMinIndex(); t--)
-                {
-                    if(gameStates[t].state == ClientGameState::GENERATED){
-                        generatedTickToUse = t;
-                        std::cout << "foundTickToUse at " << t << '\n';
-                        foundTickToUse = true;
-                        break;
-                    }else if(gameStates[t].state == ClientGameState::UNINITIALIZED){
-                        //were missing playerInputs and cannot generate
-                        std::cout << "foundUninitializedTick at "<< t << '\n';
-                        canRenderTick = false;
-                        break;
-                    }
-                }
-                if(!foundTickToUse){
-                    //well were fucked, nothing to display as we have no known state
-                    canRenderTick = false;
-                    continue;
-                }
-                //generate all ticks from baseTick till we have the current one
-                for (TICK_TYPE t = generatedTickToUse + 1; t <= tickToDisplay; t++)
-                {
-                    gameStates[t].gameState = gameStates[t-1].gameState;
-                    ClientGameStateUpdater gsUpdater(gameStates[t].gameState);
-                    updateGame(gsUpdater, gameStates[t].playerInputs, gameStates[t].gameState, tickRate.asSeconds());
-                    gameStates[t].state = ClientGameState::GENERATED;
-                }
-                canRenderTick = true;
+                deltaTime-= tickRate;
+                generatedGameState = gameStore.getGameState(tickToDisplay, true);                
             }
-            if(canRenderTick){
-                std::cout << "rendering tick "<< tickToDisplay << '\n';
-                renderer.render(gameStates[tickToDisplay].gameState);
+            if(generatedGameState != NULL){
+                std::cout << "rendering tick "<< tickToDisplay << " with players count " << generatedGameState->getPlayers().size() << '\n';
+
+                for (auto& player :generatedGameState->getPlayers())
+                {
+                    std::cout << "incl. player: " << player.getId();
+                }
+                
+                renderer.render(*generatedGameState);
                 renderer.processDisplayEvents();
             }else{
                 std::cout << "can't render tick:(\n";
@@ -289,52 +266,24 @@ void Client::mainLoop(){
 playerInput Client::processInputs(){
     playerInput input;
     if(clientState == PLAYING){
-        playerInputWithId playerInputWithId = {0}; //player inputs that are sent to the server
-        playerInputWithId.playerId = playerId;
-//        sf::Vector2f playerVelocity = gameState.getPlayer(playerId).getVelocity();
-//        playerVelocity.x = 0.f;
+        playerInputWithId playerInputWithId(playerId, playerInput()); //player inputs that are sent to the server
+
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A)){
-            input.moveLeft = true;
-/*            std::cout << "---User pressed A\n";
-            std::cout << "current player velocity: " << playerVelocity.x << '\n';
-            gameState.getPlayer(playerId).setFacing(Player::FACING_LEFT);
-            playerVelocity.x -= gameState.getPlayer(playerId).getSpeed();
-            std::cout << "new player velocity: " << playerVelocity.x << '\n';
-            playerInputWithId.playerInput.moveLeft = true;*/
+            playerInputWithId.playerInput.moveLeft = true;
+
         }
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D)){
-            input.moveRight = true;
-/*            std::cout << "---User pressed D";
-            gameState.getPlayer(playerId).setFacing(Player::FACING_RIGHT);
-            playerVelocity.x += gameState.getPlayer(playerId).getSpeed();
-            playerInputWithId.playerInput.moveRight = true;*/
+            playerInputWithId.playerInput.moveRight = true;
+
         }
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Space)) {
-            input.jump = true;
-            //playerVelocity.y = -400.f;
-            //gameState.getPlayer(playerId).setIsOnGround(false);
-//            playerInputWithId.playerInput.jump = true;
+            playerInputWithId.playerInput.jump = true;
+
         }
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::J)) {
-            input.projectile = true;
-/*            Player& player = gameState.getPlayer(playerId);
-            if (player.getProjectileCooldown() == 0) {
-                std::cout << "--Projectile fired";
-                Projectile newProjectile(gameState.getProjectileIds(), sf::Vector2f(20.0, 20.0), gameState.getPlayer(playerId).getPosition());
-                gameState.setProjectileIds(gameState.getProjectileIds()+1); // increment so the next bullet has new ID
-                newProjectile.setSpeed(newProjectile.getSpeed() * (player.getFacing() == Player::FACING_RIGHT ? 1 : -1));
-                gameState.addProjectile(newProjectile);
-                player.setProjectileCooldown(100);
-                playerInputWithId.playerInput.projectile = true;
-            }*/
+            playerInputWithId.playerInput.projectile = true;
         }
-/*        if(playerVelocity != gameState.getPlayer(playerId).getVelocity()){
-            gameState.getPlayer(playerId).setVelocity(playerVelocity);
-        }*/
-        playerInputWithId.playerId = this->playerId;
-        playerInputWithId.playerInput = input;
-        EventUserInput ev = EventUserInput(playerInputWithId);
-        conn.sendTcpEvent(ev);
+        conn.sendTcpEvent(EventUserInput(playerInputWithId));
         return input;
     }
     return playerInput();

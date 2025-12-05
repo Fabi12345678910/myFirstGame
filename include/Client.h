@@ -36,7 +36,6 @@ private:
     ClientGameStateStore<clientGameStateBufferSize> gameStore = ClientGameStateStore<clientGameStateBufferSize>(32);
     enum clientState clientState = CONNECTING;
     int playerId;
-    GameState baseGameState;
     Renderer renderer;
     std::uint64_t latestGeneratedTick = 0;
     std::uint64_t latestPreRenderedTick = 0;

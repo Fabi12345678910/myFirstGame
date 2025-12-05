@@ -24,17 +24,10 @@ public:
     }
 
     T& back(){
-        if(getSize() == 0){
-            throw std::runtime_error("empty Array");
+        if(max == 0){
+            throw std::runtime_error("empty array");
         }
-        return buffer[getSize()-1];
-    }
-
-    const T& back(){
-        if(getSize() == 0){
-            throw std::runtime_error("empty Array");
-        }
-        return buffer[getSize()-1];
+        return buffer[(max-1) % N];
     }
 
     // Indexing with wrap-around

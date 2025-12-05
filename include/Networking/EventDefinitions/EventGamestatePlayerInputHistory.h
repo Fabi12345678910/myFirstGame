@@ -38,21 +38,21 @@ inline sf::Packet& operator >>(
     return packet;
 }
 
-struct UpdateInfo{
+struct UpdateInfo1{
     enum activeComponent{GAMESTATE_PLAYER_INPUT, PLAYER_INPUT};
     gsUpdateInfo gsUpdate;
     std::vector<playerInputWithId> pInput;
 
-    UpdateInfo(){}
-    UpdateInfo(gsUpdateInfo gsUpdate) : gsUpdate(gsUpdate){}
-    UpdateInfo(std::vector<playerInputWithId> pInput) : pInput(pInput){}
+    UpdateInfo1(){}
+    UpdateInfo1(gsUpdateInfo gsUpdate) : gsUpdate(gsUpdate){}
+    UpdateInfo1(std::vector<playerInputWithId> pInput) : pInput(pInput){}
 };
 
 struct LabeledUpdateInfo{
-    UpdateInfo::activeComponent type;
-    UpdateInfo& info;
-    LabeledUpdateInfo(UpdateInfo::activeComponent type,
-    UpdateInfo& info): type(type), info(info){}
+    UpdateInfo1::activeComponent type;
+    UpdateInfo1& info;
+    LabeledUpdateInfo(UpdateInfo1::activeComponent type,
+    UpdateInfo1& info): type(type), info(info){}
 };
 
 //this will send the latest snapshots and the inputs used to create those snapshots
@@ -66,7 +66,7 @@ public:
     TICK_TYPE startingGameTick;
     std::uint8_t snapShotDistance;
     PLAYER_INPUT_NO_TYPE latestAcknowledgedPlayerInput;
-    std::vector<UpdateInfo> updateInfos;
+    std::vector<UpdateInfo1> updateInfos;
 
     bool hasNextInfo(){
         return nextInfoIndex < updateInfos.size();
@@ -75,9 +75,9 @@ public:
     LabeledUpdateInfo getNextInfo(){
         nextInfoIndex++;
         if((nextInfoIndex-1) % snapShotDistance == 0){
-            return LabeledUpdateInfo(UpdateInfo::GAMESTATE_PLAYER_INPUT, updateInfos[nextInfoIndex - 1]);
+            return LabeledUpdateInfo(UpdateInfo1::GAMESTATE_PLAYER_INPUT, updateInfos[nextInfoIndex - 1]);
         }else{
-            return LabeledUpdateInfo(UpdateInfo::PLAYER_INPUT, updateInfos[nextInfoIndex - 1]);
+            return LabeledUpdateInfo(UpdateInfo1::PLAYER_INPUT, updateInfos[nextInfoIndex - 1]);
         }
     }
 
