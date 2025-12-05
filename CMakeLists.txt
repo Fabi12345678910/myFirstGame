@@ -42,7 +42,7 @@ add_executable(eventTest
     src/eventTest.cpp
     src/networking/Events.cpp
 )
-target_link_libraries(eventTest PRIVATE SFML::Network)
+target_link_libraries(eventTest PRIVATE SFML::Network SFML::Graphics)
 enable_autocopy_runtime_dlls(eventTest)
 
 # --- LOCAL sandbox (always build) ---
@@ -75,7 +75,7 @@ add_executable(ConnectionTestClient
     src/networking/Connection.cpp
     src/networking/ClientConnection.cpp
 )
-target_link_libraries(ConnectionTestClient PRIVATE SFML::Network)
+target_link_libraries(ConnectionTestClient PRIVATE SFML::Network SFML::Graphics)
 enable_autocopy_runtime_dlls(ConnectionTestClient)
 
 add_executable(ConnectionTestServer
@@ -86,7 +86,7 @@ add_executable(ConnectionTestServer
     src/networking/ServerSocket.cpp
     src/networking/ClientConnection.cpp
 )
-target_link_libraries(ConnectionTestServer PRIVATE SFML::Network)
+target_link_libraries(ConnectionTestServer PRIVATE SFML::Network SFML::Graphics)
 enable_autocopy_runtime_dlls(ConnectionTestServer)
 
 add_executable(Server

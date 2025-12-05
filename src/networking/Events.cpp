@@ -20,7 +20,7 @@ std::unique_ptr<Event> getEventFromPacket(sf::Packet& packet){
 
     switch (event_type)
     {
-        case EVENT_TYPE_DEBUG_MESSAGE:
+/*        case EVENT_TYPE_DEBUG_MESSAGE:
             return std::make_unique<EventDebugMessage>(packet);    
         case EVENT_TYPE_LOGIN_REQUEST:
             return std::make_unique<EventLoginRequest>(packet);
@@ -33,11 +33,13 @@ std::unique_ptr<Event> getEventFromPacket(sf::Packet& packet){
         case EVENT_TYPE_PLAYER_VELOCITY:
             return std::make_unique<EventPlayerVelocity>(packet);
         case EVENT_TYPE_SPAWN_NEW_PLAYER:
-            return std::make_unique<EventSpawnNewPlayer>(packet);
+            return std::make_unique<EventSpawnNewPlayer>(packet);*/
+        case EVENT_TYPE_PLAYER_VELOCITY:
+            return std::make_unique<EventPlayerVelocity>(packet);
         case EVENT_TYPE_USER_INPUT:
             return std::make_unique<EventUserInput>(packet);
-        case EVENT_TYPE_GAMESTATE_PLAYERINPUT_HISTORY:
-            return std::make_unique<EventGamestatePlayerInputHistory>(packet);
+//        case EVENT_TYPE_GAMESTATE_PLAYERINPUT_HISTORY:
+//            return std::make_unique<EventGamestatePlayerInputHistory>(packet);
         default:
             throw std::runtime_error("invalid event type");
     }

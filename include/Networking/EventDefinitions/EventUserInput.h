@@ -4,7 +4,6 @@
 #include "Networking/EventTypeList.h"
 #include "Inputs.h"
 #include "Types.h"
-#include <SFML/System/Vector2.hpp>
 
 class EventUserInput:public Event
 {

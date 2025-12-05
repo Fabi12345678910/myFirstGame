@@ -11,6 +11,7 @@ struct playerInput{
     bool moveRight = false;
     bool jump = false;
     bool projectile = false;
+    playerInput(){};
 };
 
 struct playerInputWithId : public UpdateInfo{
