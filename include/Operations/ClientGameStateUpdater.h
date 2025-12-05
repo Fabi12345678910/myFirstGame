@@ -1,3 +1,5 @@
+#pragma once
+
 #include "GameStateUpdater.h"
 #include "GameState.h"
 class ClientGameStateUpdater: public GameStateUpdater
@@ -5,6 +7,9 @@ class ClientGameStateUpdater: public GameStateUpdater
 private:
     GameState& gameState;
 public:
+    void setGameState(GameState& gameState){
+        this->gameState  = gameState;
+    }
     ClientGameStateUpdater(GameState& gameState):gameState(gameState){};
     ~ClientGameStateUpdater(){};
     virtual void setPlayerVelocity(Player& player, sf::Vector2f velocity) override {player.setVelocity(velocity);};

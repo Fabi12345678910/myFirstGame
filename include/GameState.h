@@ -21,9 +21,22 @@ public:
         }
         throw std::runtime_error("player not found");
     }
+    Player const& getPlayer(OBJECT_ID_TYPE id) const{
+        for (auto& player:players)
+        {
+            if(player.getId() == id){
+                return player;
+            }
+        }
+        throw std::runtime_error("player not found");
+    }
     std::vector<Player>&getPlayers(){
         return players;
     }
+    void addPlayer(Player& player){
+        players.push_back(player);
+    }
+
     void addPlayer(Player&& player){
         players.push_back(player);
     }
@@ -58,7 +71,7 @@ public:
         projectiles.push_back(projectile);
     }
 
-    OBJECT_ID_TYPE getProjectileIds() { return projectileIds; }
+    OBJECT_ID_TYPE getProjectileIds() const { return projectileIds; }
 
     void setProjectileIds(OBJECT_ID_TYPE i) { projectileIds = i; }
 

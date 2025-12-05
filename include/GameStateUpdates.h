@@ -2,6 +2,7 @@
 #include "GameState.h"
 #include "SFML/Network/Packet.hpp"
 #include <iostream>
+#include "UpdateInfo.h"
 
 struct playerUpdateInfo{
     OBJECT_ID_TYPE id;
@@ -57,10 +58,11 @@ struct projectileUpdateInfo{
     }
 };
 
-struct gsUpdateInfo{
+struct gsUpdateInfo : public UpdateInfo{
+
     std::vector<playerUpdateInfo> playerInfos;
     std::vector<projectileUpdateInfo> projectileInfos;
-    void applyUpdate(GameState& gameState){
+    virtual bool applyUpdate(GameStateUpdater& gsUpdater, GameState& gameState) override{
         for (auto& playerInfo : playerInfos)
         {
             try
@@ -71,13 +73,10 @@ struct gsUpdateInfo{
             {
                 gameState.addPlayer(Player(playerInfo.id, sf::Vector2f(40.f, 40.f), playerInfo.position));
                 playerInfo.applyUpdate(gameState.getPlayer(playerInfo.id));
-//                std::cerr << "did not found player with id"<< playerInfo.id <<" for update\n";
             }
-            
-            gameState.getPlayer(playerInfo.id);
         }
 
-    for (auto& projectileInfo : projectileInfos)
+        for (auto& projectileInfo : projectileInfos)
         {
             try
             {
@@ -90,10 +89,9 @@ struct gsUpdateInfo{
                 projectileInfo.applyUpdate(gameState.getProjectile(projectileInfo.id));
 //                std::cerr << "did not found player with id"<< projectileInfo.id <<" for update\n";
             }
-            
-            gameState.getPlayer(projectileInfo.id);
         }
-    }
+        return true;
+    };
 };
 
 inline sf::Packet& operator <<(sf::Packet& packet, const sf::Vector2f& v)

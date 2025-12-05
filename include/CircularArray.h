@@ -23,6 +23,13 @@ public:
         max++;
     }
 
+    T& back(){
+        if(max == 0){
+            throw std::runtime_error("empty array");
+        }
+        return buffer[(max-1) % N];
+    }
+
     // Indexing with wrap-around
     T& operator[](std::size_t idx) {
         if (idx >= max || idx < min)

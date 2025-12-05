@@ -37,42 +37,7 @@ static bool applyVoidTeleportY(GameStateUpdater& gsUpdater, Player& player, sf::
     return false;
 }
 
-void updateGame(GameStateUpdater& gsUpdater, std::vector<playerInputWithId> inputs, GameState& gameState, float deltaTime, std::vector<Player*> playersToUpdate, std::vector<Projectile*> projectilesToUpdate){
-    for(auto& input: inputs){
-
-        std::cout << "debug: handling user input" << input.playerId << "\n";
-        Player &player = gameState.getPlayer(input.playerId);
-        sf::Vector2f playerVelocity = player.getVelocity();
-        if(input.playerInput.moveLeft){
-            playerVelocity.x = -player.getSpeed();
-            gsUpdater.setPlayerVelocity(gameState.getPlayer(input.playerId), playerVelocity);
-            gsUpdater.setPlayerFacing(gameState.getPlayer(input.playerId), Player::FACING_LEFT);
-        }
-        if(input.playerInput.moveRight){
-            playerVelocity.x = player.getSpeed();
-            gsUpdater.setPlayerVelocity(gameState.getPlayer(input.playerId), playerVelocity);
-            gsUpdater.setPlayerFacing(gameState.getPlayer(input.playerId), Player::FACING_RIGHT);
-        }
-        if(!input.playerInput.moveLeft&&!input.playerInput.moveRight){
-            playerVelocity.x = 0;
-            gsUpdater.setPlayerVelocity(gameState.getPlayer(input.playerId), playerVelocity);
-        }
-        if(input.playerInput.jump){
-            if(player.getIsOnGround()){
-                playerVelocity.y = -400.f;
-                gsUpdater.setPlayerVelocity(gameState.getPlayer(input.playerId), playerVelocity);
-            }
-        }
-        if(input.playerInput.projectile && player.getProjectileCooldown() == 0){
-            int projId = gameState.getProjectileIds();
-            gsUpdater.setProjectileIds(projId + 1);
-
-            Projectile proj(projId, {20.f,20.f}, player.getPosition());
-            proj.setSpeed(proj.getSpeed() * (player.getFacing() == Player::FACING_RIGHT ? 1 : -1));
-            gsUpdater.addProjectile(proj);
-            gsUpdater.setPlayerProjectileCooldown(player, 100);
-        }
-    }
+void updateGame(GameStateUpdater& gsUpdater, GameState& gameState, float deltaTime, std::vector<Player*> playersToUpdate, std::vector<Projectile*> projectilesToUpdate){
 
     //move all movable objects
     for(Player* player : playersToUpdate){
@@ -148,7 +113,7 @@ void updateGame(GameStateUpdater& gsUpdater, std::vector<playerInputWithId> inpu
     }
 }
 
-void updateGame(GameStateUpdater& gsUpdater, std::vector<playerInputWithId> inputs, GameState& gameState, float deltaTime){
+void updateGame(GameStateUpdater& gsUpdater, GameState& gameState, float deltaTime){
     std::vector<Player*> playersToUpdate;
     std::vector<Projectile*> projectilesToUpdate;
     for (Player& p : gameState.getPlayers())
@@ -161,10 +126,10 @@ void updateGame(GameStateUpdater& gsUpdater, std::vector<playerInputWithId> inpu
         projectilesToUpdate.push_back(&p);
     }
     
-    updateGame(gsUpdater, inputs, gameState, deltaTime, playersToUpdate, projectilesToUpdate);
+    updateGame(gsUpdater, gameState, deltaTime, playersToUpdate, projectilesToUpdate);
 }
 
-void updateGameGhostPlayer(GameStateUpdater& gsUpdater, std::vector<playerInputWithId> inputs, GameState& gameState, float deltaTime){
+void updateGameGhostPlayer(GameStateUpdater& gsUpdater, GameState& gameState, float deltaTime){
     std::vector<Player*> playersToUpdate;
     std::vector<Projectile*> projectilesToUpdate;
     for (Player& p : gameState.getPlayers())
@@ -174,5 +139,5 @@ void updateGameGhostPlayer(GameStateUpdater& gsUpdater, std::vector<playerInputW
         }
     }
     
-    updateGame(gsUpdater, inputs, gameState, deltaTime, playersToUpdate, projectilesToUpdate);
+    updateGame(gsUpdater, gameState, deltaTime, playersToUpdate, projectilesToUpdate);
 }
