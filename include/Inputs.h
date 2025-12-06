@@ -11,9 +11,42 @@ struct playerInput{
     bool moveRight = false;
     bool jump = false;
     bool projectile = false;
+    bool applyUpdate(Player& player, GameStateUpdater& gsUpdater, GameState & gameState){
+        OBJECT_ID_TYPE playerId = player.getId();
+        sf::Vector2f playerVelocity = player.getVelocity();
+        if(moveLeft){
+            playerVelocity.x = -player.getSpeed();
+            gsUpdater.setPlayerVelocity(player, playerVelocity);
+            gsUpdater.setPlayerFacing(player, Player::FACING_LEFT);
+        }
+        if(moveRight){
+            playerVelocity.x = player.getSpeed();
+            gsUpdater.setPlayerVelocity(player, playerVelocity);
+            gsUpdater.setPlayerFacing(player, Player::FACING_RIGHT);
+        }
+        if(!moveLeft&&!moveRight){
+            playerVelocity.x = 0;
+            gsUpdater.setPlayerVelocity(player, playerVelocity);
+        }
+        if(jump){
+            if(player.getIsOnGround()){
+                playerVelocity.y = -400.f;
+                gsUpdater.setPlayerVelocity(player, playerVelocity);
+            }
+        }
+        if(projectile && player.getProjectileCooldown() == 0){
+            int projId = gameState.getProjectileIds();
+            gsUpdater.setProjectileIds(projId + 1);
+
+            Projectile proj(projId, {20.f,20.f}, player.getPosition());
+            proj.setSpeed(proj.getSpeed() * (player.getFacing() == Player::FACING_RIGHT ? 1 : -1));
+            gsUpdater.addProjectile(proj);
+            gsUpdater.setPlayerProjectileCooldown(player, 100);
+        }
+        return true;
+    }
     playerInput(){};
 };
-
 struct playerInputWithId : public UpdateInfo{
     OBJECT_ID_TYPE playerId;
     struct playerInput playerInput;
@@ -23,36 +56,7 @@ struct playerInputWithId : public UpdateInfo{
         try
         {
             Player &player = gameState.getPlayer(playerId);
-            sf::Vector2f playerVelocity = player.getVelocity();
-            if(playerInput.moveLeft){
-                playerVelocity.x = -player.getSpeed();
-                gsUpdater.setPlayerVelocity(gameState.getPlayer(playerId), playerVelocity);
-                gsUpdater.setPlayerFacing(gameState.getPlayer(playerId), Player::FACING_LEFT);
-            }
-            if(playerInput.moveRight){
-                playerVelocity.x = player.getSpeed();
-                gsUpdater.setPlayerVelocity(gameState.getPlayer(playerId), playerVelocity);
-                gsUpdater.setPlayerFacing(gameState.getPlayer(playerId), Player::FACING_RIGHT);
-            }
-            if(!playerInput.moveLeft&&!playerInput.moveRight){
-                playerVelocity.x = 0;
-                gsUpdater.setPlayerVelocity(gameState.getPlayer(playerId), playerVelocity);
-            }
-            if(playerInput.jump){
-                if(player.getIsOnGround()){
-                    playerVelocity.y = -400.f;
-                    gsUpdater.setPlayerVelocity(gameState.getPlayer(playerId), playerVelocity);
-                }
-            }
-            if(playerInput.projectile && player.getProjectileCooldown() == 0){
-                int projId = gameState.getProjectileIds();
-                gsUpdater.setProjectileIds(projId + 1);
-
-                Projectile proj(projId, {20.f,20.f}, player.getPosition());
-                proj.setSpeed(proj.getSpeed() * (player.getFacing() == Player::FACING_RIGHT ? 1 : -1));
-                gsUpdater.addProjectile(proj);
-                gsUpdater.setPlayerProjectileCooldown(player, 100);
-            }
+            playerInput.applyUpdate(player, gsUpdater, gameState);
         }
         catch(const std::exception& e)
         {

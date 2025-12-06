@@ -129,15 +129,9 @@ void updateGame(GameStateUpdater& gsUpdater, GameState& gameState, float deltaTi
     updateGame(gsUpdater, gameState, deltaTime, playersToUpdate, projectilesToUpdate);
 }
 
-void updateGameGhostPlayer(GameStateUpdater& gsUpdater, GameState& gameState, float deltaTime){
-    std::vector<Player*> playersToUpdate;
+void updateGameSinglePlayer(GameStateUpdater& gsUpdater, GameState& gameState, Player& player, float deltaTime){
+    std::vector<Player*> playersToUpdate = {&player};
     std::vector<Projectile*> projectilesToUpdate;
-    for (Player& p : gameState.getPlayers())
-    {
-        if(p.getIsGhostPlayer()){
-            playersToUpdate.push_back(&p);
-        }
-    }
     
     updateGame(gsUpdater, gameState, deltaTime, playersToUpdate, projectilesToUpdate);
 }

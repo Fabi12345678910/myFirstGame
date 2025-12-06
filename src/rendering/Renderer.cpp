@@ -35,7 +35,7 @@ void Renderer::render(GameState& gameState) {
     // ---- Players ----
     for (Player& player : gameState.getPlayers()) {
         sf::RectangleShape rect = player.getShape();
-        rect.setFillColor(sf::Color(255, 220, 60));
+        rect.setFillColor(player.getShape().getFillColor());
         rect.setOutlineThickness(1.f);
         rect.setOutlineColor(sf::Color(0, 0, 0, 70));
         window.draw(rect);
