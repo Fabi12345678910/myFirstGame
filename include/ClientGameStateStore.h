@@ -4,6 +4,7 @@
 #include "CircularArray.h"
 #include "Inputs.h"
 #include "Operations/GameStateUpdater.h"
+#include "Operations/LocalPlayerGameStateUpdater.h"
 #include "Operations/ClientGameStateUpdater.h"
 #include "GameUpdate.h"
 
@@ -13,16 +14,18 @@
 struct StoreState{
     std::vector<UpdateInfo*> updateInfos = std::vector<UpdateInfo*>();
     bool updateInfosFinalized = false;
-    Player localPlayer = Player();
     bool hasSnapshot = false;
+    Player localPlayer = Player();
+    bool localPlayerInitialized = false;
     playerInput localInput = playerInput();
+    bool localInputFinalized = false;
     GameState gameState = GameState();
     bool gameStateUpdated = false;
     StoreState() {}
 };
 
 
-#ifndef VSCODE_LINT
+#if true //can be changed to false to get vscode linting
     template<std::size_t N>
 #else
     static constexpr int N = 32;
@@ -31,7 +34,8 @@ class ClientGameStateStore
 {
 private:
     CircularArray<StoreState, N> gameStates;
-    float tickrateSeconds = 0.00001;
+    float tickrateSeconds = 0;
+    OBJECT_ID_TYPE localPlayerId = 0;
     //returns false if GameState could not be made available(e.g. is too old)
     bool ensureGameStateIsAvailable(TICK_TYPE tick){
         if(tick < gameStates.getMinIndex()) {return false;}
@@ -43,49 +47,93 @@ private:
             gameStates.back().gameStateUpdated = false;
             gameStates.back().updateInfos.clear();
             gameStates.back().updateInfosFinalized = false;
+            gameStates.back().localInputFinalized = false;
             gameStates.back().hasSnapshot = false;
         }
         return true;
     }
 
-    bool updateGameState(TICK_TYPE tick, GameStateUpdater& gsUpdater){
+    bool updateGameState(TICK_TYPE tick){
         std::cout << tick << ": updateGameState()\n";
         if(!isGameStateAvailable(tick)){return false;}
         if(gameStates[tick].gameStateUpdated){return true;}
         //well here we're actually updating the gameState
+        ClientGameStateUpdater gsUpdater(gameStates[tick].gameState, localPlayerId, gameStates[tick].localPlayer);
 
         if(gameStates[tick].hasSnapshot){
             std::cout << "applying snapshot update\n";
             for (UpdateInfo* updateInfo: gameStates[tick].updateInfos){
+                if(updateGameState(tick-1)){
+                    gameStates[tick].gameState = gameStates[tick-1].gameState;
+                }
                 updateInfo->applyUpdate(gsUpdater, gameStates[tick].gameState);
+                //still update LocalPlayer tho, since he is not included in the snapshot
             }
+            if(gsUpdater.isLocalPlayerAdded()){
+                gameStates[tick].localPlayerInitialized = true;
+            }
+            updateLocalPlayer(tick);
             gameStates[tick].gameStateUpdated = true;
             return true;
         }
 
-        if(!updateGameState(tick-1, gsUpdater)){return false;}
         if(!gameStates[tick].updateInfosFinalized){return false;}
-        
+        if(!gameStates[tick].localInputFinalized){return false;}
+        if(!updateGameState(tick-1)){return false;}
+
         gameStates[tick].gameState = gameStates[tick-1].gameState;
+        gameStates[tick].localPlayer = gameStates[tick-1].localPlayer;
+        gameStates[tick].localPlayerInitialized = gameStates[tick-1].localPlayerInitialized;
+
         std::cout << "applying client side update\n";
         for (UpdateInfo* updateInfo: gameStates[tick].updateInfos)
         {
             updateInfo->applyUpdate(gsUpdater, gameStates[tick].gameState);
         }
-        ClientGameStateUpdater gsUpdaterTimeStep(gameStates[tick].gameState);
+        if(gsUpdater.isLocalPlayerAdded()){
+            gameStates[tick].localPlayerInitialized = true;
+        }
 
         std::cout << "updating gameState " << tick << " with tickrate of " << this->tickrateSeconds << '\n';
-        updateGame(gsUpdaterTimeStep, gameStates[tick].gameState, this->tickrateSeconds);
-        
+        updateGame(gsUpdater, gameStates[tick].gameState, this->tickrateSeconds);
+        updateLocalPlayer(tick);
         std::cout << "updated gameState " << tick << '\n';
         gameStates[tick].gameStateUpdated = true;
         return true;
     }
 
+    bool updateLocalPlayer(TICK_TYPE tick){
+        std::cout << tick << ": updateLocalPlayer()\n";
+        if(!isGameStateAvailable(tick)){return false;}
+        if(!isGameStateAvailable(tick-1)){return false;}
+        if(!gameStates[tick].localInputFinalized){return false;};
+        if(!gameStates[tick].localPlayerInitialized && gameStates[tick-1].localPlayerInitialized){
+            gameStates[tick].localPlayer = gameStates[tick-1].localPlayer;
+            gameStates[tick].localPlayerInitialized = true;
+        }
+
+        LocalPlayerGameStateUpdater gsUpdaterLocalPlayer(gameStates[tick].gameState);
+        gameStates[tick].localInput.applyUpdate(gameStates[tick].localPlayer, gsUpdaterLocalPlayer, gameStates[tick].gameState);
+        updateGameSinglePlayer(gsUpdaterLocalPlayer, gameStates[tick].gameState, gameStates[tick].localPlayer, this->tickrateSeconds);
+        return true;
+    }
+
 public:
+    void setLocalPlayerId(OBJECT_ID_TYPE id){
+        this->localPlayerId = id;
+    }
+
+    bool addPlayer(TICK_TYPE tick, Player const& player){
+        if(!ensureGameStateIsAvailable(tick)){
+            return false;
+        }
+        gameStates[tick].localPlayer = player;
+    }
+
     void setTickrate(float tickrateSeconds){
         this->tickrateSeconds = tickrateSeconds;
     }
+
     ClientGameStateStore(size_t initialGameStates, GameState& initialGS){
         gameStates.push(StoreState());
         gameStates[0].gameState = initialGS;
@@ -142,6 +190,25 @@ public:
         return true;
     }
 
+    bool setLocalInput(TICK_TYPE tick, playerInput input){
+        std::cout << "finalizing updateInfos\n";
+        if (!isGameStateAvailable(tick))
+        {
+            return false;
+        }
+        gameStates[tick].localInput = input;
+        return true;
+    }
+    bool finalizeLocalInput(TICK_TYPE tick){
+        std::cout << "finalizing updateInfos\n";
+        if (!isGameStateAvailable(tick))
+        {
+            return false;
+        }
+        gameStates[tick].localInputFinalized = true;
+        return true;
+    }
+
     bool areUpdateInfosFinalized(TICK_TYPE tick){
         if (isGameStateAvailable(tick))
         {
@@ -155,19 +222,23 @@ public:
     }
 
     //returns a ptr to the GameState or NULL
-    GameState* getGameState(TICK_TYPE tick, bool updateIfPossible){
+    GameState* getGameState(TICK_TYPE tick, bool updateIfPossible, Player** localPlayer){
         if(!isGameStateAvailable(tick)){
             std::cout << tick << " tick not available\n"; 
             return NULL;
         }
+        if(!gameStates[tick].localPlayerInitialized){
+            std::cout << "localPlayer is uninitialized, not including in result\n";
+        }
         if(gameStates[tick].gameStateUpdated){
             std::cout << tick << " gamestate already rendered\n";
+            if(localPlayer != NULL && gameStates[tick].localPlayerInitialized){*localPlayer = &gameStates[tick].localPlayer;}
             return &(gameStates[tick].gameState);
         }else{
             if(updateIfPossible){
                 std::cout << tick << " trying to update gs\n";
-                ClientGameStateUpdater gsUpdater(gameStates[tick].gameState);
-                if(updateGameState(tick, gsUpdater)){
+                if(updateGameState(tick)){
+                    if(localPlayer != NULL && gameStates[tick].localPlayerInitialized){*localPlayer = &gameStates[tick].localPlayer;}
                     return &(gameStates[tick].gameState);
                 }else{
                     return NULL;

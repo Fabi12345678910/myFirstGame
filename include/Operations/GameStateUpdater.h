@@ -17,4 +17,5 @@ public:
     virtual void setPlayerFacing(Player& player, bool facing) = 0;
     virtual void addProjectile(Projectile& projectile) = 0;
     virtual void setProjectileIds(OBJECT_ID_TYPE id) = 0;
+    virtual void addPlayer(Player& player) = 0;
 };

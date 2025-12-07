@@ -6,11 +6,14 @@ class ClientGameStateUpdater: public GameStateUpdater
 {
 private:
     GameState& gameState;
+    OBJECT_ID_TYPE localPlayerId;
+    Player& localPlayer;
+    bool localPlayerAdded = false;
 public:
     void setGameState(GameState& gameState){
         this->gameState  = gameState;
     }
-    ClientGameStateUpdater(GameState& gameState):gameState(gameState){};
+    ClientGameStateUpdater(GameState& gameState, OBJECT_ID_TYPE localPlayerId, Player& localPlayer):gameState(gameState), localPlayerId(localPlayerId), localPlayer(localPlayer){};
     ~ClientGameStateUpdater(){};
     virtual void setPlayerVelocity(Player& player, sf::Vector2f velocity) override {player.setVelocity(velocity);};
     virtual void deltaMovePlayer(Player& player, sf::Vector2f deltaPosition) override {player.getShape().move(deltaPosition);};
@@ -20,4 +23,15 @@ public:
     virtual void setPlayerFacing(Player& player, bool facing) override {player.setFacing(facing);};
     virtual void addProjectile(Projectile& projectile) override {gameState.addProjectile(projectile);};
     virtual void setProjectileIds(OBJECT_ID_TYPE id) override {gameState.setProjectileIds(id);};
+    virtual void addPlayer(Player& player) override {
+        gameState.addPlayer(player);
+        if(player.getId() == localPlayerId){
+            std::cout << "detected local Player adding\n";
+            localPlayer = player;
+            localPlayerAdded = true;
+        }
+    };
+    bool isLocalPlayerAdded(){
+        return localPlayerAdded;
+    }
 };

@@ -75,6 +75,7 @@ void Server::mainLoop(){
     printf("entering main loop\n");
     sf::Clock tickClock;
     while(true){
+        float deltaTime = tickClock.restart().asSeconds();
         currentTick++;
         std::vector<playerInputWithId> playerInputs;
         playerInputs.reserve(numPlayers);
@@ -88,7 +89,6 @@ void Server::mainLoop(){
             std::cout << "  player present: " << p.getId() << '\n';
         }*/
         
-        float deltaTime = tickClock.restart().asSeconds();
         processEvents(playerInputs);
         //apply inputs for players
         for(auto& conn: serverSocket.connections){

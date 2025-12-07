@@ -53,7 +53,7 @@ void Client::performLogin(){
                 this->tickrateMs = evLoginSuccess->serverTickRateMs;
                 tickToDisplay = evLoginSuccess->latestServerTick - displayTickDifference;
                 if(evLoginSuccess->latestServerTick < displayTickDifference){
-                    tickToDisplay = 0;
+                    throw std::runtime_error("unable to initiate entity interpolation");
                 }
                 clientState = AWAITING_SPAWN;
                 conn.setUdpArgs(&eventData);
@@ -89,6 +89,7 @@ void Client::run(){
     }
     gameStore = ClientGameStateStore<clientGameStateBufferSize>(1, baseGameState);
     gameStore.setTickrate(sf::milliseconds(this->tickrateMs).asSeconds());
+    gameStore.setLocalPlayerId(this->playerId);
                 
     //enter the main loop
     mainLoop();
@@ -105,7 +106,7 @@ void Client::processEventsAwaitingSpawn(){
         EventSpawnNewPlayer *evSpawnNewPlayer = dynamic_cast<EventSpawnNewPlayer*>(ev);
         if(evSpawnNewPlayer != NULL){
             clientState = PLAYING;
-//TODO
+//TODO store player in GameStore.addPlayer()
 /*            gameStates[latestGeneratedTick].gameState.addPlayer(Player(evSpawnNewPlayer->playerId, sf::Vector2f(40.f, 40.f),evSpawnNewPlayer->location));
             if(evSpawnNewPlayer->playerId == this->playerId){
                 // we have spawned and can now start the game
@@ -224,26 +225,43 @@ void Client::mainLoop(){
             printf("be playing\n");
 
             processEventsPlaying();
-            processInputs();
+
 /*            ClientGameStateUpdater updater(gameStates[latestRenderedTick].gameState);
             std::vector<playerInputWithId> playerInputs;
             updateGame(updater, playerInputs, gameStates[latestRenderedTick].gameState, deltaTime);*/
-            GameState* generatedGameState;
+            GameState* generatedGameState = NULL;
+            Player* localPlayer = NULL;
             bool canRenderTick = true;
+            playerInput input = processInputs();
             while (deltaTime >= tickRate){
                 tickToDisplay++;
                 deltaTime-= tickRate;
-                generatedGameState = gameStore.getGameState(tickToDisplay, true);                
+                conn.sendTcpEvent(EventUserInput(playerInputWithId(this->playerId, input)));
+                gameStore.setLocalInput(tickToDisplay, input);
+                gameStore.finalizeLocalInput(tickToDisplay);
+
+                gameStore.getGameState(tickToDisplay, true, NULL);                
             }
+
+            generatedGameState = gameStore.getGameState(tickToDisplay, true, &localPlayer);  
+
             if(generatedGameState != NULL){
                 std::cout << "rendering tick "<< tickToDisplay << " with players count " << generatedGameState->getPlayers().size() << '\n';
-
-                for (auto& player :generatedGameState->getPlayers())
-                {
-                    std::cout << "incl. player: " << player.getId();
+                GameState displayGameState = *generatedGameState;
+                if(localPlayer != NULL){
+                    Player locPlayer = *localPlayer;
+                    locPlayer.getShape().setFillColor(sf::Color::Magenta);
+                    std::cout << "adding local player\n";
+                    displayGameState.addPlayer(locPlayer);
+                }else{
+                    std::cout << "no local player found\n";
                 }
-                
-                renderer.render(*generatedGameState);
+                for (auto& player :displayGameState.getPlayers())
+                {
+                    std::cout << "incl. player: " << player.getId() << '\n';
+                }
+                renderer.render(displayGameState);
+
                 renderer.processDisplayEvents();
             }else{
                 std::cout << "can't render tick:(\n";
@@ -266,24 +284,22 @@ void Client::mainLoop(){
 playerInput Client::processInputs(){
     playerInput input;
     if(clientState == PLAYING){
-        playerInputWithId playerInputWithId(playerId, playerInput()); //player inputs that are sent to the server
 
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A)){
-            playerInputWithId.playerInput.moveLeft = true;
+            input.moveLeft = true;
 
         }
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D)){
-            playerInputWithId.playerInput.moveRight = true;
+            input.moveRight = true;
 
         }
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Space)) {
-            playerInputWithId.playerInput.jump = true;
+            input.jump = true;
 
         }
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::J)) {
-            playerInputWithId.playerInput.projectile = true;
+            input.projectile = true;
         }
-        conn.sendTcpEvent(EventUserInput(playerInputWithId));
         return input;
     }
     return playerInput();

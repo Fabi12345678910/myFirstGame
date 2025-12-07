@@ -71,8 +71,9 @@ struct gsUpdateInfo : public UpdateInfo{
             }
             catch(const std::runtime_error& e)
             {
-                gameState.addPlayer(Player(playerInfo.id, sf::Vector2f(40.f, 40.f), playerInfo.position));
-                playerInfo.applyUpdate(gameState.getPlayer(playerInfo.id));
+                Player newPlayer(playerInfo.id, sf::Vector2f(40.f, 40.f), playerInfo.position);
+                playerInfo.applyUpdate(newPlayer);
+                gsUpdater.addPlayer(newPlayer);
             }
         }
 
