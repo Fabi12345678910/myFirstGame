@@ -114,3 +114,12 @@ inline sf::Packet& operator<<(sf::Packet& packet, const playerInputWithId& input
 inline sf::Packet& operator>>(sf::Packet& packet, playerInputWithId& inputId) {
     return packet >> inputId.playerId >> inputId.playerInput;
 }
+
+
+inline sf::Packet& operator<<(sf::Packet& packet, const indexedPlayerInput& inputId) {
+    return packet << inputId.idx << inputId.playerInput;
+}
+
+inline sf::Packet& operator>>(sf::Packet& packet, indexedPlayerInput& inputId) {
+    return packet >> inputId.idx >> inputId.playerInput;
+}

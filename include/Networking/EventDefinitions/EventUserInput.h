@@ -9,16 +9,14 @@
 class EventUserInput:public Event
 {
 private:
-    std::vector<playerInput> playerInputs;
-    TICK_TYPE firstInputTick;
-    TICK_TYPE currentReadInputTick;
+    std::vector<struct indexedPlayerInput> playerInputs;
+    TICK_TYPE currentReadInputTick = 0;
 public:
     EventUserInput(sf::Packet packet){
         uint32_t inputSize;
-        if(!(packet >> firstInputTick >> inputSize)){
+        if(!(packet >> inputSize)){
             throw std::runtime_error("error reading packet");
         };
-        currentReadInputTick = firstInputTick;
         playerInputs.reserve(inputSize);
         for (uint32_t i = 0; i < inputSize; i++)
         {
@@ -33,30 +31,22 @@ public:
     }
 
     bool hasNextUserInput(){
-        return (currentReadInputTick - firstInputTick < (TICK_TYPE)playerInputs.size());
+        return (currentReadInputTick < (TICK_TYPE)playerInputs.size());
     }
 
     indexedPlayerInput getNextUserInput(){
         indexedPlayerInput retValue;
-        retValue.playerInput = playerInputs[currentReadInputTick - firstInputTick ];
-        retValue.idx = currentReadInputTick;
+        retValue = playerInputs[currentReadInputTick];
         currentReadInputTick++;
         return retValue;
     }
 
-    void addUserInput(TICK_TYPE tick, playerInput playerInput){
-        if(playerInputs.size() == 0){
-            firstInputTick = tick;
-        }
-        if(firstInputTick + playerInputs.size() != tick){
-            throw std::runtime_error("provided userInputs are not in order");
-        }
+    void addUserInput(indexedPlayerInput playerInput){
         playerInputs.push_back(playerInput);
     }
     sf::Packet toPacket() const override{
         sf::Packet packet;
         packet << (DATATYPE_EVENT_TYPE) EVENT_TYPE_USER_INPUT;
-        packet << firstInputTick;
         packet << (uint32_t) playerInputs.size();
         for(auto& input: playerInputs){
             packet << input;

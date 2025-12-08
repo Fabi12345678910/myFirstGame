@@ -30,6 +30,16 @@ public:
         }
         throw std::runtime_error("player not found");
     }
+
+    void removePlayer(OBJECT_ID_TYPE id){
+        for (size_t i = 0; i < players.size(); i++)
+        {
+            if(players[i].getId() == id){
+                players.erase(players.begin()+i);
+                return;
+            }
+        }
+    }
     std::vector<Player>&getPlayers(){
         return players;
     }

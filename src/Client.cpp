@@ -196,16 +196,17 @@ void Client::mainLoop(){
                 deltaTime-= tickRate;
                 gameStore.setLocalInput(tickToDisplay, input);
                 gameStore.finalizeLocalInput(tickToDisplay);
-                constexpr size_t maxHistoricInputsToSend = 4; 
+                constexpr size_t maxHistoricInputsToSend = 8;
                 EventUserInput userInputs;
+                bool foundFirstInput = false;
                 for (size_t i = tickToDisplay - maxHistoricInputsToSend; i <= tickToDisplay; i++)
                 {
                     if(gameStore.hasLocalInput(i)){
-                        userInputs.addUserInput(i, gameStore.getLocalInput(i));
+                        userInputs.addUserInput(indexedPlayerInput(i, gameStore.getLocalInput(i)));
                     }
                 }
 //                std::cout << "sending UserInput\n";
-                conn.sendTcpEvent(userInputs);
+                conn.sendUdpEvent(userInputs);
 
                 gameStore.getGameState(tickToDisplay, true, NULL);                
             }
@@ -223,6 +224,12 @@ void Client::mainLoop(){
                 }else{
 //                    std::cout << "no local player found\n";
                 }
+                constexpr bool renderLocalServerPlayer = false;
+                if (!renderLocalServerPlayer){
+                    displayGameState.removePlayer(this->playerId);
+                }
+
+
                 for (auto& player :displayGameState.getPlayers())
                 {
 //                    std::cout << "incl. player: " << player.getId() << '\n';

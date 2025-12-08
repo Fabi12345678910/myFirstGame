@@ -19,6 +19,7 @@
 struct serverEventHandlerData{
     std::queue<std::tuple<ServerConnection&, std::unique_ptr<Event>>> connectionEventsQueue;
     std::mutex connectionEventsMutex;
+    std::list<std::unique_ptr<ServerConnection>>* connections;
 };
 
 class Server

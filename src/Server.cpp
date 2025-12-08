@@ -27,13 +27,30 @@ void* serverTcpEventHandler(std::unique_ptr<Event> ev, Connection& conn, void* a
     //printf("handling event\n");
     return NULL;
 };
-void* udpEventHandler(std::unique_ptr<Event>, std::optional<sf::IpAddress>& remoteAddress, unsigned short& remotePort, void* args){
-    //TODO
+void* serverUdpEventHandler(std::unique_ptr<Event> ev, std::optional<sf::IpAddress>& remoteAddress, unsigned short& remotePort, void* args){
+    struct serverEventHandlerData *handle = (serverEventHandlerData*) args;
+    std::lock_guard<std::mutex> queueLockGuard(handle->connectionEventsMutex);
+    ServerConnection* serverConn;
+    for (auto& connPtr : *handle->connections)
+    {
+        if(connPtr->udpRecipientIpAdress == remoteAddress && connPtr->udpRecipientPort == remotePort){
+            serverConn = connPtr.get();
+        }
+    }
+    
+    if(serverConn == NULL){
+        throw std::runtime_error("did not get a server connection");
+    }
+    std::tuple<ServerConnection&, std::unique_ptr<Event>> queueEntry(*serverConn, std::move(ev));
+    handle->connectionEventsQueue.push(std::move(queueEntry));
+    //printf("handling event\n");
+    return NULL;
     return NULL;
 }
 
 
 Server::Server() : serverSocket(42069){
+    eventData.connections = &serverSocket.connections;
 }
 
 Server::~Server(){
@@ -66,8 +83,8 @@ void Server::run(){
     }
     serverSocket.setArgs(&eventData);
     serverSocket.setEventHandler(serverTcpEventHandler);
-//    serverSocket.setUdpArgs(&eventData);
-//    serverSocket.setUdpEventHandler(serverTcpEventHandler);
+    serverSocket.setUdpArgs(&eventData);
+    serverSocket.setUdpEventHandler(serverUdpEventHandler);
     for(OBJECT_ID_TYPE i = 1; i<= MAX_PLAYERS; i++){
         availablePlayerIds.push(i);
     }
