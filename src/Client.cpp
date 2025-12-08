@@ -131,48 +131,6 @@ void Client::processEventsPlaying(){
             std::cout << "handling gameStateUpdate\n";
             updateGameStates(*eventGamestatePlayerInputHistory);
         }
-        
-        // EventPlayerVelocity *evPlayerVelocity = dynamic_cast<EventPlayerVelocity*>(ev);
-        // if(evPlayerVelocity != NULL){
-        //     updatePlayerVelocity(gameState, evPlayerVelocity->playerId,evPlayerVelocity->velocity);
-        // }
-/*        EventPlayerLocation *evPlayerLocation = dynamic_cast<EventPlayerLocation*>(ev);
-        if(evPlayerLocation != NULL){
-            updatePlayerLocation(gameState, evPlayerLocation->playerId,evPlayerLocation->location);
-        }*/
-/*        EventUserInput *evUserInput = dynamic_cast<EventUserInput*>(ev);
-        if(evUserInput != NULL && evUserInput->playerInput.playerId != this->playerId){
-            std::cout << "received user input\n";
-            playerInput input = evUserInput->playerInput.playerInput;
-            Player& player = gameState.getPlayer(evUserInput->playerInput.playerId);
-            
-            // Horizontal velocity
-            sf::Vector2f v = player.getVelocity();
-            v.x = 0.f;
-            if(input.moveLeft) { player.setFacing(-1); v.x -= player.getSpeed(); }
-            if(input.moveRight) { player.setFacing( 1); v.x += player.getSpeed(); }
-
-            // Jump
-            if(input.jump && player.getIsOnGround() && playerId == player.getId()){
-                v.y = -400.f;
-                player.setIsOnGround(false);
-            }
-
-            // apply velocity
-            player.setVelocity(v);
-
-            // fire projectile
-            if(input.projectile && player.getProjectileCooldown() == 0){
-                int projId = gameState.getProjectileIds();
-                gameState.setProjectileIds(projId + 1);
-
-                Projectile proj(projId, {20.f,20.f}, player.getPosition());
-                proj.setSpeed(proj.getSpeed() * player.getFacing());
-                gameState.addProjectile(proj);
-
-                player.setProjectileCooldown(100);
-            }
-        }*/
 
 //        printf("processEvents: done processing event\n");
         eventData.connectionEventsQueue.pop();
@@ -188,7 +146,7 @@ void Client::updateGameStates(EventGamestatePlayerInputHistory& ev){
     TICK_TYPE currentTickInfo = ev.startingGameTick;
     while (ev.hasNextInfo())
     {
-        std::cout << "handling update info for tick " << currentTickInfo << '\n';
+//        std::cout << "handling update info for tick " << currentTickInfo << '\n';
         LabeledUpdateInfo update = ev.getNextInfo();
         for(auto &pInput : update.info.pInput){
             gameStore.addUpdateInfo(currentTickInfo, pInput);
@@ -222,7 +180,7 @@ void Client::mainLoop(){
     while(true){
         if(clientState == PLAYING){
             sf::Time deltaTime = tickClock.restart();
-            printf("be playing\n");
+//            printf("be playing\n");
 
             processEventsPlaying();
 
@@ -246,7 +204,7 @@ void Client::mainLoop(){
                         userInputs.addUserInput(i, gameStore.getLocalInput(i));
                     }
                 }
-                std::cout << "sending UserInput\n";
+//                std::cout << "sending UserInput\n";
                 conn.sendTcpEvent(userInputs);
 
                 gameStore.getGameState(tickToDisplay, true, NULL);                
@@ -255,25 +213,25 @@ void Client::mainLoop(){
             generatedGameState = gameStore.getGameState(tickToDisplay, true, &localPlayer);  
 
             if(generatedGameState != NULL){
-                std::cout << "rendering tick "<< tickToDisplay << " with players count " << generatedGameState->getPlayers().size() << '\n';
+//                std::cout << "rendering tick "<< tickToDisplay << " with players count " << generatedGameState->getPlayers().size() << '\n';
                 GameState displayGameState = *generatedGameState;
                 if(localPlayer != NULL){
                     Player locPlayer = *localPlayer;
                     locPlayer.getShape().setFillColor(sf::Color::Magenta);
-                    std::cout << "adding local player\n";
+//                    std::cout << "adding local player\n";
                     displayGameState.addPlayer(locPlayer);
                 }else{
-                    std::cout << "no local player found\n";
+//                    std::cout << "no local player found\n";
                 }
                 for (auto& player :displayGameState.getPlayers())
                 {
-                    std::cout << "incl. player: " << player.getId() << '\n';
+//                    std::cout << "incl. player: " << player.getId() << '\n';
                 }
                 renderer.render(displayGameState);
 
                 renderer.processDisplayEvents();
             }else{
-                std::cout << "can't render tick:(\n";
+//                std::cout << "can't render tick:(\n";
             }
             if(tickClock.getElapsedTime().asMilliseconds() >= 5){
                 std::cout << "Computing tick took " << tickClock.getElapsedTime().asMilliseconds() << "ms\n";

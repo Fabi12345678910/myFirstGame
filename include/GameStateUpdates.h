@@ -59,10 +59,11 @@ struct projectileUpdateInfo{
 };
 
 struct gsUpdateInfo : public UpdateInfo{
-
+    TICK_TYPE latestIncludedPInput;
     std::vector<playerUpdateInfo> playerInfos;
     std::vector<projectileUpdateInfo> projectileInfos;
     virtual bool applyUpdate(GameStateUpdater& gsUpdater, GameState& gameState) override{
+        std::cout << "gsUpdate info contains " << playerInfos.size() << " players\n";
         for (auto& playerInfo : playerInfos)
         {
             try
@@ -154,66 +155,39 @@ inline sf::Packet& operator >>(sf::Packet& packet, projectileUpdateInfo& pr)
 inline sf::Packet& operator <<(sf::Packet& packet, const gsUpdateInfo& gs)
 {
     // Players
+    packet << gs.latestIncludedPInput;
     packet << static_cast<uint32_t>(gs.playerInfos.size());
     std::cout << "writing " << static_cast<uint32_t>(gs.playerInfos.size()) << "players\n";
-    for (const auto& p : gs.playerInfos)
+    for (const auto& p : gs.playerInfos){
         packet << p;
+    }
 
     // Projectiles
     packet << static_cast<uint32_t>(gs.projectileInfos.size());
-    for (const auto& pr : gs.projectileInfos)
+    for (const auto& pr : gs.projectileInfos){
         packet << pr;
+    }
 
     return packet;
 }
 
 inline sf::Packet& operator >>(sf::Packet& packet, gsUpdateInfo& gs)
 {
+    packet >> gs.latestIncludedPInput;
     uint32_t count;
-
     // Players
     packet >> count;
-    std::cout << "reading " << count << "players\n";
+//    std::cout << "reading " << count << "players\n";
     gs.playerInfos.resize(count);
-    for (uint32_t i = 0; i < count; i++)
+    for (uint32_t i = 0; i < count; i++){
         packet >> gs.playerInfos[i];
-
+    }
     // Projectiles
     packet >> count;
     gs.projectileInfos.resize(count);
-    for (uint32_t i = 0; i < count; i++)
+    for (uint32_t i = 0; i < count; i++){
         packet >> gs.projectileInfos[i];
-
+    }
+        
     return packet;
 }
-
-/*inline sf::Packet& operator <<(
-    sf::Packet& packet,
-    const std::vector<gsUpdateInfo>& vec)
-{
-    packet << static_cast<uint32_t>(vec.size());
-
-    for (const auto& updateInfo : vec)
-    {
-        packet << updateInfo;   // gsUpdateInfo
-    }
-
-    return packet;
-}
-
-inline sf::Packet& operator >>(
-    sf::Packet& packet,
-    std::vector<gsUpdateInfo>& vec)
-{
-    uint32_t count;
-    packet >> count;
-
-    vec.resize(count);
-
-    for (uint32_t i = 0; i < count; ++i)
-    {
-        packet >> vec[i];
-    }
-
-    return packet;
-}*/

@@ -38,9 +38,9 @@ private:
     TICK_TYPE currentTick = 0;
 
     int numPlayers;
-    CircularArray<std::vector<struct playerInputWithId>, gameStateBufferSize> inputHistory;
+    CircularArray<std::vector<struct indexedPlayerInputWithId>, gameStateBufferSize> inputHistory;
     CircularArray<GameState, gameStateBufferSize> gameStates;
-    void processEvents(std::vector<playerInputWithId>& playerInputs);
+    void processEvents(std::vector<indexedPlayerInputWithId>& playerInputs);
     void someTimesResyncGameState();
     void resyncGameState();
     void mainLoop();

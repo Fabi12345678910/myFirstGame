@@ -52,7 +52,7 @@ struct playerInputWithId : public UpdateInfo{
     struct playerInput playerInput;
 
     virtual bool applyUpdate(GameStateUpdater& gsUpdater, GameState & gameState) override{
-        std::cout << "debug: applying user input " << playerId << "\n";
+//        std::cout << "applyUpdate() user input " << playerId << "\n";
         try
         {
             Player &player = gameState.getPlayer(playerId);
@@ -72,6 +72,20 @@ struct playerInputWithId : public UpdateInfo{
 struct indexedPlayerInput{
     TICK_TYPE idx;
     struct playerInput playerInput;
+    indexedPlayerInput(){}
+    indexedPlayerInput(TICK_TYPE idx, struct playerInput pInput) : idx(idx), playerInput(pInput) {}
+};
+
+struct indexedPlayerInputWithId{
+    TICK_TYPE idx;
+    struct playerInputWithId playerInputWithId;
+    indexedPlayerInputWithId(){}
+    indexedPlayerInputWithId(TICK_TYPE idx, struct playerInputWithId pInputWithId): idx(idx), playerInputWithId(pInputWithId){}
+    indexedPlayerInputWithId(TICK_TYPE idx, struct playerInput pInput, OBJECT_ID_TYPE id) : 
+        idx(idx), playerInputWithId(id, pInput){}
+    indexedPlayerInputWithId(struct indexedPlayerInput idxPInput, OBJECT_ID_TYPE id) : idx(idxPInput.idx), playerInputWithId(id, idxPInput.playerInput){}
+    void invalidateIdx(){idx = 0-1;};
+    bool isIdxValid(){return idx != 0-1;}
 };
 
 struct allPlayerInputs{

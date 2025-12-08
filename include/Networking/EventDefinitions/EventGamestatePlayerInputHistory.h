@@ -65,7 +65,6 @@ public:
     // The Tick on which the first playerInput is based
     TICK_TYPE startingGameTick;
     std::uint8_t snapShotDistance;
-    PLAYER_INPUT_NO_TYPE latestAcknowledgedPlayerInput;
     std::vector<UpdateInfo1> updateInfos;
 
     bool hasNextInfo(){
@@ -83,7 +82,7 @@ public:
 
     EventGamestatePlayerInputHistory(sf::Packet packet){
         uint32_t size;
-        if(!(packet >> startingGameTick >> snapShotDistance >> latestAcknowledgedPlayerInput >> size)){
+        if(!(packet >> startingGameTick >> snapShotDistance >> size)){
             throw std::runtime_error("failed to read updateInfos metadata");
         }
         updateInfos.reserve(size);
@@ -107,16 +106,17 @@ public:
         baseLineGameState = gameState;
     }
 
-    std::vector<playerInputWithId>& createCombinedUpdateInfo(GameState& gameState){
+    UpdateInfo1& createCombinedUpdateInfo(GameState& gameState, TICK_TYPE latestIncludedPlayerInput){
         auto& updateInfo = updateInfos.emplace_back();
         for (Player& p : gameState.getPlayers()){
             updateInfo.gsUpdate.playerInfos.emplace_back(p);
-            std::cout << "added player " << p.getId() <<" to playerInfos\n";
+//            std::cout << "added player " << p.getId() <<" to playerInfos\n";
         }
         for (Projectile &p : gameState.getProjectiles()){
             updateInfo.gsUpdate.projectileInfos.emplace_back(p);
         }
-        return updateInfo.pInput;
+        updateInfo.gsUpdate.latestIncludedPInput = latestIncludedPlayerInput;
+        return updateInfo;
     }
 
     std::vector<playerInputWithId>& createNewPlayerInputs(){
@@ -134,7 +134,6 @@ public:
         packet << (DATATYPE_EVENT_TYPE) EVENT_TYPE_GAMESTATE_PLAYERINPUT_HISTORY;
         packet << startingGameTick;
         packet << snapShotDistance;
-        packet << latestAcknowledgedPlayerInput;
         packet << static_cast<uint32_t>(updateInfos.size());
 
         for (size_t i = 0; i < updateInfos.size(); i++)
