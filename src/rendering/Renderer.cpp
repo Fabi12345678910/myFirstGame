@@ -34,6 +34,7 @@ void Renderer::render(GameState& gameState) {
 
     // ---- Players ----
     for (Player& player : gameState.getPlayers()) {
+        if (player.getHealth() <= 0) {continue;}
         sf::RectangleShape rect = player.getShape();
         rect.setFillColor(player.getShape().getFillColor());
         rect.setOutlineThickness(1.f);

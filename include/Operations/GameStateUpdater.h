@@ -1,5 +1,6 @@
 #pragma once
 #include "Player.h"
+#include "Projectile.h"
 //handles calculated updates for a specific gamestate, may be implemented different on client/server
 //all methods required by either the client or the server should be defined here and used in Gameupdate.update()
 class GameStateUpdater
@@ -18,4 +19,5 @@ public:
     virtual void addProjectile(Projectile& projectile) = 0;
     virtual void setProjectileIds(OBJECT_ID_TYPE id) = 0;
     virtual void addPlayer(Player& player) = 0;
+    virtual void projectileHitPlayer(Projectile& projectile, Player& player) = 0;
 };

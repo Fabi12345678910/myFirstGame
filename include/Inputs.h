@@ -38,8 +38,19 @@ struct playerInput{
             int projId = gameState.getProjectileIds();
             gsUpdater.setProjectileIds(projId + 1);
 
-            Projectile proj(projId, {20.f,20.f}, player.getPosition());
-            proj.setSpeed(proj.getSpeed() * (player.getFacing() == Player::FACING_RIGHT ? 1 : -1));
+            const sf::Vector2f bulletSize{20.f, 20.f};
+            const sf::Vector2f playerPos = player.getPosition();
+            const sf::Vector2f playerSize = player.getSize();
+            const int dir = (player.getFacing() == Player::FACING_RIGHT) ? 1 : -1;
+            const float margin = 10.f;
+            sf::Vector2f spawnPos{
+                (dir > 0) ? (playerPos.x + playerSize.x + margin)
+                          : (playerPos.x - bulletSize.x - margin),
+                playerPos.y + (playerSize.y - bulletSize.y) * 0.5f
+            };
+
+            Projectile proj(projId, bulletSize, spawnPos);
+            proj.setSpeed(proj.getSpeed() * dir);
             gsUpdater.addProjectile(proj);
             gsUpdater.setPlayerProjectileCooldown(player, 100);
         }
