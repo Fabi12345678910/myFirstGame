@@ -19,7 +19,7 @@ public:
     // Add element to the end
     void push(const T& value) {
         buffer[max % N] = value;
-        if(max >= (ssize_t)N){min++;};
+        if(max >= N){min++;};
         max++;
     }
 
