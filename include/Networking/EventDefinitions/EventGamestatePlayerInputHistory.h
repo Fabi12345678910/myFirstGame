@@ -120,7 +120,7 @@ public:
     }
 
     std::vector<playerInputWithId>& createNewPlayerInputs(){
-        auto& updateInfo = updateInfos.emplace_back((std::vector<playerInputWithId>){});
+        UpdateInfo1& updateInfo = updateInfos.emplace_back((std::vector<playerInputWithId>){});
         updateInfo.pInput = std::vector<playerInputWithId>();
         return updateInfo.pInput;
     }
