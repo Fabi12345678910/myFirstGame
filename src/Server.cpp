@@ -74,11 +74,15 @@ void Server::run(){
         Stage s = Stage(1, stageObjects, spawnPoints);
         Stage s2 = createMap_TestAll();
         //just push a few gameStates so clients actually have something to display
-        for(int i = 0; i < 32; i++){
+        gameStates.push(GameState());
+        inputHistory.push(std::vector<indexedPlayerInputWithId>());
+        currentTick = 0;
+        for(int i = 0; i < 64; i++){
             gameStates.push(GameState());
-            gameStates[i].setStage(s2);
+            currentTick++;
+            gameStates[currentTick].setStage(s2);
+            
             inputHistory.push(std::vector<indexedPlayerInputWithId>());
-            currentTick = i;
         }
     }
     serverSocket.setArgs(&eventData);
