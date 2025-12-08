@@ -38,7 +38,7 @@ private:
     static const int gameStateResyncTicks = 4;
     TICK_TYPE currentTick = 0;
 
-    int numPlayers;
+    int numPlayers = 0;
     CircularArray<std::vector<struct indexedPlayerInputWithId>, gameStateBufferSize> inputHistory;
     CircularArray<GameState, gameStateBufferSize> gameStates;
     void processEvents(std::vector<indexedPlayerInputWithId>& playerInputs);

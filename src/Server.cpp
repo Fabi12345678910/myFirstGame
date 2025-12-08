@@ -108,7 +108,12 @@ void Server::mainLoop(){
         std::vector<indexedPlayerInputWithId> playerInputs;
         playerInputs.reserve(numPlayers);
         //copy gameState to next gameState
+        std::cout << "copying tick: " << currentTick-1 << '\n';
+        std::cout << "1\n";
+        gameStates.back();
+        std::cout << "2\n";
         gameStates.push(gameStates[currentTick-1]);
+        std::cout << "3\n";
         gameStates[currentTick] = gameStates[currentTick-1];
         
         //debug print all players

@@ -235,7 +235,6 @@ void Client::mainLoop(){
 //                    std::cout << "incl. player: " << player.getId() << '\n';
                 }
                 renderer.render(displayGameState);
-
                 renderer.processDisplayEvents();
             }else{
 //                std::cout << "can't render tick:(\n";
