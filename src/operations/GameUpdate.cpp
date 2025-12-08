@@ -92,7 +92,8 @@ void updateGame(GameStateUpdater& gsUpdater, GameState& gameState, float deltaTi
                 if(collidable != NULL){
                     if (projectile->getShape().getGlobalBounds().findIntersection(player.getShape().getGlobalBounds())) {
                         //std::cout << "detected collision\n";
-
+                        projectile->setIsActive(false);
+                        gsUpdater.projectileHitPlayer(*projectile, player);
                     }
                 }
                 else { std::cout << "projectile collided with a non collidable player"; } 

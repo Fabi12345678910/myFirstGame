@@ -34,4 +34,5 @@ public:
     bool isLocalPlayerAdded(){
         return localPlayerAdded;
     }
+    virtual void projectileHitPlayer(Projectile& projectile, Player& player) override {};
 };

@@ -21,4 +21,5 @@ public:
     virtual void addProjectile(Projectile& projectile) override {};
     virtual void setProjectileIds(OBJECT_ID_TYPE id) override {};
     virtual void addPlayer(Player& player) override {};
+    virtual void projectileHitPlayer(Projectile& projectile, Player& player) override {};
 };
