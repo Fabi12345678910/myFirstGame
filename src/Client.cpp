@@ -175,12 +175,16 @@ void Client::mainLoop(){
     printf("entering main loop\n");
     //this is the main loop
     sf::Clock tickClock;
+    tickClock.start();
+    sf::Time startTime = tickClock.getElapsedTime();
     sf::Time tickRate = sf::milliseconds(tickrateMs);
-    
+    sf::Time latestElapsedTick = startTime;
+    TICK_TYPE displayedTicks;
+
     while(true){
         if(clientState == PLAYING){
-            sf::Time deltaTime = tickClock.restart();
-//            printf("be playing\n");
+            sf::Time startTickTime = tickClock.getElapsedTime();
+            sf::Time currentDeltaTime = startTickTime - latestElapsedTick;
 
             processEventsPlaying();
 
@@ -191,21 +195,24 @@ void Client::mainLoop(){
             Player* localPlayer = NULL;
             bool canRenderTick = true;
             playerInput input = processInputs();
-            while (deltaTime >= tickRate){
+            std::cout << "delta time " << currentDeltaTime.asSeconds() << '\n';
+            std::cout << "tickrate time " << tickRate.asSeconds() << '\n';
+            while (currentDeltaTime >= tickRate){
                 tickToDisplay++;
-                deltaTime-= tickRate;
+                std::cout << "attempting to generate display tick " << tickToDisplay << '\n';
+                currentDeltaTime-= tickRate;
+                std::cout << "remaining delta time " << currentDeltaTime.asSeconds() << '\n';
                 gameStore.setLocalInput(tickToDisplay, input);
                 gameStore.finalizeLocalInput(tickToDisplay);
+                latestElapsedTick += tickRate;
                 constexpr size_t maxHistoricInputsToSend = 8;
                 EventUserInput userInputs;
-                bool foundFirstInput = false;
                 for (size_t i = tickToDisplay - maxHistoricInputsToSend; i <= tickToDisplay; i++)
                 {
                     if(gameStore.hasLocalInput(i)){
                         userInputs.addUserInput(indexedPlayerInput(i, gameStore.getLocalInput(i)));
                     }
                 }
-//                std::cout << "sending UserInput\n";
                 conn.sendUdpEvent(userInputs);
 
                 gameStore.getGameState(tickToDisplay, true, NULL);                
@@ -237,13 +244,14 @@ void Client::mainLoop(){
                 renderer.render(displayGameState);
                 renderer.processDisplayEvents();
             }else{
-//                std::cout << "can't render tick:(\n";
+                std::cout << "can't render tick:(\n";
             }
-            if(tickClock.getElapsedTime().asMilliseconds() >= 5){
-                std::cout << "Computing tick took " << tickClock.getElapsedTime().asMilliseconds() << "ms\n";
+            sf::Time tickRenderTime = tickClock.getElapsedTime() - startTickTime;
+            if(tickRenderTime.asMilliseconds() >= 5){
+                std::cout << "Computing tick took " << tickRenderTime.asMilliseconds() << "ms\n";
             }
 
-            sf::sleep(tickRate - tickClock.getElapsedTime());
+//            sf::sleep(tickRate - tickClock.getElapsedTime());
         }
         else if(clientState == AWAITING_SPAWN){
             printf("be awaiting spawn\n");

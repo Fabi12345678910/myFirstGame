@@ -31,6 +31,7 @@ private:
     static constexpr int MAX_GAMEOBJECTS = 10000;
     //Tickrate in milliseconds per ticks
     static constexpr std::uint16_t TICKRATE_MS = 10;
+    static constexpr sf::Time tickRate = sf::milliseconds(TICKRATE_MS);
     static const int gameStateBufferSize = 64;
     //defines how many gameState ticks will be sent
     //e.g. 1 = send every frame

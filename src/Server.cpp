@@ -45,7 +45,6 @@ void* serverUdpEventHandler(std::unique_ptr<Event> ev, std::optional<sf::IpAddre
     handle->connectionEventsQueue.push(std::move(queueEntry));
     //printf("handling event\n");
     return NULL;
-    return NULL;
 }
 
 
@@ -101,19 +100,23 @@ void Server::run(){
 void Server::mainLoop(){
     printf("entering main loop\n");
     sf::Clock tickClock;
+    tickClock.start();
+    sf::Time startTime = tickClock.getElapsedTime();
+    sf::Time latestElapsedTick = startTime;
     while(true){
-        float deltaTime = tickClock.restart().asSeconds();
+        sf::Time startTickTime = tickClock.getElapsedTime();
+        sf::Time currentDeltaTime = startTickTime - latestElapsedTick;
+        if(currentDeltaTime < tickRate){
+            continue;
+        }
+        latestElapsedTick += tickRate;
         currentTick++;
         std::cout << "calculating tick " << currentTick << '\n';
         std::vector<indexedPlayerInputWithId> playerInputs;
         playerInputs.reserve(numPlayers);
         //copy gameState to next gameState
-        std::cout << "copying tick: " << currentTick-1 << '\n';
-        std::cout << "1\n";
         gameStates.back();
-        std::cout << "2\n";
         gameStates.push(gameStates[currentTick-1]);
-        std::cout << "3\n";
         gameStates[currentTick] = gameStates[currentTick-1];
         
         //debug print all players
@@ -171,7 +174,7 @@ void Server::mainLoop(){
         for(auto& input : playerInputs){
             input.playerInputWithId.applyUpdate(updater, gameStates[currentTick]);
         }
-        updateGame(updater, gameStates[currentTick], deltaTime);
+        updateGame(updater, gameStates[currentTick], tickRate.asSeconds());
         someTimesResyncGameState();
         int32_t sleep_ms = TICKRATE_MS - tickClock.getElapsedTime().asMilliseconds();
         if(tickClock.getElapsedTime().asMilliseconds() >= 1){
