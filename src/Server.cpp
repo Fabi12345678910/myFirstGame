@@ -15,7 +15,7 @@
 #include "maps/Map_TestAll.h"
 #include <algorithm>
 
-void* serverEventHandler(std::unique_ptr<Event> ev, Connection& conn, void* args) {
+void* serverTcpEventHandler(std::unique_ptr<Event> ev, Connection& conn, void* args) {
     struct serverEventHandlerData *handle = (serverEventHandlerData*) args;
     std::lock_guard<std::mutex> queueLockGuard(handle->connectionEventsMutex);
     ServerConnection* serverConn = dynamic_cast<ServerConnection*>(&conn);
@@ -27,6 +27,10 @@ void* serverEventHandler(std::unique_ptr<Event> ev, Connection& conn, void* args
     //printf("handling event\n");
     return NULL;
 };
+void* udpEventHandler(std::unique_ptr<Event>, std::optional<sf::IpAddress>& remoteAddress, unsigned short& remotePort, void* args){
+    //TODO
+    return NULL;
+}
 
 
 Server::Server() : serverSocket(42069){
@@ -61,7 +65,9 @@ void Server::run(){
         }
     }
     serverSocket.setArgs(&eventData);
-    serverSocket.setEventHandler(serverEventHandler);
+    serverSocket.setEventHandler(serverTcpEventHandler);
+//    serverSocket.setUdpArgs(&eventData);
+//    serverSocket.setUdpEventHandler(serverTcpEventHandler);
     for(OBJECT_ID_TYPE i = 1; i<= MAX_PLAYERS; i++){
         availablePlayerIds.push(i);
     }
@@ -94,7 +100,7 @@ void Server::mainLoop(){
         for(auto& conn: serverSocket.connections){
             auto pInput = conn->getNextPlayerInput();
             if(pInput.has_value()){
-                playerInputWithId input(conn->getPlayerId(), pInput.value());
+                playerInputWithId input(conn->getPlayerId(), pInput.value().playerInput);
                 playerInputs.push_back(input);
             }
         }
@@ -191,10 +197,14 @@ void Server::processEvents(std::vector<playerInputWithId>& playerInputs){
 
         EventUserInput *evUserInput = dynamic_cast<EventUserInput*>(ev);
         if(evUserInput != NULL){
-//            std::cout << "received user input\n";
-            playerInput input = evUserInput->playerInput.playerInput;
-            Player& player = gameStates[currentTick].getPlayer(evUserInput->playerInput.playerId);
-            conn.enqueueNextInput(evUserInput->playerInput.playerInput);
+            std::cout << "--- --- ---\n";
+            std::cout << "received user input\n";
+            while (evUserInput->hasNextUserInput())
+            {
+                auto input = evUserInput->getNextUserInput();
+                std::cout << "adding user input '" << input.idx << "' to queue\n";
+                conn.enqueueInput(input);
+            }
         }
 
 //        printf("processEvents: done processing event\n");

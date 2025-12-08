@@ -119,6 +119,22 @@ private:
     }
 
 public:
+    bool hasLocalInput(TICK_TYPE tick){
+        if(!isGameStateAvailable(tick)){return false;}
+        if(gameStates[tick].localInputFinalized){
+            return true;
+        }else{
+            return false;
+        }
+    }
+    playerInput getLocalInput(TICK_TYPE tick){
+        if(hasLocalInput(tick)){
+            return gameStates[tick].localInput;
+        }else{
+            throw std::runtime_error("localInput unavailable");
+        }
+    }
+
     void setLocalPlayerId(OBJECT_ID_TYPE id){
         this->localPlayerId = id;
     }

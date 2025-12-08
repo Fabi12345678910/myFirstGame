@@ -236,9 +236,18 @@ void Client::mainLoop(){
             while (deltaTime >= tickRate){
                 tickToDisplay++;
                 deltaTime-= tickRate;
-                conn.sendTcpEvent(EventUserInput(playerInputWithId(this->playerId, input)));
                 gameStore.setLocalInput(tickToDisplay, input);
                 gameStore.finalizeLocalInput(tickToDisplay);
+                constexpr size_t maxHistoricInputsToSend = 4; 
+                EventUserInput userInputs;
+                for (size_t i = tickToDisplay - maxHistoricInputsToSend; i <= tickToDisplay; i++)
+                {
+                    if(gameStore.hasLocalInput(i)){
+                        userInputs.addUserInput(i, gameStore.getLocalInput(i));
+                    }
+                }
+                std::cout << "sending UserInput\n";
+                conn.sendTcpEvent(userInputs);
 
                 gameStore.getGameState(tickToDisplay, true, NULL);                
             }

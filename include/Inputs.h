@@ -69,6 +69,11 @@ struct playerInputWithId : public UpdateInfo{
         : playerId(playerId), playerInput(playerInput){}
 };
 
+struct indexedPlayerInput{
+    TICK_TYPE idx;
+    struct playerInput playerInput;
+};
+
 struct allPlayerInputs{
     int ammountInputs;
     struct playerInputWithId *playerInputs;
