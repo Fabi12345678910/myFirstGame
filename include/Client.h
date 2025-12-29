@@ -10,6 +10,8 @@
 
 #include <queue>
 #include <mutex>
+#include <SFML/Graphics.hpp>
+
 struct clientEventHandlerData{
     std::queue<std::unique_ptr<Event>> connectionEventsQueue;
     std::mutex connectionEventsMutex;
@@ -53,8 +55,17 @@ private:
 //    GameState gameState = GameState();
     struct clientEventHandlerData eventData;
     ClientConnection conn;
+    bool isHost = false;
 public:
     void run();
-    Client();
+    Client(sf::RenderWindow& win);
+    Client(sf::RenderWindow& win, sf::IpAddress ip, unsigned short port);
     ~Client(){};
+    bool const& getIsHost() const{
+        return isHost;
+    }
+
+    void setIsHost(bool b) {
+        isHost = b;
+    }
 };

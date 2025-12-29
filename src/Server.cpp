@@ -48,7 +48,12 @@ void* serverUdpEventHandler(std::unique_ptr<Event> ev, std::optional<sf::IpAddre
 }
 
 
-Server::Server() : serverSocket(42069){
+
+Server::Server() : serverSocket(42069) {
+    eventData.connections = &serverSocket.connections;
+}
+
+Server::Server(unsigned short port) : serverSocket(port) {
     eventData.connections = &serverSocket.connections;
 }
 
@@ -95,7 +100,9 @@ void Server::run(){
         availableObjectIds.push(i);
     }
     
+    ready.store(true);
     mainLoop();
+    ready.store(false);
 }
 void Server::mainLoop(){
     printf("entering main loop\n");

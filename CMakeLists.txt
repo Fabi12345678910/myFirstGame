@@ -45,6 +45,29 @@ add_executable(eventTest
 target_link_libraries(eventTest PRIVATE SFML::Network SFML::Graphics)
 enable_autocopy_runtime_dlls(eventTest)
 
+# --- Unified Main executable ---
+add_executable(Main
+    src/main.cpp
+    src/menu/Menu.cpp
+    src/menu/EnterIpMenu.cpp
+    src/menu/EnterPortMenu.cpp
+    src/Client.cpp
+    src/Server.cpp
+    src/rendering/Renderer.cpp
+    src/operations/GameUpdate.cpp
+    src/operations/PlayerOperations.cpp
+    src/networking/Events.cpp
+    src/networking/Connection.cpp
+    src/networking/ClientConnection.cpp
+    src/networking/ServerSocket.cpp
+    src/maps/Map_TestAll.cpp
+    src/operations/collisions/PlayerCollisions.cpp
+)
+target_link_libraries(Main PRIVATE
+    SFML::Network SFML::System SFML::Window SFML::Graphics SFML::Audio
+)
+enable_autocopy_runtime_dlls(Main)
+
 # --- LOCAL sandbox (always build) ---
 add_executable(LocalGame
     src/StartLocalGame.cpp

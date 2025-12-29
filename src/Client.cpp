@@ -33,7 +33,23 @@ void* udpClientEventHandler(std::unique_ptr<Event> evPtr, std::optional<sf::IpAd
     return NULL;
 }
 
-Client::Client() : conn(ClientConnection::createClientConnection({127, 0, 0, 1}, 42069)){
+
+Client::Client(sf::RenderWindow& win)
+        : renderer(win),
+            conn(ClientConnection::createClientConnection({127, 0, 0, 1}, 42069)),
+            isHost(isHost)
+{
+    conn.setArgs(&eventData);
+    conn.setEventHandler(clientEventHandler);
+    performLogin();
+}
+
+// constructor with specified port
+Client::Client(sf::RenderWindow& win, sf::IpAddress ip, unsigned short port)
+        : renderer(win),
+            conn(ClientConnection::createClientConnection(ip, port)),
+            isHost(isHost)
+{
     conn.setArgs(&eventData);
     conn.setEventHandler(clientEventHandler);
     performLogin();
@@ -181,6 +197,9 @@ void Client::mainLoop(){
     sf::Time latestElapsedTick = startTime;
     TICK_TYPE displayedTicks;
 
+    int dotFrame = 0;
+    sf::Clock dotClock;
+
     while(true){
         if(clientState == PLAYING){
             sf::Time startTickTime = tickClock.getElapsedTime();
@@ -241,8 +260,18 @@ void Client::mainLoop(){
                 {
 //                    std::cout << "incl. player: " << player.getId() << '\n';
                 }
+                
                 renderer.render(displayGameState);
+                // Animate dots every 500ms
+                if (isHost && displayGameState.getPlayers().size() < 2) {
+                    if(dotClock.getElapsedTime().asMilliseconds() > 500){
+                        dotFrame = (dotFrame % 3) + 1;
+                        dotClock.restart();
+                    }
+                    renderer.renderWaitingMessage(dotFrame);
+                }
                 renderer.processDisplayEvents();
+                renderer.display();
             }else{
                 std::cout << "can't render tick:(\n";
             }
