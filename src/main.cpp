@@ -1,4 +1,5 @@
 #include <SFML/Graphics.hpp>
+#include <SFML/Audio.hpp>
 #include "menu/Menu.h"
 #include "menu/EnterIpMenu.h"
 #include "menu/EnterPortMenu.h"
@@ -32,6 +33,11 @@ int main() {
         switch (currentScene) {
 
         case Scene::MENU: {
+            sf::Music menuMusic;
+            if (menuMusic.openFromFile("../assets/music/menu.mp3")) {
+                menuMusic.setLooping(true);
+                menuMusic.play();
+            }
             std::string menuResult = menu.run_menu();
 
             if (menuResult == "Host") {
