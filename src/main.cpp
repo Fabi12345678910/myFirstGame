@@ -3,6 +3,7 @@
 #include "menu/Menu.h"
 #include "menu/EnterIpMenu.h"
 #include "menu/EnterPortMenu.h"
+#include "menu/AudioOptionsMenu.h"
 #include "Client.h"
 #include "Server.h"
 #include <thread>
@@ -39,38 +40,37 @@ int main() {
                 menuMusic.play();
             }
             std::string menuResult = menu.run_menu();
-
             if (menuResult == "Host") {
-
                 EnterPortMenu enterPortMenu(window);
                 unsigned short port = enterPortMenu.run_menu();
-
                 server = std::make_unique<Server>(port);
                 serverThread = std::thread([&] {
                     server->run();
                 });
-
                 // Wait for server to be ready
                 while (!server || !server->isReady()) {
                     std::this_thread::sleep_for(std::chrono::milliseconds(10));
                 }
-
                 client = std::make_unique<Client>(window, sf::IpAddress::LocalHost, port);
                 client->setIsHost(true);
                 currentScene = Scene::CLIENT_LOBBY;
             }
             else if (menuResult == "Join") {
-
                 EnterIpMenu enterIpMenu(window);
                 auto result = enterIpMenu.run_menu();
-
                 client = std::make_unique<Client>(window, result.first, result.second);
                 currentScene = Scene::CLIENT_LOBBY;
             }
-            else {
+            else if (menuResult == "Options") {
+                AudioOptionsMenu audioOptionsMenu(window);
+                audioOptionsMenu.run_menu(&menuMusic);
+            }
+            else if (menuResult == "Quit") {
                 currentScene = Scene::EXIT;
             }
-            break;
+            else {
+                menuResult.clear();
+            }
         }
 
         case Scene::CLIENT_LOBBY: {

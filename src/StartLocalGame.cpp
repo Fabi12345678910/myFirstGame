@@ -19,7 +19,7 @@ int sleep(unsigned long sec){
 
 void* runServer(void*){
     sf::RenderWindow window(sf::VideoMode(sf::Vector2u(1280, 720)), "LocalGameServer");
-    Server server(window);
+    Server server = Server();
     server.run();
     return NULL;
 }
