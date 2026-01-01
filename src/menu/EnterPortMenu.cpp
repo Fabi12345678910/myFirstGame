@@ -57,6 +57,13 @@ void EnterPortMenu::loop_events() {
                 portBuffer += c;
             }
         }
+
+        if (auto key = event.getIf<sf::Event::KeyPressed>()) {
+            if (key->code == sf::Keyboard::Key::Escape) {
+                done = true;
+                portBuffer.clear();
+            }
+        }
     }
 }
 
@@ -70,7 +77,7 @@ void EnterPortMenu::draw_all() {
     window.display();
 }
 
-unsigned short EnterPortMenu::run_menu() {
+std::optional<unsigned short> EnterPortMenu::run_menu() {
     set_values();
 
     while (window.isOpen() && !done) {
@@ -78,6 +85,8 @@ unsigned short EnterPortMenu::run_menu() {
         draw_all();
     }
 
+    if (portBuffer.empty())
+        return std::nullopt;
     unsigned short port = 0;
     std::istringstream(portBuffer) >> port;
     return port;
