@@ -128,6 +128,7 @@ void Menu::draw_all(){
 }
 
 std::string Menu::run_menu(){
+  theselect = false;
   while(window.isOpen()){
     loop_events();
     draw_all();

@@ -23,6 +23,13 @@ FetchContent_Declare(SFML
 )
 FetchContent_MakeAvailable(SFML)
 
+FetchContent_Declare(
+  json
+  GIT_REPOSITORY https://github.com/nlohmann/json.git
+  GIT_TAG v3.12.0
+)
+FetchContent_MakeAvailable(json)
+
 include_directories(include)
 
 # Helper function: auto-copy dependent DLLs beside the exe (Windows)
@@ -52,6 +59,7 @@ add_executable(Main
     src/menu/EnterIpMenu.cpp
     src/menu/EnterPortMenu.cpp
     src/menu/AudioOptionsMenu.cpp
+    src/Options.cpp
     src/Client.cpp
     src/Server.cpp
     src/rendering/Renderer.cpp
@@ -67,6 +75,8 @@ add_executable(Main
 target_link_libraries(Main PRIVATE
     SFML::Network SFML::System SFML::Window SFML::Graphics SFML::Audio
 )
+target_link_libraries(Main PRIVATE nlohmann_json::nlohmann_json)
+
 enable_autocopy_runtime_dlls(Main)
 
 # --- LOCAL sandbox (always build) ---

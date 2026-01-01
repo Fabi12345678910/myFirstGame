@@ -77,6 +77,8 @@ void EnterIpMenu::loop_events() {
         if (auto key = event.getIf<sf::Event::KeyPressed>()) {
             if (key->code == sf::Keyboard::Key::Tab)
                 enteringIp = !enteringIp;
+            else if (key->code == sf::Keyboard::Key::Escape)
+                done = true, ip.reset();
         }
     }
 }
@@ -93,7 +95,7 @@ void EnterIpMenu::draw_all() {
     window.display();
 }
 
-std::pair<sf::IpAddress, unsigned short> EnterIpMenu::run_menu() {
+std::optional<std::pair<sf::IpAddress, unsigned short>> EnterIpMenu::run_menu() {
     set_values();
 
     while (window.isOpen() && !done) {
@@ -101,7 +103,9 @@ std::pair<sf::IpAddress, unsigned short> EnterIpMenu::run_menu() {
         draw_all();
     }
 
+    if (!ip.has_value())
+        return std::nullopt;
     unsigned short port = 0;
     std::istringstream(portBuffer) >> port;
-    return { ip.value(), port };
+    return std::make_pair(ip.value(), port);
 }

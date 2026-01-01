@@ -3,6 +3,7 @@
 #include <SFML/Graphics.hpp>
 #include <iostream>
 #include <vector>
+#include <optional>
 
 class EnterPortMenu {
     sf::RenderWindow& window;
@@ -16,5 +17,5 @@ class EnterPortMenu {
     void draw_all();
 public:
     EnterPortMenu(sf::RenderWindow& win);
-    unsigned short run_menu();
+    std::optional<unsigned short> run_menu();
 };

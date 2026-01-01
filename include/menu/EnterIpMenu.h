@@ -3,6 +3,7 @@
 #include <SFML/Graphics.hpp>
 #include <iostream>
 #include <vector>
+#include <optional>
 
 class EnterIpMenu {
     sf::RenderWindow& window;
@@ -19,5 +20,5 @@ class EnterIpMenu {
 public:
     EnterIpMenu(sf::RenderWindow& win);
     //~EnterIpMenu();
-    std::pair<sf::IpAddress, unsigned short> run_menu();
+    std::optional<std::pair<sf::IpAddress, unsigned short>> run_menu();
 };
