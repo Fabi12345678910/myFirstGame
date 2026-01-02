@@ -264,7 +264,7 @@ void Client::mainLoop(){
                 renderer.render(displayGameState);
                 // Animate dots every 500ms
                 if (isHost && displayGameState.getPlayers().size() < 2) {
-                    if(dotClock.getElapsedTime().asMilliseconds() > 500){
+                    if(dotClock.getElapsedTime().asMilliseconds() > 800){
                         dotFrame = (dotFrame % 3) + 1;
                         dotClock.restart();
                     }

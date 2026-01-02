@@ -58,7 +58,7 @@ add_executable(Main
     src/menu/Menu.cpp
     src/menu/EnterIpMenu.cpp
     src/menu/EnterPortMenu.cpp
-    src/menu/AudioOptionsMenu.cpp
+    src/menu/OptionsMenu.cpp
     src/Options.cpp
     src/Client.cpp
     src/Server.cpp

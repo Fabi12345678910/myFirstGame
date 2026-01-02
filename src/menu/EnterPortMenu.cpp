@@ -15,14 +15,34 @@ EnterPortMenu::EnterPortMenu(sf::RenderWindow& win)
 void EnterPortMenu::set_values() {
     portBuffer.clear();
 
+    float w = window.getSize().x;
+    float h = window.getSize().y;
+    float topMargin = 0.25f * h; // start menu 20% from top
+    float spacing   = 0.125f * h; // 10% of window height between items
+    float textScale = 0.05f;
+
     done = false;
 
     if (!font.openFromFile("../assets/fonts/PressStart2P-Regular.ttf"))
         std::cout << "failed loading font\n";
 
-    portText.setPosition({400.f, 350.f});
-    labelText.setPosition({400.f, 180.f});
-    infoText.setPosition({400.f, 420.f});
+    // Set text sizes first
+    portText.setCharacterSize(textScale*h);
+    labelText.setCharacterSize(textScale*h);
+    infoText.setCharacterSize(textScale*h*0.5);
+
+    // Set origins to left edge, vertical center
+    sf::FloatRect labelBounds = labelText.getLocalBounds();
+    labelText.setOrigin(sf::Vector2f{labelBounds.position.x + labelBounds.size.x/2, labelBounds.position.y + labelBounds.size.y/2});
+    sf::FloatRect portBounds = portText.getLocalBounds();
+    portText.setOrigin(sf::Vector2f{portBounds.position.x + labelBounds.size.x/2, portBounds.position.y + portBounds.size.y/2});
+    sf::FloatRect infoBounds = infoText.getLocalBounds();
+    infoText.setOrigin(sf::Vector2f{infoBounds.position.x + infoBounds.size.x/2, infoBounds.position.y + infoBounds.size.y/2});
+
+    // Place so the vertical center is at the middle, left-aligned at window center
+    portText.setPosition({w*0.5f, topMargin + 1 * spacing});
+    labelText.setPosition({w*0.5f, topMargin + 0 * spacing});
+    infoText.setPosition({w*0.5f, topMargin + 5 * spacing});
 
     portText.setFillColor(sf::Color::White);
     labelText.setFillColor(sf::Color::Yellow);

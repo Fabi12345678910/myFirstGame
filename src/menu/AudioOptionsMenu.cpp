@@ -38,12 +38,12 @@ void AudioOptionsMenu::loop_events() {
         if (auto key = event.getIf<sf::Event::KeyPressed>()) {
             switch (key->code) {
                 case sf::Keyboard::Key::Left:
-                    if (opts.volume > 0) {
+                    if (opts.volume > 0 && !opts.muted) {
                         opts.volume = opts.volume - 5.f;
                     }
                     break;
                 case sf::Keyboard::Key::Right:
-                    if (opts.volume < 100) {
+                    if (opts.volume < 100 && !opts.muted) {
                         opts.volume = opts.volume + 5.f;
                     }
                     break;
@@ -65,7 +65,7 @@ void AudioOptionsMenu::draw_all() {
     window.draw(labelText);
     window.draw(infoText);
     std::ostringstream oss;
-    if (opts.muted || opts.volume == 0.f) {
+    if (opts.muted) {
         oss << "Volume: Muted";
     } else {
         oss << "Volume: " << static_cast<int>(opts.volume) << "%";
