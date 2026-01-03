@@ -114,12 +114,12 @@ void OptionsMenu::loop_events() {
                     } else if (pos == 1 && resolutionChanged) {
                         opts.width = bufferWidth;
                         opts.height = bufferHeight;
-                        window.create(sf::VideoMode({opts.width, opts.height}), "AdvancedCPP Game", opts.fullscreen ? sf::State::Fullscreen : sf::State::Windowed);
+                        window.create(sf::VideoMode(sf::Vector2u{static_cast<unsigned int>(opts.width), static_cast<unsigned int>(opts.height)}), "AdvancedCPP Game", opts.fullscreen ? sf::State::Fullscreen : sf::State::Windowed);
                         set_values();
                         resolutionChanged = false;
                     } else if (pos == 2) {
                         opts.fullscreen = !opts.fullscreen;
-                        window.create(sf::VideoMode({opts.width, opts.height}), "AdvancedCPP Game", opts.fullscreen ? sf::State::Fullscreen : sf::State::Windowed);
+                        window.create(sf::VideoMode(sf::Vector2u{static_cast<unsigned int>(opts.width), static_cast<unsigned int>(opts.height)}), "AdvancedCPP Game", opts.fullscreen ? sf::State::Fullscreen : sf::State::Windowed);
                         set_values();
                     }
                     break;
