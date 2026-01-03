@@ -2,6 +2,7 @@
 #include "Options.h"
 #include <iostream>
 #include <sstream>
+#include <algorithm>
 
 OptionsMenu::OptionsMenu(sf::RenderWindow& win, Options& options)
     : window(win), opts(options)/*
