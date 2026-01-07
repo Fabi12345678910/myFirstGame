@@ -263,12 +263,15 @@ void Client::mainLoop(){
                 
                 renderer.render(displayGameState);
                 // Animate dots every 500ms
-                if (isHost && displayGameState.getPlayers().size() < 2) {
+                if (displayGameState.getPlayers().size() < 2) {
                     if(dotClock.getElapsedTime().asMilliseconds() > 800){
                         dotFrame = (dotFrame % 3) + 1;
                         dotClock.restart();
                     }
                     renderer.renderWaitingMessage(dotFrame);
+                }
+                else if (displayGameState.getGameState() != gameState::RUNNING) {
+                    renderer.renderReadyMessage(displayGameState.getPlayer(playerId).getReadyToPlay());
                 }
                 renderer.processDisplayEvents();
                 renderer.display();
@@ -301,14 +304,15 @@ playerInput Client::processInputs(){
         }
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D)){
             input.moveRight = true;
-
         }
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Space)) {
             input.jump = true;
-
         }
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::J)) {
             input.projectile = true;
+        }
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::R) && gameStore.getGameState(tickToDisplay, true, NULL)->getGameState() != gameState::RUNNING) {
+            input.readyToPlay = true;
         }
         return input;
     }

@@ -13,6 +13,7 @@ public:
     void render(GameState& gamestate);
     void renderWaitingMessage();
     void renderWaitingMessage(int numDots = 3);
+    void renderReadyMessage(bool isReady);
     void display() {
         window.display();
     }

@@ -11,6 +11,7 @@ struct playerInput{
     bool moveRight = false;
     bool jump = false;
     bool projectile = false;
+    bool readyToPlay = false;
     bool applyUpdate(Player& player, GameStateUpdater& gsUpdater, GameState & gameState){
         OBJECT_ID_TYPE playerId = player.getId();
         sf::Vector2f playerVelocity = player.getVelocity();
@@ -53,6 +54,9 @@ struct playerInput{
             proj.setSpeed(proj.getSpeed() * dir);
             gsUpdater.addProjectile(proj);
             gsUpdater.setPlayerProjectileCooldown(player, 100);
+        }
+        if(readyToPlay) {
+            gsUpdater.setReadyToPlay(player, !player.getReadyToPlay());
         }
         return true;
     }

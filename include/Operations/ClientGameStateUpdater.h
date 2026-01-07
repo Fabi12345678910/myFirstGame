@@ -35,4 +35,5 @@ public:
         return localPlayerAdded;
     }
     virtual void projectileHitPlayer(Projectile& projectile, Player& player) override {};
+    virtual void setReadyToPlay(Player& player, bool ready) override {player.setReadyToPlay(ready);};
 };

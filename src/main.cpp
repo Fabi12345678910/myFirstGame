@@ -84,6 +84,7 @@ int main() {
                     }
                     client = std::make_unique<Client>(window, result->first, result->second);
                     currentScene = Scene::CLIENT_LOBBY;
+                    break;
                 }
                 else if (menuResult == "Options") {
                     OptionsMenu optionsMenu(window, opts);

@@ -10,6 +10,8 @@ private:
     float gravity    = 800.f;
     float speed      = 400.f;
     float health     = 10.f;
+    unsigned short score = 0;
+    bool readyToPlay = false;
     int16_t  projectileCooldown   = 0; // bullet cooldown
     bool  facing     = FACING_LEFT; // -1 if looking left, 1 if looking right
 
@@ -43,6 +45,12 @@ public:
 
     bool getFacing() const { return facing; }
     void setFacing(bool f) { facing = f; }
+
+    bool getReadyToPlay() const { return readyToPlay; }
+    void setReadyToPlay(bool r) { readyToPlay = r; }
+
+    unsigned short getScore() const { return score; }
+    void setScore(unsigned short s) { score = s; }
     // Player(float width, float height, float x, float y);
     // sf::FloatRect getBounds() const override;
     // void update(float dt) override;
