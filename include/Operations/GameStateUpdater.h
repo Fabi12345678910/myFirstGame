@@ -20,4 +20,5 @@ public:
     virtual void setProjectileIds(OBJECT_ID_TYPE id) = 0;
     virtual void addPlayer(Player& player) = 0;
     virtual void projectileHitPlayer(Projectile& projectile, Player& player) = 0;
+    virtual void setReadyToPlay(Player& player, bool ready) = 0;
 };

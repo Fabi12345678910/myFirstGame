@@ -3,6 +3,7 @@
 #include "Networking/Event.h"
 #include "Inputs.h"
 #include <queue>
+#include <atomic>
 #include <mutex>
 #include <tuple>
 #include <Networking/ServerConnection.h>
@@ -10,7 +11,7 @@
 #include "CircularArray.h"
 
 #ifndef ENABLE_SERVER_RENDERING
-    #define ENABLE_SERVER_RENDERING true
+    #define ENABLE_SERVER_RENDERING false
 #endif
 #if ENABLE_SERVER_RENDERING
     #include "Renderer.h"
@@ -27,6 +28,7 @@ class Server
     
 private:
 
+    std::atomic<bool> ready = false; // helps client know when to join
     static constexpr int MAX_PLAYERS = 4;
     static constexpr int MAX_GAMEOBJECTS = 10000;
     //Tickrate in milliseconds per ticks
@@ -53,9 +55,12 @@ private:
 
     #if ENABLE_SERVER_RENDERING
     Renderer renderer;
+    sf::RenderWindow* window = nullptr;
     #endif
 public:
     void run();
+    bool isReady() const { return ready.load(); }
     Server();
+    Server(unsigned short port);
     ~Server();
 };

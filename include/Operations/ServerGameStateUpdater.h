@@ -17,4 +17,5 @@ public:
     virtual void setProjectileIds(OBJECT_ID_TYPE id) override {gameState.setProjectileIds(id);};
     virtual void addPlayer(Player& player) override {gameState.addPlayer(player);};
     virtual void projectileHitPlayer(Projectile& projectile, Player& player) override {gameState.getPlayer(player.getId()).setHealth(0);};
+    virtual void setReadyToPlay(Player& player, bool ready) override {player.setReadyToPlay(ready);};
 };

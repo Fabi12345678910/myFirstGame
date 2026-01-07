@@ -1,6 +1,7 @@
 #include "Server.h"
 #include "Client.h"
 #include "Threads/Threads.h"
+#include "SFML/Graphics.hpp"
 pthread_t serverThread;
 pthread_t clientThread;
 
@@ -17,13 +18,15 @@ int sleep(unsigned long sec){
 #endif
 
 void* runServer(void*){
-    Server server;
+    sf::RenderWindow window(sf::VideoMode(sf::Vector2u(1280, 720)), "LocalGameServer");
+    Server server = Server();
     server.run();
     return NULL;
 }
 
 void* runClient(void*){
-    Client client;
+    sf::RenderWindow window(sf::VideoMode(sf::Vector2u(1280, 720)), "LocalGameServer");
+    Client client(window);
     client.run();
     return NULL;
 }

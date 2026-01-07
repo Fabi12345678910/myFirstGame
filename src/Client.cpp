@@ -33,7 +33,23 @@ void* udpClientEventHandler(std::unique_ptr<Event> evPtr, std::optional<sf::IpAd
     return NULL;
 }
 
-Client::Client() : conn(ClientConnection::createClientConnection({127, 0, 0, 1}, 42069)){
+
+Client::Client(sf::RenderWindow& win)
+        : renderer(win),
+            conn(ClientConnection::createClientConnection({127, 0, 0, 1}, 42069)),
+            isHost(isHost)
+{
+    conn.setArgs(&eventData);
+    conn.setEventHandler(clientEventHandler);
+    performLogin();
+}
+
+// constructor with specified port
+Client::Client(sf::RenderWindow& win, sf::IpAddress ip, unsigned short port)
+        : renderer(win),
+            conn(ClientConnection::createClientConnection(ip, port)),
+            isHost(isHost)
+{
     conn.setArgs(&eventData);
     conn.setEventHandler(clientEventHandler);
     performLogin();
@@ -181,6 +197,9 @@ void Client::mainLoop(){
     sf::Time latestElapsedTick = startTime;
     TICK_TYPE displayedTicks;
 
+    int dotFrame = 0;
+    sf::Clock dotClock;
+
     while(true){
         if(clientState == PLAYING){
             sf::Time startTickTime = tickClock.getElapsedTime();
@@ -241,8 +260,21 @@ void Client::mainLoop(){
                 {
 //                    std::cout << "incl. player: " << player.getId() << '\n';
                 }
+                
                 renderer.render(displayGameState);
+                // Animate dots every 500ms
+                if (displayGameState.getPlayers().size() < 2) {
+                    if(dotClock.getElapsedTime().asMilliseconds() > 800){
+                        dotFrame = (dotFrame % 3) + 1;
+                        dotClock.restart();
+                    }
+                    renderer.renderWaitingMessage(dotFrame);
+                }
+                else if (displayGameState.getGameState() != gameState::RUNNING) {
+                    renderer.renderReadyMessage(displayGameState.getPlayer(playerId).getReadyToPlay());
+                }
                 renderer.processDisplayEvents();
+                renderer.display();
             }else{
                 std::cout << "can't render tick:(\n";
             }
@@ -263,27 +295,22 @@ void Client::mainLoop(){
 }
 
 playerInput Client::processInputs(){
-        playerInput input;
-        if(clientState == PLAYING){
-            // Get local player
-            Player* localPlayer = nullptr;
-            gameStore.getGameState(tickToDisplay, true, &localPlayer);
-            if(localPlayer && localPlayer->getHealth() > 0){
-                if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A)){
-                    input.moveLeft = true;
-                }
-                if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D)){
-                    input.moveRight = true;
-                }
-                if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Space)) {
-                    input.jump = true;
-                }
-                if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::J)) {
-                    input.projectile = true;
-                }
-            }
-            // If health <= 0, input remains default (no movement)
-            return input;
-        }
-        return playerInput();
+    playerInput input;
+    // Get local player
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A)){
+        input.moveLeft = true;
+    }
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D)){
+        input.moveRight = true;
+    }
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Space)) {
+        input.jump = true;
+    }
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::J)) {
+        input.projectile = true;
+    }
+    if(sf::Keyboard::isKeyPressed(sf::Keyboard::Key::R)){
+        input.readyToPlay = true;
+    }
+    return input;
 }

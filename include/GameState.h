@@ -3,8 +3,11 @@
 #include "Stage.h"
 #include "Projectile.h"
 
+enum gameState{RUNNING, WAITING};
+
 class GameState {
 private:
+    gameState currentGameState = WAITING;
     std::vector<Player> players;
     std::vector<Projectile> projectiles;
     std::vector<GameObject> gameObjects;
@@ -95,6 +98,10 @@ public:
     }
     void setStage(Stage& stage){
         this->stage = stage;
+    }
+
+    gameState getGameState() const {
+        return currentGameState;
     }
     GameState(){};
 };

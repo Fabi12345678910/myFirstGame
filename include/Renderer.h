@@ -5,11 +5,16 @@
 class Renderer
 {
 private:
-    /* data */
-    sf::RenderWindow window;
+    sf::RenderWindow& window;
 public:
-    Renderer(): window(sf::VideoMode(sf::Vector2u(800, 600)), "My Game"){};
+    Renderer(sf::RenderWindow& win) : window(win) {}
     ~Renderer(){};
     void processDisplayEvents();
     void render(GameState& gamestate);
+    void renderWaitingMessage();
+    void renderWaitingMessage(int numDots = 3);
+    void renderReadyMessage(bool isReady);
+    void display() {
+        window.display();
+    }
 };

@@ -1,5 +1,57 @@
 #include "Renderer.h"
 #include "StageObject.h"
+#include <cctype>
+#include <sstream>
+
+void Renderer::renderWaitingMessage(int numDots) {
+    sf::Font font;
+    if(!font.openFromFile("../assets/fonts/PressStart2P-Regular.ttf")) {
+        //std::cout << "failed loading font\n";
+    }
+
+    float w = window.getSize().x;
+    float h = window.getSize().y;
+    float topMargin = 0.06f * h; // start menu 20% from top
+    float textScale = 0.03f;
+
+        // Clamp numDots between 1 and 3
+        int dots = std::max(1, std::min(numDots, 3));
+        std::string dotsStr(dots, '.');
+        std::string message = "Waiting for players" + dotsStr;
+
+        sf::Text text(font, message, h*textScale);
+    text.setFillColor(sf::Color::White);
+    text.setOutlineColor(sf::Color::Black);
+    text.setOutlineThickness(2.f);
+    sf::FloatRect textRect = text.getLocalBounds();
+    text.setOrigin(sf::Vector2f(textRect.position.x + textRect.size.x / 2.0f, textRect.size.y + textRect.position.y / 2.0f));
+    text.setPosition(sf::Vector2f(w / 2.0f, topMargin));
+    window.draw(text);
+}
+
+void Renderer::renderReadyMessage(bool isReady) {
+    sf::Font font;
+    if(!font.openFromFile("../assets/fonts/PressStart2P-Regular.ttf")) {
+        //std::cout << "failed loading font\n";
+    }
+
+    float w = window.getSize().x;
+    float h = window.getSize().y;
+    float topMargin = 0.06f * h; // start menu 20% from top
+    float textScale = 0.03f;
+
+    std::string ready = isReady ? "ready" : "unready";
+    std::string message = "Press R to go " + ready;
+
+    sf::Text text(font, message, h*textScale);
+    text.setFillColor(sf::Color::White);
+    text.setOutlineColor(sf::Color::Black);
+    text.setOutlineThickness(2.f);
+    sf::FloatRect textRect = text.getLocalBounds();
+    text.setOrigin(sf::Vector2f(textRect.position.x + textRect.size.x / 2.0f, textRect.size.y + textRect.position.y / 2.0f));
+    text.setPosition(sf::Vector2f(w / 2.0f, topMargin));
+    window.draw(text);
+}
 
 // simple color selector for tile types
 static sf::Color colorForStageType(StageObjectType t) {
@@ -53,7 +105,7 @@ void Renderer::render(GameState& gameState) {
         }
     }
 
-    window.display();
+    //window.display();
 }
 
 void Renderer::processDisplayEvents() {

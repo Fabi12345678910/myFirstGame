@@ -48,7 +48,12 @@ void* serverUdpEventHandler(std::unique_ptr<Event> ev, std::optional<sf::IpAddre
 }
 
 
-Server::Server() : serverSocket(42069){
+
+Server::Server() : serverSocket(42069) {
+    eventData.connections = &serverSocket.connections;
+}
+
+Server::Server(unsigned short port) : serverSocket(port) {
     eventData.connections = &serverSocket.connections;
 }
 
@@ -95,7 +100,9 @@ void Server::run(){
         availableObjectIds.push(i);
     }
     
+    ready.store(true);
     mainLoop();
+    ready.store(false);
 }
 void Server::mainLoop(){
     printf("entering main loop\n");
@@ -175,6 +182,28 @@ void Server::mainLoop(){
             input.playerInputWithId.applyUpdate(updater, gameStates[currentTick]);
         }
         updateGame(updater, gameStates[currentTick], tickRate.asSeconds());
+
+        // --- ROUND AND GAME WIN LOGIC ---
+        auto& players = gameStates[currentTick].getPlayers();
+        int aliveCount = 0;
+        Player* lastAlive = nullptr;
+        for (auto& p : players) {
+            if (p.getHealth() > 0) {
+                aliveCount++;
+                lastAlive = &p;
+            }
+        }
+
+        if (aliveCount == 1 && lastAlive) {
+            lastAlive->setScore(lastAlive->getScore() + 1); // or use a setter
+            // Notify clients: lastAlive->getId() won the round
+            if (lastAlive->getScore() >= 10) {
+                // Notify clients: lastAlive->getId() won the game
+                // Optionally reset scores, return to lobby, etc.
+            }
+            // Reset round: restore health, positions, set readyToPlay = false, etc.
+        }       
+
         someTimesResyncGameState();
         int32_t sleep_ms = TICKRATE_MS - tickClock.getElapsedTime().asMilliseconds();
         if(tickClock.getElapsedTime().asMilliseconds() >= 1){
