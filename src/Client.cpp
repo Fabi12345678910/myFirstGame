@@ -295,41 +295,22 @@ void Client::mainLoop(){
 }
 
 playerInput Client::processInputs(){
-        playerInput input;
-        if(clientState == PLAYING){
-            // Get local player
-            Player* localPlayer = nullptr;
-            gameStore.getGameState(tickToDisplay, true, &localPlayer);
-            if(localPlayer && localPlayer->getHealth() > 0){
-                if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A)){
-                    input.moveLeft = true;
-                }
-                if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D)){
-                    input.moveRight = true;
-                }
-                if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Space)) {
-                    input.jump = true;
-                }
-                if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::J)) {
-                    input.projectile = true;
-                }
-            }
-            // If health <= 0, input remains default (no movement)
-            return input;
-        }
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D)){
-            input.moveRight = true;
-        }
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Space)) {
-            input.jump = true;
-        }
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::J)) {
-            input.projectile = true;
-        }
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::R) && gameStore.getGameState(tickToDisplay, true, NULL)->getGameState() != gameState::RUNNING) {
-            input.readyToPlay = true;
-        }
-        return input;
+    playerInput input;
+    // Get local player
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A)){
+        input.moveLeft = true;
     }
-    return playerInput();
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D)){
+        input.moveRight = true;
+    }
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Space)) {
+        input.jump = true;
+    }
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::J)) {
+        input.projectile = true;
+    }
+    if(sf::Keyboard::isKeyPressed(sf::Keyboard::Key::R)){
+        input.readyToPlay = true;
+    }
+    return input;
 }
