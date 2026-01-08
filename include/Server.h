@@ -38,7 +38,7 @@ private:
     //defines how many gameState ticks will be sent
     //e.g. 1 = send every frame
     //e.g. 8 = send full update every 8th frame
-    static const int gameStateResyncTicks = 4;
+    static const int gameStateResyncTicks = 2;
     TICK_TYPE currentTick = 0;
 
     int numPlayers = 0;
@@ -47,6 +47,7 @@ private:
     void processEvents(std::vector<indexedPlayerInputWithId>& playerInputs);
     void someTimesResyncGameState();
     void resyncGameState();
+    void resyncLastInputs();
     void mainLoop();
     std::queue<OBJECT_ID_TYPE> availablePlayerIds;
     std::queue<OBJECT_ID_TYPE> availableObjectIds;

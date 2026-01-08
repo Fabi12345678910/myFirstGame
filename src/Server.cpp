@@ -292,12 +292,14 @@ void Server::processEvents(std::vector<indexedPlayerInputWithId>& playerInputs){
 }
 
 void Server::someTimesResyncGameState(){
-    #define PLAYERRESYNCTIMER 5
+    #define PLAYERRESYNCTIMER 3
     static unsigned tickCounter = 1;
     tickCounter--;
     if(tickCounter == 0){
         tickCounter = PLAYERRESYNCTIMER;
         resyncGameState();
+    }else{
+        resyncLastInputs();
     }
 }
 
@@ -308,7 +310,7 @@ void Server::resyncGameState(){
     // that means we have to include all current data and all new inputs since the last 2 synced gameStates
     
     static constexpr int SNAPSHOT_DISTANCE = 5;
-    static constexpr int MAX_TOTAL_INFOS_TO_SEND = SNAPSHOT_DISTANCE * 2;
+    static constexpr int MAX_TOTAL_INFOS_TO_SEND = SNAPSHOT_DISTANCE + 1;
 
     int infosToSend = MAX_TOTAL_INFOS_TO_SEND;
     //current Tick = 1 == can send 2 ticks
@@ -353,7 +355,38 @@ void Server::resyncGameState(){
         /* code */
         PLOG_DEBUG << "sending " << syncEvent.updateInfos.size() << " updates at starting tick " << syncEvent.startingGameTick;
     }
+}
+
+void Server::resyncLastInputs(){
+    static constexpr int MAX_TOTAL_INFOS_TO_SEND = 3;
+
+    int infosToSend = MAX_TOTAL_INFOS_TO_SEND;
+    //current Tick = 1 == can send 2 ticks
+    if(currentTick + 1 < MAX_TOTAL_INFOS_TO_SEND){
+        infosToSend = currentTick + 1;
+    }
     
-    
-//    serverSocket.sendUdpEventToEveryone(std::move(syncEvent));
+    for (std::unique_ptr<ServerConnection> &connPtr : serverSocket.connections)
+    {
+        EventGamestatePlayerInputHistory syncEvent = EventGamestatePlayerInputHistory();
+        syncEvent.startingGameTick = currentTick + 1 - infosToSend;
+        syncEvent.snapShotDistance = 255;
+
+        for (TICK_TYPE i = 0; i < infosToSend; i++){
+            TICK_TYPE currentTickToSend = syncEvent.startingGameTick + i;
+            PLOG_DEBUG << "tick(current, currentToSend, i): " << currentTick << ' ' << currentTickToSend << ' ' << i;
+
+            auto& eventInputs = syncEvent.createNewPlayerInputs();
+            eventInputs.reserve(inputHistory[currentTickToSend].size());
+            for (auto& pInput : inputHistory[currentTickToSend])
+            {
+                eventInputs.emplace_back(pInput.playerInputWithId);
+            }
+        }
+        
+        //set latestUpdatedInputSync
+        connPtr->sendUdpEvent(syncEvent);
+        /* code */
+        PLOG_DEBUG << "sending " << syncEvent.updateInfos.size() << " updates at starting tick " << syncEvent.startingGameTick;
+    }
 }

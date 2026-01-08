@@ -73,7 +73,9 @@ public:
 
     LabeledUpdateInfo getNextInfo(){
         nextInfoIndex++;
-        if((nextInfoIndex-1) % snapShotDistance == 0){
+        if(snapShotDistance == 255){
+            return LabeledUpdateInfo(UpdateInfo1::PLAYER_INPUT, updateInfos[nextInfoIndex - 1]);
+        }else if((nextInfoIndex-1) % snapShotDistance == 0){
             return LabeledUpdateInfo(UpdateInfo1::GAMESTATE_PLAYER_INPUT, updateInfos[nextInfoIndex - 1]);
         }else{
             return LabeledUpdateInfo(UpdateInfo1::PLAYER_INPUT, updateInfos[nextInfoIndex - 1]);
@@ -89,7 +91,10 @@ public:
         for (size_t i = 0; i < size; i++)
         {
             updateInfos.emplace_back();
-            if(i%snapShotDistance == 0){
+            if(snapShotDistance == 255){
+                packet >> updateInfos[i].pInput;
+            }
+            else if(i%snapShotDistance == 0){
                 packet >> updateInfos[i].gsUpdate;
                 packet >> updateInfos[i].pInput;
             }else{
@@ -137,7 +142,10 @@ public:
 
         for (size_t i = 0; i < updateInfos.size(); i++)
         {
-            if(i%snapShotDistance == 0){
+            if(snapShotDistance == 255){
+                packet << updateInfos[i].pInput;
+            }
+            else if(i%snapShotDistance == 0){
                 packet << updateInfos[i].gsUpdate;
                 packet << updateInfos[i].pInput;
             }else{

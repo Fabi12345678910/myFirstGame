@@ -107,7 +107,7 @@ void Client::run(){
     gameStore = ClientGameStateStore<clientGameStateBufferSize>(1, baseGameState);
     gameStore.setTickrate(sf::milliseconds(this->tickrateMs).asSeconds());
     gameStore.setLocalPlayerId(this->playerId);
-                
+
     //enter the main loop
     mainLoop();
 }
@@ -266,6 +266,8 @@ void Client::mainLoop(){
                 else if (displayGameState.getGameState() != gameState::RUNNING) {
                     renderer.renderReadyMessage(displayGameState.getPlayer(playerId).getReadyToPlay());
                 }
+                auto healthReport = gameStore.getHealthReport(tickToDisplay);
+                renderer.renderGameStateHealth(healthReport);
                 renderer.processDisplayEvents();
                 renderer.display();
             }else{

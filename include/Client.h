@@ -44,7 +44,7 @@ private:
     std::uint16_t tickrateMs = 100;
     TICK_TYPE tickToDisplay = 0;
     //the targeted Tick to display(higher means)
-    TICK_TYPE displayTickDifference = 10;
+    TICK_TYPE displayTickDifference = 4;
     void performLogin();
     void processEventsPlaying();
     void processEventsAwaitingSpawn();
