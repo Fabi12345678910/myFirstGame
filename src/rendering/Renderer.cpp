@@ -40,7 +40,7 @@ void Renderer::renderReadyMessage(bool isReady) {
     float topMargin = 0.06f * h; // start menu 20% from top
     float textScale = 0.03f;
 
-    std::string ready = isReady ? "ready" : "unready";
+    std::string ready = isReady ? "unready" : "ready";
     std::string message = "Press R to go " + ready;
 
     sf::Text text(font, message, h*textScale);

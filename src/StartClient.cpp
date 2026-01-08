@@ -1,7 +1,3 @@
-#ifndef LOG_LEVEL
-    #define LOG_LEVEL plog::verbose
-#endif
-
 #include "Client.h"
 #include "Logger.h"
 

@@ -11,7 +11,7 @@
 #include "CircularArray.h"
 
 #ifndef ENABLE_SERVER_RENDERING
-    #define ENABLE_SERVER_RENDERING true
+    #define ENABLE_SERVER_RENDERING false
 #endif
 #if ENABLE_SERVER_RENDERING
     #include "Renderer.h"

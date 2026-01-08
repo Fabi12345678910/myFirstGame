@@ -111,14 +111,16 @@ inline sf::Packet& operator<<(sf::Packet& packet, const playerInput& input) {
     return packet << input.moveLeft
                   << input.moveRight
                   << input.jump
-                  << input.projectile;
+                  << input.projectile
+                  << input.readyToPlay;
 }
 
 inline sf::Packet& operator>>(sf::Packet& packet, playerInput& input) {
     return packet >> input.moveLeft
                   >> input.moveRight
                   >> input.jump
-                  >> input.projectile;
+                  >> input.projectile
+                  >> input.readyToPlay;
 }
 
 inline sf::Packet& operator<<(sf::Packet& packet, const playerInputWithId& inputId) {

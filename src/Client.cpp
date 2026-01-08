@@ -37,7 +37,7 @@ void* udpClientEventHandler(std::unique_ptr<Event> evPtr, std::optional<sf::IpAd
 
 Client::Client(sf::RenderWindow& win)
         : renderer(win),
-            conn(ClientConnection::createClientConnection({127, 0, 0, 1}, 42069)),
+            conn(ClientConnection::createClientConnection({127, 0, 0, 1}, 4444)),
             isHost(isHost)
 {
     conn.setArgs(&eventData);
@@ -304,6 +304,7 @@ playerInput Client::processInputs(){
     }
     if(sf::Keyboard::isKeyPressed(sf::Keyboard::Key::R)){
         input.readyToPlay = true;
+        PLOG_ERROR << "Player " + gameStore.getGameState(tickToDisplay, true, NULL)->getPlayer(playerId).getReadyToPlay(); 
     }
     return input;
 }
