@@ -1,6 +1,7 @@
 #pragma once
 #include <SFML/Graphics.hpp>
 #include "GameState.h"
+#include "GameStateHealth.h"
 
 class Renderer
 {
@@ -12,6 +13,7 @@ public:
     void processDisplayEvents();
     void render(GameState& gamestate);
     void renderWaitingMessage();
+    void renderGameStateHealth(HealthReport& report);
     void renderWaitingMessage(int numDots = 3);
     void renderReadyMessage(bool isReady);
     void renderMapSelection(TICK_TYPE timeLeft, int16_t& selectionIndex, bool& confirmed, std::vector<std::pair<int16_t, std::string>> maps);

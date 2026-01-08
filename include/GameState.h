@@ -70,6 +70,16 @@ public:
         throw std::runtime_error("projectile not found");
     }
 
+    void removeProjectile(OBJECT_ID_TYPE id){
+        for (size_t i = 0; i < projectiles.size(); i++)
+        {
+            if(projectiles[i].getId() == id){
+                projectiles.erase(projectiles.begin()+i);
+                return;
+            }
+        }
+    }
+
     std::vector<Projectile> getActiveProjectiles() {
         std::vector<Projectile> active;
         active.reserve(projectiles.size());

@@ -29,7 +29,7 @@ public:
 
     int enqueueInput(indexedPlayerInput const & input){
         PLOG_VERBOSE << this <<", queue size: " << inputQueue.size();
-        if(inputQueue.size()>= 20){
+        if(inputQueue.size()>= 3){
             PLOG_VERBOSE << "too many inputs enqueued";
             return -1;
         }

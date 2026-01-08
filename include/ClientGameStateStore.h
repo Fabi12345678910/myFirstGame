@@ -12,6 +12,8 @@
 
 #include <iostream>
 
+#include "GameStateHealth.h"
+
 struct StoreState{
     std::vector<UpdateInfo*> updateInfos = std::vector<UpdateInfo*>();
     bool updateInfosFinalized = false;
@@ -304,5 +306,28 @@ public:
                 return NULL;
             }
         }
+    }
+
+    HealthReport getHealthReport(TICK_TYPE currentTickToDisplay){
+        HealthReport report;
+        report.tickHealths.reserve(30);
+        for (TICK_TYPE i = currentTickToDisplay - 9; i <= currentTickToDisplay + 20; i++)
+        {
+            if (!isGameStateAvailable(i)){
+                report.tickHealths.emplace_back(i, TickHealth::UNAVAILABLE);
+                continue;
+            }
+            if(gameStates[i].gameStateUpdated){
+                report.tickHealths.emplace_back(i, TickHealth::GENERATED);
+                continue;
+            }
+            if(gameStates[i].updateInfosFinalized){
+                report.tickHealths.emplace_back(i, TickHealth::READY_TO_GENERATE);
+                continue;
+            }else{
+                report.tickHealths.emplace_back(i, TickHealth::MISSING_SERVER_UPDATE_INFOS);
+            }            
+        }
+        return report;
     }
 };
