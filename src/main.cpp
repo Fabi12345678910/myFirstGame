@@ -1,8 +1,3 @@
-#ifndef LOG_LEVEL
-    #define LOG_LEVEL plog::warning
-#endif
-
-
 #include <SFML/Graphics.hpp>
 #include <SFML/Audio.hpp>
 #include <nlohmann/json.hpp>

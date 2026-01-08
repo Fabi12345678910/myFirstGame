@@ -401,6 +401,7 @@ playerInput Client::processInputs(){
     }
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::R)) {
         input.readyToPlay = true;
+        PLOG_ERROR << "Player " + gameStore.getGameState(tickToDisplay, true, NULL)->getPlayer(playerId).getReadyToPlay(); 
     }
 
     return input;
