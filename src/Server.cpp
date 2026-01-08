@@ -22,7 +22,8 @@ void* serverTcpEventHandler(std::unique_ptr<Event> ev, Connection& conn, void* a
     std::lock_guard<std::mutex> queueLockGuard(handle->connectionEventsMutex);
     ServerConnection* serverConn = dynamic_cast<ServerConnection*>(&conn);
     if(serverConn == NULL){
-        throw std::runtime_error("did not get a server connection");
+        PLOG_ERROR << "did not get a server connection";
+        return NULL;
     }
     std::tuple<ServerConnection&, std::unique_ptr<Event>> queueEntry(*serverConn, std::move(ev));
     handle->connectionEventsQueue.push(std::move(queueEntry));
@@ -43,6 +44,12 @@ void* serverUdpEventHandler(std::unique_ptr<UdpClientSendableEvent> ev, std::opt
         PLOG_VERBOSE << "comparing against connection " << connPtr->udpRecipientIpAdress << ':' << connPtr->udpRecipientPort;
         //if(connPtr->udpRecipientIpAdress == remoteAddress.value() && connPtr->udpRecipientPort == remotePort){
         if(connPtr->getPlayerId() == ev->playerId){
+            if(connPtr->udpRecipientPort != remotePort){
+                connPtr->udpRecipientPort = remotePort;
+            }
+            if(connPtr->udpRecipientIpAdress != remoteAddress.value()){
+                connPtr->udpRecipientIpAdress = remoteAddress.value();
+            }
             serverConn = connPtr.get();
         }
     }
@@ -73,6 +80,8 @@ void Server::run(){
     //set an example Gamestate for now
     //start a corresponding Socket
     //Profit?
+    initAlwaysOnLogger();
+    PLOG_INFO_(1) << "starting server";
     {
         std::vector<StageObject> stageObjects;
         auto so = new StageObject(0, sf::Vector2f(800.f, 50.f), sf::Vector2f(0.f,550.f));

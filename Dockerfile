@@ -17,7 +17,8 @@ COPY CMakeLists.txt CMakeLists.txt
 
 # Build static binary
 RUN cmake -B build -S . \
-    -DCMAKE_BUILD_TYPE=Release
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_CXX_FLAGS="-DENABLE_SERVER_RENDERING=false -DLOG_LEVEL=plog::info"
 RUN cmake --build build --target Server --config Release
 
 ENTRYPOINT ["/build/build/Server"]

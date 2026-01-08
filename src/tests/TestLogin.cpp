@@ -30,7 +30,7 @@ void* eventHandler(std::unique_ptr<Event> ev, Connection& conn, void* args) {
 }
 int main(int argc, char const *argv[])
 {
-    ClientConnection conn = ClientConnection::createClientConnection({127, 0, 0, 1}, 42069);
+    ClientConnection conn = ClientConnection::createClientConnection({100, 75, 135, 22}, 30567);
     conn.sendTcpEvent(EventLoginRequest(conn.getUdpPort()));
     conn.setEventHandler(eventHandler);
     sleep(1);

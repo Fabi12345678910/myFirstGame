@@ -45,6 +45,13 @@ function(enable_autocopy_runtime_dlls targetName)
     endif()
 endfunction()
 
+# Boolean option with default
+option(ENABLE_SERVER_RENDERING "Enable server rendering" OFF)
+
+# Logging level default string
+set(LOG_LEVEL "plog::info" CACHE STRING "Logging level")
+
+
 # ---- Executables -------------------------------------------------------------
 
 add_executable(eventTest
