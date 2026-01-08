@@ -67,7 +67,6 @@ struct playerInputWithId : public UpdateInfo{
     struct playerInput playerInput;
 
     virtual bool applyUpdate(GameStateUpdater& gsUpdater, GameState & gameState) override{
-//        std::cout << "applyUpdate() user input " << playerId << "\n";
         try
         {
             Player &player = gameState.getPlayer(playerId);

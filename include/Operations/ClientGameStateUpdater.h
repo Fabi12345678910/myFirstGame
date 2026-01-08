@@ -26,9 +26,9 @@ public:
     virtual void addPlayer(Player& player) override {
         gameState.addPlayer(player);
         if(player.getId() == localPlayerId){
-            std::cout << "detected local Player adding\n";
             localPlayer = player;
             localPlayerAdded = true;
+            PLOG_VERBOSE << "local player was added";
         }
     };
     bool isLocalPlayerAdded(){
