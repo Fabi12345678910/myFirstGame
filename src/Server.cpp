@@ -247,6 +247,10 @@ void Server::processEvents(std::vector<indexedPlayerInputWithId>& playerInputs){
                 //no new SLOT
                 conn.sendTcpEvent(EventLoginDenied(0));
             }else{
+                if(evLoginRequest->apiVersion != API_VERSION){
+                    conn.sendTcpEvent(EventLoginDenied(1));
+                    continue;
+                }
                 OBJECT_ID_TYPE nextPlayerId = availablePlayerIds.front();
                 availablePlayerIds.pop();
                 conn.setPlayerId(nextPlayerId);
