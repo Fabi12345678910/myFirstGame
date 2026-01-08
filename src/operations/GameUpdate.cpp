@@ -5,6 +5,7 @@
 #include "Collidable.h"
 #include "Collisions/PlayerCollisions.h"
 #include "Operations/GameStateUpdater.h"
+#include "plog/Log.h"
 //#include "Inputs.h"
 
 static bool applyWrapEdgesX(GameStateUpdater& gsUpdater, Player& player, sf::RectangleShape newPosition, sf::Vector2f playerVelocity, const Stage& stage) {
@@ -63,7 +64,6 @@ void updateGame(GameStateUpdater& gsUpdater, GameState& gameState, float deltaTi
             const Collidable *collidable = dynamic_cast<const Collidable*>(&stageObject);
             if(collidable != NULL){
                 if (newPosition.getGlobalBounds().findIntersection(stageObject.getShape().getGlobalBounds())) {
-                    //std::cout << "detected collision\n";
                     if(handlePlayerCollision(gsUpdater, *player, stageObject, newPosition, playerVelocity, gameState)){
                         movementHandledByCollision = true;
                     };
@@ -77,7 +77,6 @@ void updateGame(GameStateUpdater& gsUpdater, GameState& gameState, float deltaTi
             movementHandledByCollision = true;
         }
         if(!movementHandledByCollision){
-//            std::cout << "moving player because he did not already got handled\n";
             gsUpdater.absoluteMovePlayer(*player, newPosition.getPosition());
             gsUpdater.setPlayerVelocity(*player, playerVelocity);
         }
@@ -91,12 +90,11 @@ void updateGame(GameStateUpdater& gsUpdater, GameState& gameState, float deltaTi
                 const Collidable *collidable = dynamic_cast<const Collidable*>(&player);
                 if(collidable != NULL){
                     if (projectile->getShape().getGlobalBounds().findIntersection(player.getShape().getGlobalBounds())) {
-                        //std::cout << "detected collision\n";
                         projectile->setIsActive(false);
                         gsUpdater.projectileHitPlayer(*projectile, player);
                     }
                 }
-                else { std::cout << "projectile collided with a non collidable player"; } 
+                else { PLOG_WARNING << "projectile collided with a non collidable player"; } 
             }
             // check collision with stage objects
             for (StageObject &stageObject: gameState.getStage().getStageObjects()){
@@ -105,7 +103,6 @@ void updateGame(GameStateUpdater& gsUpdater, GameState& gameState, float deltaTi
                 if(collidable != NULL){
 
                     if (projectile->getShape().getGlobalBounds().findIntersection(stageObject.getShape().getGlobalBounds())) {
-                        //std::cout << "detected collision\n";
                         projectile->setIsActive(false);
                     }
                 }

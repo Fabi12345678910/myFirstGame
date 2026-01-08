@@ -13,6 +13,8 @@
 #include "Networking/EventDefinitions/EventUserInput.h"
 #include "Networking/EventDefinitions/EventGamestatePlayerInputHistory.h"
 #include "maps/Map_TestAll.h"
+#include "Logger.h"
+#include "plog/Log.h"
 #include <algorithm>
 
 void* serverTcpEventHandler(std::unique_ptr<Event> ev, Connection& conn, void* args) {
@@ -20,36 +22,49 @@ void* serverTcpEventHandler(std::unique_ptr<Event> ev, Connection& conn, void* a
     std::lock_guard<std::mutex> queueLockGuard(handle->connectionEventsMutex);
     ServerConnection* serverConn = dynamic_cast<ServerConnection*>(&conn);
     if(serverConn == NULL){
-        throw std::runtime_error("did not get a server connection");
+        PLOG_ERROR << "did not get a server connection";
+        return NULL;
     }
     std::tuple<ServerConnection&, std::unique_ptr<Event>> queueEntry(*serverConn, std::move(ev));
     handle->connectionEventsQueue.push(std::move(queueEntry));
-    //printf("handling event\n");
+    PLOG_VERBOSE << "handlung tcp event";
     return NULL;
 };
-void* serverUdpEventHandler(std::unique_ptr<Event> ev, std::optional<sf::IpAddress>& remoteAddress, unsigned short& remotePort, void* args){
+void* serverUdpEventHandler(std::unique_ptr<UdpClientSendableEvent> ev, std::optional<sf::IpAddress>& remoteAddress, unsigned short& remotePort, void* args){
+    if(!remoteAddress.has_value()){
+        PLOG_ERROR << "missing remote address for udp packet";
+        return NULL;
+    }
     struct serverEventHandlerData *handle = (serverEventHandlerData*) args;
     std::lock_guard<std::mutex> queueLockGuard(handle->connectionEventsMutex);
-    ServerConnection* serverConn;
+    ServerConnection* serverConn = nullptr;
+    PLOG_DEBUG << "got an udp event";
     for (auto& connPtr : *handle->connections)
     {
-        if(connPtr->udpRecipientIpAdress == remoteAddress && connPtr->udpRecipientPort == remotePort){
+        PLOG_VERBOSE << "comparing against connection " << connPtr->udpRecipientIpAdress << ':' << connPtr->udpRecipientPort;
+        //if(connPtr->udpRecipientIpAdress == remoteAddress.value() && connPtr->udpRecipientPort == remotePort){
+        if(connPtr->getPlayerId() == ev->playerId){
+            if(connPtr->udpRecipientPort != remotePort){
+                connPtr->udpRecipientPort = remotePort;
+            }
+            if(connPtr->udpRecipientIpAdress != remoteAddress.value()){
+                connPtr->udpRecipientIpAdress = remoteAddress.value();
+            }
             serverConn = connPtr.get();
         }
     }
     
     if(serverConn == NULL){
-        throw std::runtime_error("did not get a server connection");
+        PLOG_ERROR << "did not find receipient for " << remoteAddress.value() << ':' << remotePort;
     }
     std::tuple<ServerConnection&, std::unique_ptr<Event>> queueEntry(*serverConn, std::move(ev));
     handle->connectionEventsQueue.push(std::move(queueEntry));
-    //printf("handling event\n");
     return NULL;
 }
 
 
 
-Server::Server() : serverSocket(42069) {
+Server::Server() : serverSocket(42069){
     eventData.connections = &serverSocket.connections;
 }
 
@@ -65,6 +80,8 @@ void Server::run(){
     //set an example Gamestate for now
     //start a corresponding Socket
     //Profit?
+    initAlwaysOnLogger();
+    PLOG_INFO_(1) << "starting server";
     {
         std::vector<StageObject> stageObjects;
         auto so = new StageObject(0, sf::Vector2f(800.f, 50.f), sf::Vector2f(0.f,550.f));
@@ -105,7 +122,7 @@ void Server::run(){
     ready.store(false);
 }
 void Server::mainLoop(){
-    printf("entering main loop\n");
+    PLOG_INFO << "entering main loop";
     sf::Clock tickClock;
     tickClock.start();
     sf::Time startTime = tickClock.getElapsedTime();
@@ -114,24 +131,20 @@ void Server::mainLoop(){
         sf::Time startTickTime = tickClock.getElapsedTime();
         sf::Time currentDeltaTime = startTickTime - latestElapsedTick;
         if(currentDeltaTime < tickRate){
+            PLOG_VERBOSE << "not there yet";
+            sf::sleep(tickRate - currentDeltaTime);
             continue;
         }
         latestElapsedTick += tickRate;
         currentTick++;
-        std::cout << "calculating tick " << currentTick << '\n';
+        PLOG_VERBOSE << "calculating tick " << currentTick;
         std::vector<indexedPlayerInputWithId> playerInputs;
         playerInputs.reserve(numPlayers);
         //copy gameState to next gameState
         gameStates.back();
         gameStates.push(gameStates[currentTick-1]);
         gameStates[currentTick] = gameStates[currentTick-1];
-        
-        //debug print all players
-/*        std::cout << "GameStateDebugInfo:\n";
-        for (Player& p: gameStates[currentTick % gameStateBufferSize].getPlayers()){
-            std::cout << "  player present: " << p.getId() << '\n';
-        }*/
-        
+
         processEvents(playerInputs);
         //get inputs for players
         for(auto& conn: serverSocket.connections){
@@ -139,6 +152,8 @@ void Server::mainLoop(){
             if(pInput.has_value()){
                 indexedPlayerInputWithId input(pInput.value(), conn->getPlayerId());
                 playerInputs.push_back(input);
+            }else{
+                PLOG_VERBOSE << "got no input available";
             }
         }
 
@@ -149,7 +164,7 @@ void Server::mainLoop(){
             if(it == playerInputs.end()){
                 if(currentTick == 0){
                     //no inputs yet, just use an empty one
-                    std::cout << "first frame, using empty userInput\n";
+                    PLOG_VERBOSE << "first frame, using empty userInput";
                     playerInputs.emplace_back(0, playerInput(), player.getId());
                     //player.getId(), playerInput()
                     playerInputs.back().invalidateIdx();
@@ -160,18 +175,16 @@ void Server::mainLoop(){
                 auto itLastInput = std::find_if(lastInputs.begin(), lastInputs.end(),
                 [player](const indexedPlayerInputWithId& p){ return p.playerInputWithId.playerId == player.getId(); });
                 if(itLastInput != lastInputs.end()){
-                    std::cout << "reusing last userInput with userId: " << itLastInput->playerInputWithId.playerId <<"\n";
+                    PLOG_DEBUG << "reusing last userInput with userId: " << itLastInput->playerInputWithId.playerId;
                     playerInputs.push_back(*itLastInput);
                     playerInputs.back().invalidateIdx();
-//                    std::cout << "emplaced: " << playerInputs.back().playerId << '\n';
                 }else{
                     //no last inputs, use empty one
-//                    std::cout << "no last inputs, use empty one\n";
                     playerInputs.emplace_back(0, playerInput(), player.getId());
                     playerInputs.back().invalidateIdx();
                 }
             }else{
-//                std::cout << "already have input provided by the user\n";
+//                PLOG_VERBOSE << "already have input provided by the user\n";
             }
         }
 
@@ -206,33 +219,38 @@ void Server::mainLoop(){
 
         someTimesResyncGameState();
         int32_t sleep_ms = TICKRATE_MS - tickClock.getElapsedTime().asMilliseconds();
-        if(tickClock.getElapsedTime().asMilliseconds() >= 1){
-            std::cout << "Computing tick took " << tickClock.getElapsedTime().asMilliseconds() << "ms\n";
-        }
+
         #if ENABLE_SERVER_RENDERING
         renderer.render(gameStates[currentTick]);
         renderer.processDisplayEvents();
+        renderer.display();
         #endif
-        sf::sleep(sf::milliseconds(TICKRATE_MS) - tickClock.getElapsedTime());
+        sf::Time tickComputeTime = tickClock.getElapsedTime() - startTickTime;
+        if(tickComputeTime.asMilliseconds() >= 1){
+            PLOG_INFO << "Computing tick took " << tickClock.getElapsedTime().asMilliseconds() << "ms";
+        }
     }
-    printf("exiting main loop\n");
+    PLOG_INFO <<"exiting main loop";
 }
 
 void Server::processEvents(std::vector<indexedPlayerInputWithId>& playerInputs){
     std::lock_guard<std::mutex> queueLockGuard(eventData.connectionEventsMutex);
     while(!eventData.connectionEventsQueue.empty()){
-//        std::cout<< "processEvents: processing a new event\n";
         auto& connEv = eventData.connectionEventsQueue.front();
         ServerConnection& conn = std::get<0>(connEv);
         Event* ev = std::get<1>(connEv).get();
         //somehow handle tha event
         EventLoginRequest *evLoginRequest = dynamic_cast<EventLoginRequest*>(ev);
         if(evLoginRequest != NULL){
-            std::cout << "got a new login request\n";
+            PLOG_INFO << "got a new login request";
             if(availablePlayerIds.empty()){
                 //no new SLOT
                 conn.sendTcpEvent(EventLoginDenied(0));
             }else{
+                if(evLoginRequest->apiVersion != API_VERSION){
+                    conn.sendTcpEvent(EventLoginDenied(1));
+                    continue;
+                }
                 OBJECT_ID_TYPE nextPlayerId = availablePlayerIds.front();
                 availablePlayerIds.pop();
                 conn.setPlayerId(nextPlayerId);
@@ -254,22 +272,21 @@ void Server::processEvents(std::vector<indexedPlayerInputWithId>& playerInputs){
 
         EventDebugMessage *evDebug = dynamic_cast<EventDebugMessage*>(ev);
         if(evDebug != NULL){
-            std::cout << "got a debug message\n";
-            std::cout << "Debug message: " << evDebug->message << '\n';
+            PLOG_VERBOSE << "got a debug message";
+            PLOG_DEBUG << "Debug message: " << evDebug->message;
         }
 
         EventUserInput *evUserInput = dynamic_cast<EventUserInput*>(ev);
         if(evUserInput != NULL){
-            std::cout << "received user input\n";
+            PLOG_DEBUG << "received user input";
             while (evUserInput->hasNextUserInput())
             {
                 auto input = evUserInput->getNextUserInput();
-                std::cout << "adding user input '" << input.idx << "' to queue\n";
+                PLOG_DEBUG << "adding user input '" << input.idx << "' to queue";
                 conn.enqueueInput(input);
             }
         }
 
-//        printf("processEvents: done processing event\n");
         eventData.connectionEventsQueue.pop();
     }
 }
@@ -289,7 +306,6 @@ void Server::resyncGameState(){
     // along with every movement in between the gs and the previous one(and perhaps even one before for safety)
     // so that clients will be able to correctly interfer gameStates between these  
     // that means we have to include all current data and all new inputs since the last 2 synced gameStates
-    // std::cout << "resyncing players\n";
     
     static constexpr int SNAPSHOT_DISTANCE = 5;
     static constexpr int MAX_TOTAL_INFOS_TO_SEND = SNAPSHOT_DISTANCE * 2;
@@ -309,7 +325,7 @@ void Server::resyncGameState(){
     //    for (TICK_TYPE i = syncEvent.startingGameTick; i <= currentTick; i++){
         for (TICK_TYPE i = 0; i < infosToSend; i++){
             TICK_TYPE currentTickToSend = syncEvent.startingGameTick + i;
-            std::cout << "tick(current, currentToSend, i): " << currentTick << ' ' << currentTickToSend << ' ' << i << '\n';
+            PLOG_DEBUG << "tick(current, currentToSend, i): " << currentTick << ' ' << currentTickToSend << ' ' << i;
             if((i)%SNAPSHOT_DISTANCE == 0){
                 auto& eventUpdates = syncEvent.createCombinedUpdateInfo(gameStates[currentTickToSend], 0-1);
                 eventUpdates.pInput.reserve(inputHistory[currentTickToSend].size());
@@ -321,7 +337,7 @@ void Server::resyncGameState(){
                     eventUpdates.pInput.emplace_back(pInput.playerInputWithId);
                 }
 
-                std::cout << "server: playerInfosSize: " << syncEvent.updateInfos.back().gsUpdate.playerInfos.size() << '\n';
+                PLOG_VERBOSE << "server: playerInfosSize: " << syncEvent.updateInfos.back().gsUpdate.playerInfos.size();
             }else{
                 auto& eventInputs = syncEvent.createNewPlayerInputs();
                 eventInputs.reserve(inputHistory[currentTickToSend].size());
@@ -335,7 +351,7 @@ void Server::resyncGameState(){
         //set latestUpdatedInputSync
         connPtr->sendUdpEvent(syncEvent);
         /* code */
-        std::cout << "sending " << syncEvent.updateInfos.size() << " updates at starting tick " << syncEvent.startingGameTick << "\n";
+        PLOG_DEBUG << "sending " << syncEvent.updateInfos.size() << " updates at starting tick " << syncEvent.startingGameTick;
     }
     
     

@@ -3,6 +3,7 @@
 #include "Networking/Connection.h"
 #include "Types.h"
 #include "Inputs.h"
+#include "plog/Log.h"
 #include <queue>
 
 class ServerConnection : public Connection
@@ -10,26 +11,31 @@ class ServerConnection : public Connection
 private:
     OBJECT_ID_TYPE playerId = 0;
     sf::UdpSocket& udpSocket;
-    std::queue<indexedPlayerInput> inputQueue;
+    std::queue<indexedPlayerInput> inputQueue = std::queue<indexedPlayerInput>();
     TICK_TYPE highestProcessedInput = 0;
 public:
+
     std::optional<indexedPlayerInput> getNextPlayerInput(){
+        PLOG_VERBOSE << this <<", queue size: " << inputQueue.size();
         if(inputQueue.size() == 0){
             return std::nullopt;
         }
 
-        struct indexedPlayerInput nextInput(inputQueue.front());
+        indexedPlayerInput nextInput(inputQueue.front());
         highestProcessedInput = nextInput.idx;
         inputQueue.pop();
         return nextInput;
     }
 
     int enqueueInput(indexedPlayerInput const & input){
+        PLOG_VERBOSE << this <<", queue size: " << inputQueue.size();
         if(inputQueue.size()>= 20){
-            return -1;//too much inputs queued
+            PLOG_VERBOSE << "too many inputs enqueued";
+            return -1;
         }
         if(!inputQueue.empty() && inputQueue.back().idx >= input.idx){
-            return -2;//input already enqueued
+            PLOG_VERBOSE << "input already enqueued";
+            return -2;
         }
         inputQueue.emplace(input);
         return 0;

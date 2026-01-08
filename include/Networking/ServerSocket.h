@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Networking/ServerConnection.h"
+#include "Networking/EventDefinitions/UdpClientSendableEvent.h"
 #include <SFML/Network/TcpListener.hpp>
 #include <list>
 
@@ -14,7 +15,7 @@ public:
     std::list<std::unique_ptr<ServerConnection>> connections;
 
     void*(*eventHandler)(std::unique_ptr<Event>, Connection&, void* args) = NULL;
-    void*(*udpEventHandler)(std::unique_ptr<Event>, std::optional<sf::IpAddress>& remoteAddress, unsigned short& remotePort, void* args) = NULL;
+    void*(*udpEventHandler)(std::unique_ptr<UdpClientSendableEvent>, std::optional<sf::IpAddress>& remoteAddress, unsigned short& remotePort, void* args) = NULL;
 
     pthread_t connectionHandlerThread;
     pthread_t udpEventHandlerThread;
@@ -29,7 +30,7 @@ public:
     void sendTcpEventToEveryone(Event&& ev);
     void sendUdpEventToEveryone(Event&& ev);
     void setEventHandler(void* handleEvent(std::unique_ptr<Event>, Connection&, void* args));
-    void setUdpEventHandler(void* udpEventHandler(std::unique_ptr<Event>, std::optional<sf::IpAddress>& remoteAddress, unsigned short& remotePort, void* args));
+    void setUdpEventHandler(void* udpEventHandler(std::unique_ptr<UdpClientSendableEvent>, std::optional<sf::IpAddress>& remoteAddress, unsigned short& remotePort, void* args));
 
     void setArgs(void* args);
     void* getArgs(){

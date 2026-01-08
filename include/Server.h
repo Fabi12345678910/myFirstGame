@@ -11,7 +11,7 @@
 #include "CircularArray.h"
 
 #ifndef ENABLE_SERVER_RENDERING
-    #define ENABLE_SERVER_RENDERING false
+    #define ENABLE_SERVER_RENDERING true
 #endif
 #if ENABLE_SERVER_RENDERING
     #include "Renderer.h"
@@ -54,8 +54,8 @@ private:
     ServerSocket serverSocket;
 
     #if ENABLE_SERVER_RENDERING
-    Renderer renderer;
-    sf::RenderWindow* window = nullptr;
+    sf::RenderWindow window = sf::RenderWindow(sf::VideoMode(sf::Vector2u(1280, 720)), "ServerRendering");
+    Renderer renderer = Renderer(window);
     #endif
 public:
     void run();

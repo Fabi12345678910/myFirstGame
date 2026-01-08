@@ -36,7 +36,7 @@ void *handleEvents(std::unique_ptr<Event> ev, Connection& conn, void* args){
     return NULL;
 }
 
-void* udpEventHandler(std::unique_ptr<Event>, std::optional<sf::IpAddress>& remoteAddress, unsigned short& remotePort, void* args){
+void* udpEventHandler(std::unique_ptr<UdpClientSendableEvent>, std::optional<sf::IpAddress>& remoteAddress, unsigned short& remotePort, void* args){
     std::cout << "got a new udp event!!\n";
     if(remoteAddress.has_value()){
         std::cout << "remoteAdress: " << remoteAddress.value() << '\n';
