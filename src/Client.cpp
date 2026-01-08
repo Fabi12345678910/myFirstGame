@@ -221,7 +221,7 @@ void Client::mainLoop(){
                 gameStore.setLocalInput(tickToDisplay, input);
                 gameStore.finalizeLocalInput(tickToDisplay);
                 latestElapsedTick += tickRate;
-                constexpr size_t maxHistoricInputsToSend = 8;
+                constexpr size_t maxHistoricInputsToSend = 3;
                 EventUserInput userInputs(this->playerId);
                 for (size_t i = tickToDisplay - maxHistoricInputsToSend; i <= tickToDisplay; i++)
                 {
