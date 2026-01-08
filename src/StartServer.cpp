@@ -1,7 +1,10 @@
 #include "Server.h"
 #include <limits.h>
+#include "Logger.h"
+
 int main(int argc, char const *argv[])
 {
+    initLogger();
     unsigned short port = 4444;
     if(argc > 1){
         //parsing 

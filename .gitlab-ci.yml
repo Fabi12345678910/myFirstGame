@@ -7,7 +7,7 @@ variables:
   CMAKE_BUILD_TYPE: Release
 
 default:
-  image: gcc:latest     # or clang, or your own build image
+  image: gcc:latest
   before_script:
     - apt-get update
     - apt-get install -y cmake make gpp

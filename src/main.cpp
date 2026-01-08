@@ -11,6 +11,7 @@
 #include <thread>
 #include <memory>
 #include <atomic>
+#include "Logger.h"
 
 // Enum for scene management
 enum class Scene {
@@ -21,6 +22,7 @@ enum class Scene {
 };
 
 int main() {
+    initLogger();
     Options opts = load_options("config.json");
     save_options(opts, "config.json");
     sf::State style = opts.fullscreen ? sf::State::Fullscreen : sf::State::Windowed;

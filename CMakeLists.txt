@@ -12,7 +12,9 @@ set(SFML_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(SFML_BUILD_TEST_SUITE OFF CACHE BOOL "" FORCE)
 set(SFML_USE_SYSTEM_DEPS OFF CACHE BOOL "" FORCE)
 # Build shared libs so we don't fight static CRT on MSVC
-set(BUILD_SHARED_LIBS ON CACHE BOOL "" FORCE)
+if(NOT DEFINED BUILD_SHARED_LIBS)
+    set(BUILD_SHARED_LIBS ON CACHE BOOL "Build shared libraries")
+endif()
 
 FetchContent_Declare(SFML
     GIT_REPOSITORY https://github.com/SFML/SFML.git

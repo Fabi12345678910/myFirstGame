@@ -4,6 +4,7 @@
 #include "Projectile.h"
 #include "GameUpdate.h"
 #include "Renderer.h"
+#include "plog/Log.h"
 #include "Operations/ClientGameStateUpdater.h"
 
 #include "Networking/EventDefinitions/EventLoginRequest.h"
@@ -26,7 +27,7 @@ void* clientEventHandler(std::unique_ptr<Event> evPtr, Connection& conn, void* a
 };
 
 void* udpClientEventHandler(std::unique_ptr<Event> evPtr, std::optional<sf::IpAddress> &remoteAddress, unsigned short &remotePort, void *args){
-    std::cout << "got udp event\n";
+    PLOG_VERBOSE << "got udp event";
     struct clientEventHandlerData *handle = (clientEventHandlerData*) args;
     std::lock_guard<std::mutex> queueLockGuard(handle->connectionEventsMutex);
     handle->connectionEventsQueue.push(std::move(evPtr));
@@ -115,7 +116,6 @@ void Client::processEventsAwaitingSpawn(){
 
     std::lock_guard<std::mutex> queueLockGuard(eventData.connectionEventsMutex);
     while(!eventData.connectionEventsQueue.empty()){
-//        std::cout<< "processEvents: processing a new event\n";
         auto& evPtr = eventData.connectionEventsQueue.front();
         Event* ev = evPtr.get();
         //somehow handle tha event
@@ -139,16 +139,14 @@ void Client::processEventsPlaying(){
 
     std::lock_guard<std::mutex> queueLockGuard(eventData.connectionEventsMutex);
     while(!eventData.connectionEventsQueue.empty()){
-//        std::cout<< "processEvents: processing a new event\n";
         auto& evPtr = eventData.connectionEventsQueue.front();
         Event* ev = evPtr.get();
         EventGamestatePlayerInputHistory *eventGamestatePlayerInputHistory = dynamic_cast<EventGamestatePlayerInputHistory*>(ev);
         if(eventGamestatePlayerInputHistory != NULL){
-            std::cout << "handling gameStateUpdate\n";
+            PLOG_VERBOSE << "handling gameStateUpdate";
             updateGameStates(*eventGamestatePlayerInputHistory);
         }
 
-//        printf("processEvents: done processing event\n");
         eventData.connectionEventsQueue.pop();
     }
 }
@@ -162,7 +160,6 @@ void Client::updateGameStates(EventGamestatePlayerInputHistory& ev){
     TICK_TYPE currentTickInfo = ev.startingGameTick;
     while (ev.hasNextInfo())
     {
-//        std::cout << "handling update info for tick " << currentTickInfo << '\n';
         LabeledUpdateInfo update = ev.getNextInfo();
         for(auto &pInput : update.info.pInput){
             gameStore.addUpdateInfo(currentTickInfo, pInput);
@@ -188,7 +185,7 @@ void Client::mainLoop(){
     //  updateGame(gameStateToDisplay+1, tickrate)
     //displayGameState = updateGame_interpolate(gameStateToDisplay, deltaTime)
     //render(displayGameState)
-    printf("entering main loop\n");
+    PLOG_INFO << "entering main loop";
     //this is the main loop
     sf::Clock tickClock;
     tickClock.start();
@@ -214,18 +211,18 @@ void Client::mainLoop(){
             Player* localPlayer = NULL;
             bool canRenderTick = true;
             playerInput input = processInputs();
-            std::cout << "delta time " << currentDeltaTime.asSeconds() << '\n';
-            std::cout << "tickrate time " << tickRate.asSeconds() << '\n';
+            PLOG_VERBOSE << "delta time " << currentDeltaTime.asSeconds();
+            PLOG_VERBOSE << "tickrate time " << tickRate.asSeconds();
             while (currentDeltaTime >= tickRate){
                 tickToDisplay++;
-                std::cout << "attempting to generate display tick " << tickToDisplay << '\n';
+                PLOG_DEBUG << "attempting to generate display tick " << tickToDisplay;
                 currentDeltaTime-= tickRate;
-                std::cout << "remaining delta time " << currentDeltaTime.asSeconds() << '\n';
+                PLOG_VERBOSE << "remaining delta time " << currentDeltaTime.asSeconds();
                 gameStore.setLocalInput(tickToDisplay, input);
                 gameStore.finalizeLocalInput(tickToDisplay);
                 latestElapsedTick += tickRate;
                 constexpr size_t maxHistoricInputsToSend = 8;
-                EventUserInput userInputs;
+                EventUserInput userInputs(this->playerId);
                 for (size_t i = tickToDisplay - maxHistoricInputsToSend; i <= tickToDisplay; i++)
                 {
                     if(gameStore.hasLocalInput(i)){
@@ -233,22 +230,18 @@ void Client::mainLoop(){
                     }
                 }
                 conn.sendUdpEvent(userInputs);
-
                 gameStore.getGameState(tickToDisplay, true, NULL);                
             }
 
             generatedGameState = gameStore.getGameState(tickToDisplay, true, &localPlayer);  
 
             if(generatedGameState != NULL){
-//                std::cout << "rendering tick "<< tickToDisplay << " with players count " << generatedGameState->getPlayers().size() << '\n';
                 GameState displayGameState = *generatedGameState;
                 if(localPlayer != NULL){
                     Player locPlayer = *localPlayer;
                     locPlayer.getShape().setFillColor(sf::Color::Magenta);
-//                    std::cout << "adding local player\n";
                     displayGameState.addPlayer(locPlayer);
                 }else{
-//                    std::cout << "no local player found\n";
                 }
                 constexpr bool renderLocalServerPlayer = false;
                 if (!renderLocalServerPlayer){
@@ -258,7 +251,7 @@ void Client::mainLoop(){
 
                 for (auto& player :displayGameState.getPlayers())
                 {
-//                    std::cout << "incl. player: " << player.getId() << '\n';
+                    PLOG_VERBOSE << "incl. player: " << player.getId() << '\n';
                 }
                 
                 renderer.render(displayGameState);
@@ -276,22 +269,22 @@ void Client::mainLoop(){
                 renderer.processDisplayEvents();
                 renderer.display();
             }else{
-                std::cout << "can't render tick:(\n";
+                PLOG_INFO << "can't render tick:(\n";
             }
             sf::Time tickRenderTime = tickClock.getElapsedTime() - startTickTime;
             if(tickRenderTime.asMilliseconds() >= 5){
-                std::cout << "Computing tick took " << tickRenderTime.asMilliseconds() << "ms\n";
+                PLOG_INFO << "Computing tick took " << tickRenderTime.asMilliseconds() << "ms";
             }
 
 //            sf::sleep(tickRate - tickClock.getElapsedTime());
         }
         else if(clientState == AWAITING_SPAWN){
-            printf("be awaiting spawn\n");
+            PLOG_DEBUG << "be awaiting spawn";
             processEventsAwaitingSpawn();
             sf::sleep(sf::milliseconds(10));
         }
     }
-    printf("exiting main loop\n");
+    PLOG_INFO << "exiting main loop";
 }
 
 playerInput Client::processInputs(){

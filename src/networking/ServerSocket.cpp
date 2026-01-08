@@ -1,5 +1,7 @@
 #include "Networking/ServerSocket.h"
 #include "Networking/Events.h"
+#include "Networking/EventDefinitions/UdpClientSendableEvent.h"
+#include "plog/Log.h"
 
 void *connectionAccepter(void * arg){
     ServerSocket *serverSock = (ServerSocket*) arg;
@@ -16,7 +18,7 @@ void *connectionAccepter(void * arg){
         if (serverSock->eventHandler != NULL){
             serverSock->connections.back()->setEventHandler(serverSock->eventHandler);
         }
-        printf("created new client\n");
+        PLOG_INFO << "ServerSocket: created new client";
     }    
 }
 
@@ -25,19 +27,29 @@ void *udpListener(void* arg){
     sf::Packet packet;
     std::optional<sf::IpAddress> remoteAdress;
     unsigned short remotePort;
+    PLOG_VERBOSE << "starting udp listener";
     while (true)
     {
         if(serverSock->udpSocket.receive(packet, remoteAdress, remotePort) != sf::Socket::Status::Done){
             std::cerr << "error reading udp packet";
         }
-
-        serverSock->udpEventHandler(getEventFromPacket(packet), remoteAdress, remotePort, serverSock->udpArgs);
+        PLOG_VERBOSE << "got a udp packet";
+        std::unique_ptr<Event> ev = getEventFromPacket(packet);
+        UdpClientSendableEvent* clientEvent =  dynamic_cast<UdpClientSendableEvent*> (ev.get());
+        if(clientEvent != NULL){
+            ev.release();
+            auto udpEvPtr = std::unique_ptr<UdpClientSendableEvent>(clientEvent);
+            serverSock->udpEventHandler(std::move(udpEvPtr), remoteAdress, remotePort, serverSock->udpArgs);
+        }
+        else{
+            PLOG_ERROR << "udp packet was not udp sendable";
+        }
     }
 }
 
 ServerSocket::ServerSocket(unsigned short listenerPort){
     this->port = listenerPort;
-    if (listener.listen(this->port) != sf::Socket::Status::Done){
+    if (this->listener.listen(this->port) != sf::Socket::Status::Done){
         throw std::runtime_error("error listening on tcp port");
     }
     if(this->udpSocket.bind(listenerPort) != sf::Socket::Status::Done){
@@ -59,7 +71,7 @@ void ServerSocket::setEventHandler(void* handleEvent(std::unique_ptr<Event>, Con
     }
 }
 
-void ServerSocket::setUdpEventHandler(void* udpEventHandler(std::unique_ptr<Event>, std::optional<sf::IpAddress>& remoteAddress, unsigned short& remotePort, void* args)){
+void ServerSocket::setUdpEventHandler(void* udpEventHandler(std::unique_ptr<UdpClientSendableEvent>, std::optional<sf::IpAddress>& remoteAddress, unsigned short& remotePort, void* args)){
     if (this->udpEventHandler == NULL){
         this->udpEventHandler = udpEventHandler;
 

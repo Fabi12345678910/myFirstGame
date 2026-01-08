@@ -110,7 +110,6 @@ public:
         UpdateInfo1& updateInfo = updateInfos.emplace_back();
         for (Player& p : gameState.getPlayers()){
             updateInfo.gsUpdate.playerInfos.emplace_back(p);
-//            std::cout << "added player " << p.getId() <<" to playerInfos\n";
         }
         for (Projectile &p : gameState.getProjectiles()){
             updateInfo.gsUpdate.projectileInfos.emplace_back(p);

@@ -1,6 +1,7 @@
 #include "Collisions/PlayerCollisions.h"
 #include "Stage.h"
 #include <iostream>
+#include "plog/Log.h"
 
 bool handlePlayerSolidCollision(GameStateUpdater& gsUpdater, Player& player, GameObject& object, sf::RectangleShape& collisionPosition, sf::Vector2f playerVelocity);
 bool handlePlayerSemiSolidCollision(GameStateUpdater& gsUpdater, Player& player, GameObject& object, sf::RectangleShape& collisionPosition, sf::Vector2f playerVelocity);
@@ -58,12 +59,10 @@ bool handlePlayerSolidCollision(GameStateUpdater& gsUpdater, Player& player, Gam
             playerMovement.x += overlapX;
             gsUpdater.deltaMovePlayer(player, sf::Vector2f(overlapX, 0.f));
 //            player.getShape().move(sf::Vector2f(overlapX, 0.f));
-            // std::cout << "Collision from left\n";
         } else {
             // Player is on the left
             playerMovement.x -= overlapX;
             gsUpdater.deltaMovePlayer(player, sf::Vector2f(-overlapX, 0.f));
-            // std::cout << "Collision from right\n";
         }
         gsUpdater.deltaMovePlayer(player, playerMovement);
         playerVelocity.x = 0.f;
@@ -75,12 +74,10 @@ bool handlePlayerSolidCollision(GameStateUpdater& gsUpdater, Player& player, Gam
         if (dy > 0.f) {
             // Player is below
             playerMovement.y += overlapY;
-            // std::cout << "Collision from above\n";
         } else {
             // Player is above
             playerMovement.y -= overlapY;
             gsUpdater.setPlayerOnGround(player, true);
-            // std::cout << "Collision from below / landed\n";
         }
         gsUpdater.deltaMovePlayer(player, playerMovement);
         playerVelocity.y = 0.f;
@@ -103,7 +100,7 @@ bool handlePlayerSemiSolidCollision(GameStateUpdater& gsUpdater, Player& player,
     sf::Vector2f playerMovement = collisionPosition.getGlobalBounds().position - player.getShape().getGlobalBounds().position;
 
 //    const bool movingDown = playerVelocity.y > 0.f;
-    std::cout << ", crossedTopFromAbove: " << crossedTopFromAbove(player.getShape(), collisionPosition, tBox)<<'\n';
+    PLOG_VERBOSE << ", crossedTopFromAbove: " << crossedTopFromAbove(player.getShape(), collisionPosition, tBox);
     if (crossedTopFromAbove(player.getShape(), collisionPosition, tBox)) {
         const float platformTop = tBox.position.y;
         const float correction  = platformTop - collisionPosition.getGlobalBounds().position.y - collisionPosition.getGlobalBounds().size.y;
