@@ -11,7 +11,12 @@
 //hh = hotfixes
 //hotfixes do not affect the api
 //when major and minor versions are equal, a server should be able to work together with a client
+<<<<<<< HEAD
 constexpr VERSION_TYPE VERSION = 0x000601;
 constexpr VERSION_TYPE API_VERSION = VERSION & 0xffff00;
 
 constexpr uint16_t mapSelectionTime = 2000; //1k ms
+=======
+constexpr VERSION_TYPE VERSION = 0x000700;
+constexpr VERSION_TYPE API_VERSION = VERSION & 0xffff00;
+>>>>>>> 6f012d1 (updated version because server behaves different)
