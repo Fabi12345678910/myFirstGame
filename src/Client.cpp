@@ -264,7 +264,7 @@ void Client::mainLoop(){
                     renderer.renderWaitingMessage(dotFrame);
                 }
                 else if (displayGameState.getGameState() != gameState::RUNNING) {
-                    renderer.renderReadyMessage(displayGameState.getPlayer(playerId).getReadyToPlay());
+                    renderer.renderReadyMessage(generatedGameState->getPlayer(playerId).getReadyToPlay());
                 }
                 renderer.processDisplayEvents();
                 renderer.display();
