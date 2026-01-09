@@ -349,12 +349,13 @@ void Client::mainLoop(){
                         lastRenderedGameState = gameState::RUNNING;
                     }
                 }
-                else if (displayGameState.getGameState() == gameState::RUNNING) {
-
+                else if (displayGameState.getGameState() != gameState::RUNNING) {
+                    renderer.renderReadyMessage(displayGameState.getPlayer(playerId).getReadyToPlay());
                 }
                 if (CONF_SHOW_CLIENT_HEALTH){
                     auto healthReport = gameStore.getHealthReport(tickToDisplay);
                     renderer.renderGameStateHealth(healthReport);
+                    renderer.renderReadyMessage(generatedGameState->getPlayer(playerId).getReadyToPlay());
                 }
                 if(CONF_SHOW_SERVER_HEALTH){
                     renderer.renderServerQueueHealth(serverQueueHealth);
