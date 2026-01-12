@@ -2,6 +2,8 @@
 #include <SFML/Graphics.hpp>
 #include "GameState.h"
 #include "GameStateHealth.h"
+#include "Networking/EventDefinitions/EventServerHealth.h"
+#include "CircularArray.h"
 
 class Renderer
 {
@@ -10,6 +12,7 @@ private:
 public:
     Renderer(sf::RenderWindow& win) : window(win) {}
     ~Renderer(){};
+    void renderFrameTimeGraph(const CircularArray<HEALTH_FRAME_TIME_TYPE, 256>& frameTimes, HEALTH_FRAME_TIME_TYPE criticalMs = 33, float startX = 50.f, float startY = 100.f);
     void processDisplayEvents();
     void render(GameState& gamestate);
     void renderWaitingMessage();

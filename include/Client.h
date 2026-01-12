@@ -6,6 +6,7 @@
 #include "Networking/Event.h"
 #include "CircularArray.h"
 #include "Networking/EventDefinitions/EventGamestatePlayerInputHistory.h"
+#include "Networking/EventDefinitions/EventServerHealth.h"
 #include "ClientGameStateStore.h"
 #include "StageManager.h"
 
@@ -51,7 +52,9 @@ private:
     std::uint64_t latestPreRenderedTick = 0;
     std::uint16_t tickrateMs = 100;
     TICK_TYPE tickToDisplay = 0;
-    std::uint8_t serverQueueHealth = 0;
+    HEALTH_INPUT_QUEUE_TYPE serverQueueHealth = 0;
+    CircularArray<HEALTH_FRAME_TIME_TYPE, 256> serverFrameTimes = CircularArray<HEALTH_FRAME_TIME_TYPE, 256>();
+    CircularArray<HEALTH_FRAME_TIME_TYPE, 256> clientFrameTimes = CircularArray<HEALTH_FRAME_TIME_TYPE, 256>();
     //the targeted Tick to display(higher means)
     
     TICK_TYPE displayTickDifference = 4;

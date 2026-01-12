@@ -428,7 +428,6 @@ void Server::mainLoop(){
             }
         }
 
-        someTimesResyncGameState();
         int32_t sleep_ms = TICKRATE_MS - tickClock.getElapsedTime().asMilliseconds();
 
         #if ENABLE_SERVER_RENDERING
@@ -436,7 +435,12 @@ void Server::mainLoop(){
         renderer.processDisplayEvents();
         renderer.display();
         #endif
+
+        someTimesResyncGameState();
         sf::Time tickComputeTime = tickClock.getElapsedTime() - startTickTime;
+        if(CONF_SEND_SERVER_HEALTH){
+            sendServerHealth(tickComputeTime);
+        }
         if(tickComputeTime.asMilliseconds() >= 1){
             PLOG_INFO << "Computing tick took " << tickClock.getElapsedTime().asMilliseconds() << "ms";
         }
@@ -518,9 +522,6 @@ void Server::someTimesResyncGameState(){
     #define PLAYERRESYNCTIMER 3
     static unsigned tickCounter = 1;
     tickCounter--;
-    if(CONF_SEND_SERVER_HEALTH){
-        sendServerHealth();
-    }
     if(tickCounter == 0){
         tickCounter = PLAYERRESYNCTIMER;
         resyncGameState();
@@ -529,10 +530,10 @@ void Server::someTimesResyncGameState(){
     }
 }
 
-void Server::sendServerHealth(){
+void Server::sendServerHealth(sf::Time frameTime){
     for (auto& conn : serverSocket.connections)
     {
-        conn->sendUdpEvent(EventServerHealth((std::uint8_t) conn->getInputQueueSize()));
+        conn->sendUdpEvent(EventServerHealth((HEALTH_INPUT_QUEUE_TYPE) conn->getInputQueueSize(),(HEALTH_FRAME_TIME_TYPE) frameTime.asMilliseconds()));
     }
     
 }

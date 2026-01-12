@@ -11,7 +11,7 @@
 //hotfixes do not affect the api
 //when major and minor versions are equal, a server should be able to work together with a client
 constexpr uint16_t mapSelectionTime = 2000; //1k ms
-constexpr VERSION_TYPE CONF_VERSION = 0x000801;
+constexpr VERSION_TYPE CONF_VERSION = 0x000901;
 constexpr VERSION_TYPE CONF_API_VERSION = CONF_VERSION & 0xffff00;
 
 //Debugging configuration, configurable via macros

@@ -175,8 +175,8 @@ void Client::processEventsPlaying(){
         if(eventServerHealth != NULL){
             PLOG_VERBOSE << "got a server health";
             this->serverQueueHealth = eventServerHealth->inputsInQueue;
+            this->serverFrameTimes.push(eventServerHealth->frameTimeMs);
         }
-        
         eventData.connectionEventsQueue.pop();
     }
 }
@@ -358,18 +358,22 @@ void Client::mainLoop(){
                 }
                 if(CONF_SHOW_SERVER_HEALTH){
                     renderer.renderServerQueueHealth(serverQueueHealth);
+                    renderer.renderFrameTimeGraph(serverFrameTimes, (HEALTH_FRAME_TIME_TYPE) tickrateMs, 50.F, 350.F);
+                    renderer.renderFrameTimeGraph(clientFrameTimes, (HEALTH_FRAME_TIME_TYPE) tickrateMs, 50.F, 450.F);
                 }
+
                 renderer.processDisplayEvents();
                 renderer.display();
+
+                sf::Time tickRenderTime = tickClock.getElapsedTime() - startTickTime;
+                clientFrameTimes.push((HEALTH_FRAME_TIME_TYPE) tickRenderTime.asMilliseconds());
+                if(tickRenderTime >= tickRate){
+                    PLOG_ERROR << "Computing tick took " << tickRenderTime.asMilliseconds() << "ms, which is slower than the server tickrate";
+                }
             }else{
                 PLOG_INFO << "can't render tick:(\n";
             }
-            sf::Time tickRenderTime = tickClock.getElapsedTime() - startTickTime;
-            if(tickRenderTime >= tickRate){
-                PLOG_ERROR << "Computing tick took " << tickRenderTime.asMilliseconds() << "ms, which is slower than the server tickrate";
-            }
 
-//            sf::sleep(tickRate - tickClock.getElapsedTime());
         }
         else if(clientState == AWAITING_SPAWN){
             PLOG_DEBUG << "be awaiting spawn";

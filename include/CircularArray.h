@@ -15,7 +15,7 @@ private:
     std::size_t min;
 public:
     CircularArray() : max(0), min(0) {}
-    size_t getMaxElements(){return N;}
+    size_t getMaxElements() const {return N;}
     // Add element to the end
     void push(const T& value) {
         buffer[max % N] = value;
@@ -43,11 +43,11 @@ public:
         return buffer[idx % N];
     }
 
-    size_t getSize(){
+    size_t getSize() const {
         return max;
     }
 
-    size_t getMinIndex(){
+    size_t getMinIndex() const {
         return min;
     }
 };

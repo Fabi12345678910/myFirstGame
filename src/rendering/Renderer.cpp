@@ -5,6 +5,7 @@
 #include <sstream>
 #include "plog/Log.h"
 #include <cmath>
+#include "CircularArray.h"
 
 void Renderer::renderWaitingMessage(int numDots) {
     sf::Font font;
@@ -34,6 +35,39 @@ void Renderer::renderWaitingMessage(int numDots) {
 
     text.setPosition(sf::Vector2f(960.f, topMargin));
     window.draw(text);
+}
+
+    void Renderer::renderFrameTimeGraph(const CircularArray<HEALTH_FRAME_TIME_TYPE, 256>& frameTimes, HEALTH_FRAME_TIME_TYPE criticalMs, float startX, float startY){
+    constexpr float barWidth = 2.f;
+    constexpr float barSpacing = 1.f;
+    constexpr float graphHeight = 100.f; // max height in pixels
+
+    size_t minIdx = frameTimes.getMinIndex();
+    size_t maxIdx = frameTimes.getSize();
+
+    for (size_t i = minIdx; i < maxIdx; ++i) {
+        float ms = frameTimes[i];
+        float height = std::min(ms * 5.f, graphHeight); // scale for visibility
+        height = std::max(height, 1.f); //at least 1 to have some visibility
+
+        sf::RectangleShape bar({barWidth, height});
+        bar.setPosition(sf::Vector2f(startX + (i - minIdx) * (barWidth + barSpacing),
+                        startY + graphHeight - height));
+
+        // Color gradient
+        if (ms < 16.f) bar.setFillColor(sf::Color::Green);
+        else if (ms < criticalMs) bar.setFillColor(sf::Color::Yellow);
+        else bar.setFillColor(sf::Color::Red);
+
+        window.draw(bar);
+    }
+
+    // Draw critical line
+    float critHeight = std::min(criticalMs * 5.f, graphHeight);
+    sf::RectangleShape criticalLine({(maxIdx - minIdx) * (barWidth + barSpacing), 1.f});
+    criticalLine.setPosition(sf::Vector2f(startX, startY + graphHeight - critHeight));
+    criticalLine.setFillColor(sf::Color::Magenta);
+    window.draw(criticalLine);
 }
 
 void Renderer::renderServerQueueHealth(std::uint8_t health){
