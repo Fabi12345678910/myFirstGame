@@ -18,6 +18,7 @@
 #include "Networking/EventDefinitions/EventSelectedMap.h"
 #include "Networking/EventDefinitions/EventStartGame.h"
 
+#include "Networking/EventDefinitions/EventServerHealth.h"
 #include "maps/Map_TestAll.h"
 #include "Logger.h"
 #include "plog/Log.h"
@@ -457,7 +458,7 @@ void Server::processEvents(std::vector<indexedPlayerInputWithId>& playerInputs){
                 //no new SLOT
                 conn.sendTcpEvent(EventLoginDenied(0));
             }else{
-                if(evLoginRequest->apiVersion != API_VERSION){
+                if(evLoginRequest->apiVersion != CONF_API_VERSION){
                     conn.sendTcpEvent(EventLoginDenied(1));
                     continue;
                 }
@@ -517,12 +518,23 @@ void Server::someTimesResyncGameState(){
     #define PLAYERRESYNCTIMER 3
     static unsigned tickCounter = 1;
     tickCounter--;
+    if(CONF_SEND_SERVER_HEALTH){
+        sendServerHealth();
+    }
     if(tickCounter == 0){
         tickCounter = PLAYERRESYNCTIMER;
         resyncGameState();
     }else{
         resyncLastInputs();
     }
+}
+
+void Server::sendServerHealth(){
+    for (auto& conn : serverSocket.connections)
+    {
+        conn->sendUdpEvent(EventServerHealth((std::uint8_t) conn->getInputQueueSize()));
+    }
+    
 }
 
 void Server::resyncGameState(){

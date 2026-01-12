@@ -51,6 +51,7 @@ private:
     std::uint64_t latestPreRenderedTick = 0;
     std::uint16_t tickrateMs = 100;
     TICK_TYPE tickToDisplay = 0;
+    std::uint8_t serverQueueHealth = 0;
     //the targeted Tick to display(higher means)
     
     TICK_TYPE displayTickDifference = 4;

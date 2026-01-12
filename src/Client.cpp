@@ -19,6 +19,9 @@
 #include "Networking/EventDefinitions/EventSelectMap.h"
 #include "Networking/EventDefinitions/EventSelectedMap.h"
 #include "Networking/EventDefinitions/EventStartGame.h"
+#include "Networking/EventDefinitions/EventServerHealth.h"
+
+#include "Config.h"
 
 #include "maps/Map_TestAll.h"
 
@@ -168,6 +171,12 @@ void Client::processEventsPlaying(){
             }
         }
 
+        EventServerHealth *eventServerHealth = dynamic_cast<EventServerHealth*>(ev);
+        if(eventServerHealth != NULL){
+            PLOG_VERBOSE << "got a server health";
+            this->serverQueueHealth = eventServerHealth->inputsInQueue;
+        }
+        
         eventData.connectionEventsQueue.pop();
     }
 }
@@ -343,16 +352,21 @@ void Client::mainLoop(){
                 else if (displayGameState.getGameState() == gameState::RUNNING) {
 
                 }
-                auto healthReport = gameStore.getHealthReport(tickToDisplay);
-                renderer.renderGameStateHealth(healthReport);
+                if (CONF_SHOW_CLIENT_HEALTH){
+                    auto healthReport = gameStore.getHealthReport(tickToDisplay);
+                    renderer.renderGameStateHealth(healthReport);
+                }
+                if(CONF_SHOW_SERVER_HEALTH){
+                    renderer.renderServerQueueHealth(serverQueueHealth);
+                }
                 renderer.processDisplayEvents();
                 renderer.display();
             }else{
                 PLOG_INFO << "can't render tick:(\n";
             }
             sf::Time tickRenderTime = tickClock.getElapsedTime() - startTickTime;
-            if(tickRenderTime.asMilliseconds() >= 5){
-                PLOG_INFO << "Computing tick took " << tickRenderTime.asMilliseconds() << "ms";
+            if(tickRenderTime >= tickRate){
+                PLOG_ERROR << "Computing tick took " << tickRenderTime.asMilliseconds() << "ms, which is slower than the server tickrate";
             }
 
 //            sf::sleep(tickRate - tickClock.getElapsedTime());

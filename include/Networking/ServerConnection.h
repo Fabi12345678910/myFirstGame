@@ -27,6 +27,10 @@ public:
         return nextInput;
     }
 
+    std::size_t getInputQueueSize(){
+        return inputQueue.size();
+    }
+
     int enqueueInput(indexedPlayerInput const & input){
         PLOG_VERBOSE << this <<", queue size: " << inputQueue.size();
         if(inputQueue.size()>= 6){

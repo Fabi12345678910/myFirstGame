@@ -13,6 +13,7 @@
 #include "Networking/EventDefinitions/EventSelectMap.h"
 #include "Networking/EventDefinitions/EventSelectedMap.h"
 #include "Networking/EventDefinitions/EventStartGame.h"
+#include "Networking/EventDefinitions/EventServerHealth.h"
 
 
 std::unique_ptr<Event> getEventFromPacket(sf::Packet& packet){
@@ -47,6 +48,8 @@ std::unique_ptr<Event> getEventFromPacket(sf::Packet& packet){
             return std::make_unique<EventSelectedMap>(packet);
         case EVENT_TYPE_START_GAME:
             return std::make_unique<EventStartGame>(packet);
+        case EVENT_TYPE_SERVER_HEALTH:
+            return std::make_unique<EventServerHealth>(packet);
         default:
             throw std::runtime_error("invalid event type");
     }

@@ -54,6 +54,7 @@ private:
     void resyncGameState();
     void resyncLastInputs();
     void mainLoop();
+    void sendServerHealth();
     std::queue<OBJECT_ID_TYPE> availablePlayerIds;
     std::queue<OBJECT_ID_TYPE> availableObjectIds;
     struct serverEventHandlerData eventData;

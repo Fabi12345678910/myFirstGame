@@ -13,7 +13,7 @@ public:
             throw std::runtime_error("failed to read packet contents");
         };
     };
-    EventLoginRequest(unsigned short udpPort, VERSION_TYPE apiVersion = API_VERSION): udpPort(udpPort), apiVersion(apiVersion){
+    EventLoginRequest(unsigned short udpPort, VERSION_TYPE apiVersion = CONF_API_VERSION): udpPort(udpPort), apiVersion(apiVersion){
     }
     sf::Packet toPacket() const override{
         sf::Packet packet;

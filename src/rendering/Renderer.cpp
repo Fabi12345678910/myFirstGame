@@ -36,6 +36,39 @@ void Renderer::renderWaitingMessage(int numDots) {
     window.draw(text);
 }
 
+void Renderer::renderServerQueueHealth(std::uint8_t health){
+    float barWidth = 20.f; // width of each tick bar
+    float spacing = 5.f;   // space between bars
+    float startX = 50.f;   // left margin
+    float startY = 100.f;   // top margin
+    float barHeight = 20.f; // max height of bars
+
+    constexpr uint8_t maxBars = 5;
+
+    sf::Vector2f origin = sf::Vector2f(40, 200);
+
+    const std::size_t activeBars =
+        std::min(health, maxBars);
+
+    for (std::size_t i = 0; i < maxBars; ++i) {
+        sf::RectangleShape bar({barWidth, barHeight});
+        bar.setPosition(
+            sf::Vector2f(
+            origin.x + i * (barWidth + spacing),
+            origin.y)
+        );
+
+        if (i < activeBars) {
+            bar.setFillColor(sf::Color::Cyan);
+        } else {
+            bar.setFillColor(sf::Color(60, 60, 60));
+        }
+
+        window.draw(bar);
+    }
+}
+
+
 sf::Color getHealthColor(TickHealth::HealthState state) {
     switch(state) {
         case TickHealth::GENERATED: return sf::Color::Green;
@@ -51,12 +84,12 @@ void Renderer::renderGameStateHealth(HealthReport& report){
     float spacing = 5.f;   // space between bars
     float startX = 50.f;   // left margin
     float startY = 50.f;   // top margin
-    float maxHeight = 20.f; // max height of bars (can scale to number of ticks)
+    float barHeight = 20.f; // max height of bars
 
     for (size_t i = 0; i < report.tickHealths.size(); ++i) {
         const TickHealth& tick = report.tickHealths[i];
         sf::RectangleShape bar;
-        bar.setSize(sf::Vector2f(barWidth, maxHeight));
+        bar.setSize(sf::Vector2f(barWidth, barHeight));
         bar.setFillColor(getHealthColor(tick.healthState));
         bar.setPosition(sf::Vector2f(startX + i * (barWidth + spacing), startY));
         window.draw(bar);

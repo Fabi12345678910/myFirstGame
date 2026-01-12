@@ -22,6 +22,7 @@ public:
     sf::RenderWindow& getWindow() {
         return window;
     }
+    void renderServerQueueHealth(std::uint8_t health);
     void display() {
         window.display();
     }
