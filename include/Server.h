@@ -6,6 +6,7 @@
 #include <atomic>
 #include <mutex>
 #include <tuple>
+#include <unordered_map>
 #include <Networking/ServerConnection.h>
 #include <Networking/ServerSocket.h>
 #include "CircularArray.h"
@@ -21,6 +22,10 @@ struct serverEventHandlerData{
     std::queue<std::tuple<ServerConnection&, std::unique_ptr<Event>>> connectionEventsQueue;
     std::mutex connectionEventsMutex;
     std::list<std::unique_ptr<ServerConnection>>* connections;
+};
+struct selectedMapsByClients{
+    std::unordered_map<OBJECT_ID_TYPE, int16_t> byPlayer;
+    std::vector<OBJECT_ID_TYPE> arrivalOrder;
 };
 
 class Server
@@ -52,6 +57,11 @@ private:
     std::queue<OBJECT_ID_TYPE> availableObjectIds;
     struct serverEventHandlerData eventData;
     ServerSocket serverSocket;
+
+    // should maybe be placed in game state
+    selectedMapsByClients selectedMaps;
+
+    std::unordered_map<OBJECT_ID_TYPE, TICK_TYPE> respawnAtTick;
 
     #if ENABLE_SERVER_RENDERING
     sf::RenderWindow window = sf::RenderWindow(sf::VideoMode(sf::Vector2u(1280, 720)), "ServerRendering");

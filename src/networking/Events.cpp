@@ -10,6 +10,9 @@
 #include "Networking/EventDefinitions/EventSpawnNewPlayer.h"
 #include "Networking/EventDefinitions/EventUserInput.h"
 #include "Networking/EventDefinitions/EventGamestatePlayerInputHistory.h"
+#include "Networking/EventDefinitions/EventSelectMap.h"
+#include "Networking/EventDefinitions/EventSelectedMap.h"
+#include "Networking/EventDefinitions/EventStartGame.h"
 
 
 std::unique_ptr<Event> getEventFromPacket(sf::Packet& packet){
@@ -38,6 +41,12 @@ std::unique_ptr<Event> getEventFromPacket(sf::Packet& packet){
             return std::make_unique<EventUserInput>(packet);
         case EVENT_TYPE_GAMESTATE_PLAYERINPUT_HISTORY:
             return std::make_unique<EventGamestatePlayerInputHistory>(packet);
+        case EVENT_TYPE_SELECT_MAP:
+            return std::make_unique<EventSelectMap>(packet);
+        case EVENT_TYPE_SELECTED_MAP:
+            return std::make_unique<EventSelectedMap>(packet);
+        case EVENT_TYPE_START_GAME:
+            return std::make_unique<EventStartGame>(packet);
         default:
             throw std::runtime_error("invalid event type");
     }

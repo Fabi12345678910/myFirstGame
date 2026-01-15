@@ -31,7 +31,7 @@ Stage createMap_TestAll() {
     };
 
     // === Stage setup ===
-    Stage stage(1, std::move(tiles), std::move(spawns));
+    Stage stage(1, std::move(tiles), std::move(spawns), "test");
     stage.setBounds(sf::FloatRect{{0.f, 0.f}, {800.f, 600.f}});
     stage.setWrapEdgesX(false);
     stage.setVoidTeleportY(true);

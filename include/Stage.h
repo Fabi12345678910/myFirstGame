@@ -9,6 +9,7 @@ private:
     std::vector<StageObject> stageObjects;
     std::vector<sf::Vector2f> spawnPoints;
     int16_t stageId{0};
+    std::string name;
 
     bool wrapEdgesX{false};     // if true, exiting left/right wraps to the other side
     bool voidTeleportY{true};   // if true, falling below bottom teleports to top (not death)
@@ -17,10 +18,12 @@ private:
 public:
     Stage(int16_t stageId,
           std::vector<StageObject> stageObjects,
-          std::vector<sf::Vector2f> spawnPoints)
+          std::vector<sf::Vector2f> spawnPoints, 
+          std::string name)
         : stageObjects(std::move(stageObjects)),
           spawnPoints(std::move(spawnPoints)),
-          stageId(stageId) {}
+          stageId(stageId),
+          name(name) {}
 
     Stage() = default;
 
@@ -46,4 +49,8 @@ public:
 
     const sf::FloatRect& getBounds() const { return bounds; }
     void setBounds(const sf::FloatRect& b) { bounds = b; }
+
+    const std::string& getName() const { return name; }
+    void setName(const std::string& n) { name = n; }
+
 };

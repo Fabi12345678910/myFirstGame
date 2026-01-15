@@ -7,6 +7,7 @@
 #include "CircularArray.h"
 #include "Networking/EventDefinitions/EventGamestatePlayerInputHistory.h"
 #include "ClientGameStateStore.h"
+#include "StageManager.h"
 
 #include <queue>
 #include <mutex>
@@ -15,6 +16,13 @@
 struct clientEventHandlerData{
     std::queue<std::unique_ptr<Event>> connectionEventsQueue;
     std::mutex connectionEventsMutex;
+};
+struct MapSelectionState {
+        TICK_TYPE selectUntil;
+        int16_t selectedStageId = -1;
+        int16_t selectedIndex = 0;
+        bool confirmed = false;
+        std::vector<std::pair<int16_t, std::string>> maps = StageManager::loadStageList();
 };
 enum clientState{CONNECTING, PLAYING, AWAITING_SPAWN};
 
@@ -45,6 +53,7 @@ private:
     TICK_TYPE tickToDisplay = 0;
     //the targeted Tick to display(higher means)
     TICK_TYPE displayTickDifference = 10;
+    gameState lastRenderedGameState = gameState::WAITING;
     void performLogin();
     void processEventsPlaying();
     void processEventsAwaitingSpawn();
@@ -55,7 +64,10 @@ private:
 //    GameState gameState = GameState();
     struct clientEventHandlerData eventData;
     ClientConnection conn;
+
     bool isHost = false;
+    MapSelectionState mapSelectionState;
+
 public:
     void run();
     Client(sf::RenderWindow& win);

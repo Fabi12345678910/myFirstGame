@@ -1,0 +1,72 @@
+{
+  "stageId": 1,
+  "name": "lobby",
+
+  "bounds": { "x": 0, "y": 0, "w": 1920, "h": 1080 },
+  "wrapEdgesX": false,
+  "voidTeleportY": true,
+
+  "spawnPoints": [
+    { "x": 864, "y": 360 },
+    { "x": 1104, "y": 360 },
+    { "x": 1300, "y": 360 },
+    { "x": 1500, "y": 360 }
+  ],
+
+  "objects": [
+    {
+      "id": 0,
+      "type": "Solid",
+      "size": { "w": 624, "h": 90 },
+      "position": { "x": 0, "y": 990 }
+    },
+    {
+      "id": 1,
+      "type": "Solid",
+      "size": { "w": 336, "h": 90 },
+      "position": { "x": 1584, "y": 990 }
+    },
+    {
+      "id": 2,
+      "type": "Solid",
+      "size": { "w": 960, "h": 45 },
+      "position": { "x": 480, "y": 720 }
+    },
+    {
+      "id": 3,
+      "type": "HalfSolid",
+      "size": { "w": 384, "h": 36 },
+      "position": { "x": 288, "y": 576 }
+    },
+    {
+      "id": 4,
+      "type": "HalfSolid",
+      "size": { "w": 384, "h": 36 },
+      "position": { "x": 1248, "y": 468 }
+    },
+    {
+      "id": 5,
+      "type": "JumpPad",
+      "size": { "w": 192, "h": 27 },
+      "position": { "x": 216, "y": 963 }
+    },
+    {
+      "id": 6,
+      "type": "Death",
+      "size": { "w": 192, "h": 36 },
+      "position": { "x": 1440, "y": 954 }
+    },
+    {
+      "id": 7,
+      "type": "Solid",
+      "size": { "w": 96, "h": 1080 },
+      "position": { "x": -96, "y": 0 }
+    },
+    {
+      "id": 8,
+      "type": "Solid",
+      "size": { "w": 96, "h": 1080 },
+      "position": { "x": 1920, "y": 0 }
+    }
+  ]
+}

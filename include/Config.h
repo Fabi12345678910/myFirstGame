@@ -13,3 +13,5 @@
 //when major and minor versions are equal, a server should be able to work together with a client
 constexpr VERSION_TYPE VERSION = 0x000600;
 constexpr VERSION_TYPE API_VERSION = VERSION & 0xffff00;
+
+constexpr uint16_t mapSelectionTime = 2000; //1k ms

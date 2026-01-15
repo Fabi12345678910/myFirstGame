@@ -68,6 +68,7 @@ add_executable(Main
     src/menu/EnterIpMenu.cpp
     src/menu/EnterPortMenu.cpp
     src/menu/OptionsMenu.cpp
+    src/StageManager.cpp
     src/Options.cpp
     src/Client.cpp
     src/Server.cpp
@@ -92,6 +93,7 @@ enable_autocopy_runtime_dlls(Main)
 add_executable(LocalGame
     src/StartLocalGame.cpp
     src/threads/WinPThread.c
+    src/StageManager.cpp
     src/Server.cpp
     src/Client.cpp
     src/operations/GameUpdate.cpp
@@ -107,6 +109,8 @@ add_executable(LocalGame
 target_link_libraries(LocalGame PRIVATE
     SFML::Network SFML::System SFML::Window SFML::Graphics SFML::Audio
 )
+target_link_libraries(LocalGame PRIVATE nlohmann_json::nlohmann_json)
+
 enable_autocopy_runtime_dlls(LocalGame)
 
 # --- Networking & test executables (skip on Windows due to POSIX headers) ---
@@ -134,6 +138,7 @@ enable_autocopy_runtime_dlls(ConnectionTestServer)
 
 add_executable(Server
     src/Server.cpp
+    src/StageManager.cpp
     src/StartServer.cpp
     src/threads/WinPThread.c
     src/operations/GameUpdate.cpp
@@ -148,10 +153,13 @@ add_executable(Server
 target_link_libraries(Server PRIVATE
     SFML::Network SFML::System SFML::Window SFML::Graphics SFML::Audio
 )
+target_link_libraries(Server PRIVATE nlohmann_json::nlohmann_json)
+
 enable_autocopy_runtime_dlls(Server)
 
 add_executable(Client
     src/Client.cpp
+    src/StageManager.cpp
     src/StartClient.cpp
     src/threads/WinPThread.c
     src/operations/GameUpdate.cpp
@@ -167,6 +175,8 @@ add_executable(Client
 target_link_libraries(Client PRIVATE
     SFML::Network SFML::System SFML::Window SFML::Graphics SFML::Audio
 )
+target_link_libraries(Client PRIVATE nlohmann_json::nlohmann_json)
+
 enable_autocopy_runtime_dlls(Client)
 
 add_executable(TestLogin

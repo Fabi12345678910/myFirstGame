@@ -3,11 +3,13 @@
 #include "Stage.h"
 #include "Projectile.h"
 
-enum gameState{RUNNING, WAITING};
+enum gameState{RUNNING, WAITING, MAP_SELECT, LOADING, STARTING};
 
 class GameState {
 private:
     gameState currentGameState = WAITING;
+    TICK_TYPE gameStartTick;
+
     std::vector<Player> players;
     std::vector<Projectile> projectiles;
     std::vector<GameObject> gameObjects;
@@ -103,5 +105,27 @@ public:
     gameState getGameState() const {
         return currentGameState;
     }
+    void setGameState(gameState gameState) {
+        currentGameState = gameState;
+    }
+    TICK_TYPE getGameStartTick() const {
+        return gameStartTick;
+    }
+    void setGameStartTick(TICK_TYPE startTick) {
+        gameStartTick = startTick;
+    }
     GameState(){};
+
+    static std::string toString(gameState state)
+    {
+        switch (state)
+        {
+            case gameState::WAITING:   return "WAITING";
+            case gameState::MAP_SELECT:return "MAP_SELECT";
+            case gameState::RUNNING:   return "RUNNING";
+            case gameState::LOADING:   return "LOADING";
+            case gameState::STARTING:  return "STARTING";
+            default:                  return "UNKNOWN";
+        }
+    }
 };

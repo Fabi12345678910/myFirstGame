@@ -6,6 +6,7 @@
 #include "Renderer.h"
 #include "plog/Log.h"
 #include "Operations/ClientGameStateUpdater.h"
+#include "StageManager.h"
 
 #include "Networking/EventDefinitions/EventLoginRequest.h"
 #include "Networking/EventDefinitions/EventLoginDenied.h"
@@ -15,6 +16,9 @@
 #include "Networking/EventDefinitions/EventSpawnNewPlayer.h"
 #include "Networking/EventDefinitions/EventUserInput.h"
 #include "Networking/EventDefinitions/EventGamestatePlayerInputHistory.h"
+#include "Networking/EventDefinitions/EventSelectMap.h"
+#include "Networking/EventDefinitions/EventSelectedMap.h"
+#include "Networking/EventDefinitions/EventStartGame.h"
 
 #include "maps/Map_TestAll.h"
 
@@ -51,6 +55,11 @@ Client::Client(sf::RenderWindow& win, sf::IpAddress ip, unsigned short port)
             conn(ClientConnection::createClientConnection(ip, port)),
             isHost(isHost)
 {
+    sf::View worldView;
+    worldView.setSize(sf::Vector2f(1920, 1080));       // virtual world size
+    worldView.setCenter(sf::Vector2f(1920.f / 2.f, 1080.f / 2.f));
+    win.setView(worldView);
+
     conn.setArgs(&eventData);
     conn.setEventHandler(clientEventHandler);
     performLogin();
@@ -87,28 +96,15 @@ void Client::performLogin(){
 }
 
 void Client::run(){
-//    gameStates.push(ClientGameState());
-    //create a fake(e.g. default) stage, has to be reworked
+
     GameState baseGameState = GameState();
-    {
-        std::vector<StageObject> stageObjects;
-        auto so = new StageObject(0, sf::Vector2f(800.f, 50.f), sf::Vector2f(0.f,550.f));
-        stageObjects.push_back(StageObject(0, sf::Vector2f(800.f, 50.f), sf::Vector2f(0.f,550.f)));
-        stageObjects.push_back(StageObject(1, sf::Vector2f(300.f, 50.f), sf::Vector2f(0.f,450.f)));
-        stageObjects.push_back(StageObject(2, sf::Vector2f(100.f, 50.f), sf::Vector2f(500.f,350.f)));
-        stageObjects[0].getShape().setFillColor(sf::Color::Green);
-        stageObjects[1].getShape().setFillColor(sf::Color::Green);
-        stageObjects[2].getShape().setFillColor(sf::Color::Green);
-        std::vector<sf::Vector2f> spawnPoints = {sf::Vector2f(400.f,10.f)};
-        Stage s = Stage(1, stageObjects, spawnPoints);
-        Stage s2 = createMap_TestAll();
-        baseGameState.setStage(s2);
-    }
+    Stage lobbyStage = StageManager::loadStage(1);
+    baseGameState.setStage(lobbyStage);
+
     gameStore = ClientGameStateStore<clientGameStateBufferSize>(1, baseGameState);
     gameStore.setTickrate(sf::milliseconds(this->tickrateMs).asSeconds());
     gameStore.setLocalPlayerId(this->playerId);
                 
-    //enter the main loop
     mainLoop();
 }
 
@@ -147,6 +143,24 @@ void Client::processEventsPlaying(){
             updateGameStates(*eventGamestatePlayerInputHistory);
         }
 
+        EventSelectMap* eventSelectMap = dynamic_cast<EventSelectMap*>(ev);
+        if(eventSelectMap != nullptr){
+            PLOG_DEBUG << "Received [Event] Select Map";
+            mapSelectionState.selectUntil = eventSelectMap->selectMapUntil;
+            gameStore.getGameState(tickToDisplay, true, NULL)->setGameState(gameState::MAP_SELECT);
+        }
+
+        EventStartGame* eventStartGame = dynamic_cast<EventStartGame*>(ev);
+        if (eventStartGame != nullptr) {
+            PLOG_ERROR << "Received [Event] Start Game (stageId=" << eventStartGame->stageId << ")";
+            Stage selectedStage = StageManager::loadStage(eventStartGame->stageId);
+            if (GameState* gs = gameStore.getGameState(tickToDisplay, true, NULL)) {
+                gs->setGameStartTick(eventStartGame->gameStartTick);
+                gs->setStage(selectedStage);
+                gs->setGameState(gameState::STARTING);
+            }
+        }
+
         eventData.connectionEventsQueue.pop();
     }
 }
@@ -173,26 +187,15 @@ void Client::updateGameStates(EventGamestatePlayerInputHistory& ev){
 }
 
 void Client::mainLoop(){
-    //float deltaTime = ...
-    //if deltaTime > tickrate:
-    //  deltaTime -= tickrate
-    //  processInputs(keypresses)
-    //  processEvents(//this may build several new local GameStates)
-    //  if(latestGameState().getPlayer(this->playerId)) != gameStates{acknowledgedClientInputs}.localPlayer
-    //      gameStates{acknowledgedClientInputs}.localPlayer = latestGameState().getPlayer(this->playerId))
-    //      for all gameStates>acknowledgedClientInputs: recalculate ghostPlayer
-    //  else{updateGhostPlayer on gameStateToDisplay+1 using tickrate}
-    //  updateGame(gameStateToDisplay+1, tickrate)
-    //displayGameState = updateGame_interpolate(gameStateToDisplay, deltaTime)
-    //render(displayGameState)
     PLOG_INFO << "entering main loop";
-    //this is the main loop
     sf::Clock tickClock;
     tickClock.start();
     sf::Time startTime = tickClock.getElapsedTime();
     sf::Time tickRate = sf::milliseconds(tickrateMs);
     sf::Time latestElapsedTick = startTime;
     TICK_TYPE displayedTicks;
+
+    float loadingAngle = 0.f;
 
     int dotFrame = 0;
     sf::Clock dotClock;
@@ -204,17 +207,19 @@ void Client::mainLoop(){
 
             processEventsPlaying();
 
-/*            ClientGameStateUpdater updater(gameStates[latestRenderedTick].gameState);
-            std::vector<playerInputWithId> playerInputs;
-            updateGame(updater, playerInputs, gameStates[latestRenderedTick].gameState, deltaTime);*/
             GameState* generatedGameState = NULL;
             Player* localPlayer = NULL;
             bool canRenderTick = true;
-            playerInput input = processInputs();
+            
+            playerInput input;
+            if (lastRenderedGameState != gameState::STARTING) {
+                input = processInputs();
+            }
             PLOG_VERBOSE << "delta time " << currentDeltaTime.asSeconds();
             PLOG_VERBOSE << "tickrate time " << tickRate.asSeconds();
             while (currentDeltaTime >= tickRate){
                 tickToDisplay++;
+        
                 PLOG_DEBUG << "attempting to generate display tick " << tickToDisplay;
                 currentDeltaTime-= tickRate;
                 PLOG_VERBOSE << "remaining delta time " << currentDeltaTime.asSeconds();
@@ -223,19 +228,23 @@ void Client::mainLoop(){
                 latestElapsedTick += tickRate;
                 constexpr size_t maxHistoricInputsToSend = 8;
                 EventUserInput userInputs(this->playerId);
-                for (size_t i = tickToDisplay - maxHistoricInputsToSend; i <= tickToDisplay; i++)
+                TICK_TYPE startTick = 0;
+                if (tickToDisplay > maxHistoricInputsToSend) {
+                    startTick = tickToDisplay - static_cast<TICK_TYPE>(maxHistoricInputsToSend);
+                }
+                for (TICK_TYPE i = startTick; i <= tickToDisplay; i++)
                 {
                     if(gameStore.hasLocalInput(i)){
                         userInputs.addUserInput(indexedPlayerInput(i, gameStore.getLocalInput(i)));
                     }
                 }
                 conn.sendUdpEvent(userInputs);
-                gameStore.getGameState(tickToDisplay, true, NULL);                
             }
 
             generatedGameState = gameStore.getGameState(tickToDisplay, true, &localPlayer);  
 
             if(generatedGameState != NULL){
+                lastRenderedGameState = generatedGameState->getGameState();
                 GameState displayGameState = *generatedGameState;
                 if(localPlayer != NULL){
                     Player locPlayer = *localPlayer;
@@ -255,7 +264,9 @@ void Client::mainLoop(){
                 }
                 
                 renderer.render(displayGameState);
-                // Animate dots every 500ms
+                
+                // ─── State Handling ───────────────────────────────────────────────
+
                 if (displayGameState.getPlayers().size() < 2) {
                     if(dotClock.getElapsedTime().asMilliseconds() > 800){
                         dotFrame = (dotFrame % 3) + 1;
@@ -263,8 +274,50 @@ void Client::mainLoop(){
                     }
                     renderer.renderWaitingMessage(dotFrame);
                 }
-                else if (displayGameState.getGameState() != gameState::RUNNING) {
+                else if (displayGameState.getGameState() == gameState::WAITING) {
                     renderer.renderReadyMessage(generatedGameState->getPlayer(playerId).getReadyToPlay());
+                }
+                else if (displayGameState.getGameState() == gameState::MAP_SELECT) {
+                    if (tickToDisplay <= mapSelectionState.selectUntil) {
+                        renderer.renderMapSelection(mapSelectionState.selectUntil - tickToDisplay, mapSelectionState.selectedIndex, mapSelectionState.confirmed, mapSelectionState.maps);
+                    }
+                    else {
+                        if (mapSelectionState.confirmed) {
+                            if (mapSelectionState.selectedIndex >= 0 &&
+                                static_cast<size_t>(mapSelectionState.selectedIndex) < mapSelectionState.maps.size()) {
+                                mapSelectionState.selectedStageId = mapSelectionState.maps[mapSelectionState.selectedIndex].first;
+                            }
+                        }
+                        if (mapSelectionState.selectedStageId != -1) {
+                            EventSelectedMap eventSelectedMap(mapSelectionState.selectedStageId);
+                            conn.sendTcpEvent(eventSelectedMap);
+                        } 
+                        //displayGameState.setGameState(gameState::LOADING);
+                        if (generatedGameState != NULL) {
+                            generatedGameState->setGameState(gameState::LOADING);
+                        }
+                        renderer.renderLoading(loadingAngle);
+                        loadingAngle++;
+                    }
+                }
+                else if (displayGameState.getGameState() == gameState::LOADING) {
+                    renderer.renderLoading(loadingAngle);
+                    loadingAngle++;
+                }
+                else if (displayGameState.getGameState() == gameState::STARTING) {
+                    TICK_TYPE gameStartTick = gameStore.getGameState(tickToDisplay, true, NULL)->getGameStartTick();
+                    if (tickToDisplay < gameStartTick) {
+                        renderer.renderGameStart(gameStartTick - tickToDisplay);
+                    }
+                    else {
+                        if (generatedGameState != NULL) {
+                            generatedGameState->setGameState(gameState::RUNNING);
+                        }
+                        lastRenderedGameState = gameState::RUNNING;
+                    }
+                }
+                else if (displayGameState.getGameState() == gameState::RUNNING) {
+
                 }
                 renderer.processDisplayEvents();
                 renderer.display();
@@ -289,7 +342,7 @@ void Client::mainLoop(){
 
 playerInput Client::processInputs(){
     playerInput input;
-    // Get local player
+    
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A)){
         input.moveLeft = true;
     }
@@ -302,9 +355,9 @@ playerInput Client::processInputs(){
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::J)) {
         input.projectile = true;
     }
-    if(sf::Keyboard::isKeyPressed(sf::Keyboard::Key::R)){
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::R)) {
         input.readyToPlay = true;
-        PLOG_ERROR << "Player " + gameStore.getGameState(tickToDisplay, true, NULL)->getPlayer(playerId).getReadyToPlay(); 
     }
+
     return input;
 }

@@ -14,6 +14,12 @@ public:
     void renderWaitingMessage();
     void renderWaitingMessage(int numDots = 3);
     void renderReadyMessage(bool isReady);
+    void renderMapSelection(TICK_TYPE timeLeft, int16_t& selectionIndex, bool& confirmed, std::vector<std::pair<int16_t, std::string>> maps);
+    void renderLoading(float angle);
+    void renderGameStart(TICK_TYPE gameStartTick);
+    sf::RenderWindow& getWindow() {
+        return window;
+    }
     void display() {
         window.display();
     }
