@@ -95,7 +95,7 @@ private:
                 try{
                     Player& localPlayer = gameStates[tick].gameState.getPlayer(localPlayerId);
                     if(correctLocalPlayer(snapshot->latestIncludedPInput, gameStates[tick].gameState.getPlayer(localPlayerId))){
-                        PLOG_INFO << "localPlayer differed significantly!!";
+                        PLOG_INFO_IF(debugClientGameStore) << "localPlayer differed significantly!!";
                         for (TICK_TYPE i = snapshot->latestIncludedPInput + 1; i < gameStates.getSize(); i++)
                         {
                             updateLocalPlayer(i, true);
@@ -107,7 +107,7 @@ private:
                     PLOG_WARNING << e.what();
                 }
             }else{
-                PLOG_INFO << "got no latestIncludedPInput"; 
+                PLOG_INFO_IF(debugClientGameStore) << "got no latestIncludedPInput"; 
             }
             snapShotFound = true;
         }
@@ -227,7 +227,7 @@ public:
             gameStates[tick].hasSnapshot = true;
             gameStates[tick].updateInfos.push_back(new gsUpdateInfo(updateInfo));
         }else{
-            PLOG_INFO << "update already finalized";
+            PLOG_INFO_IF(debugClientGameStore) << "update already finalized";
         }
         return true;
     }
@@ -239,7 +239,7 @@ public:
         if(!gameStates[tick].updateInfosFinalized){
             gameStates[tick].updateInfos.push_back(new playerInputWithId(updateInfo));
         }else{
-            PLOG_INFO <<  "update already finalized";
+            PLOG_INFO_IF(debugClientGameStore) <<  "update already finalized";
         }
         return true;
     }

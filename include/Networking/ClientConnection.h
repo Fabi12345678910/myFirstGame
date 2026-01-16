@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Config.h"
 #include "Networking/Connection.h"
 #include "plog/Log.h"
 
@@ -34,7 +35,7 @@ public:
     unsigned short getUdpPort(){return udpSocket.getLocalPort();}
     void sendUdpEvent(const Event& ev){
         sf::Packet pack = ev.toPacket();
-        PLOG_DEBUG << "sending user input to: "<< udpRecipientAdress <<':' << udpRecipientPort;
+        PLOG_DEBUG_IF(debugClientNetworking) << "sending user input to: "<< udpRecipientAdress <<':' << udpRecipientPort;
         if(udpSocket.send(pack, udpRecipientAdress, udpRecipientPort) != sf::Socket::Status::Done){
             throw std::runtime_error("error sending event");
         }

@@ -25,7 +25,7 @@ void* runServer(void*){
 }
 
 void* runClient(void*){
-    sf::RenderWindow window(sf::VideoMode(sf::Vector2u(1280, 720)), "LocalGamClient");
+    sf::RenderWindow window(sf::VideoMode(sf::Vector2u(1920,1080)), "LocalGameClient");
     Client client(window, sf::IpAddress(127,0,0,1), 4445);
     client.run();
     return NULL;

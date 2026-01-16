@@ -1,4 +1,5 @@
 #include "Networking/ServerSocket.h"
+#include "Config.h"
 #include "Networking/Events.h"
 #include "Networking/EventDefinitions/UdpClientSendableEvent.h"
 #include "plog/Log.h"
@@ -28,13 +29,13 @@ void *udpListener(void* arg){
     sf::Packet packet;
     std::optional<sf::IpAddress> remoteAdress;
     unsigned short remotePort;
-    PLOG_VERBOSE << "starting udp listener";
+    PLOG_VERBOSE_IF(debugServerNetworking) << "starting udp listener";
     while (true)
     {
         if(serverSock->udpSocket.receive(packet, remoteAdress, remotePort) != sf::Socket::Status::Done){
             std::cerr << "error reading udp packet";
         }
-        PLOG_VERBOSE << "got a udp packet";
+        PLOG_VERBOSE_IF(debugServerNetworking) << "got a udp packet";
         std::unique_ptr<Event> ev = getEventFromPacket(packet);
         UdpClientSendableEvent* clientEvent =  dynamic_cast<UdpClientSendableEvent*> (ev.get());
         if(clientEvent != NULL){

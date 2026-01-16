@@ -34,5 +34,14 @@ constexpr VERSION_TYPE CONF_API_VERSION = CONF_VERSION & 0xffff00;
 #endif
 
 //Debug config:
-constexpr bool debugClientGameStore = true;
-constexpr bool debugClientFrameGen = true;
+constexpr bool debugClient = false;
+constexpr bool debugClientGameStore = debugClient && true;
+constexpr bool debugClientFrameGen = debugClient && true;
+constexpr bool debugClientNetworking = debugClient && true;
+constexpr bool debugClientInputs = debugClient && true;
+constexpr bool debugClientState = debugClient && true;
+constexpr bool debugClientPerformance = true;
+
+constexpr bool debugServer = false;
+constexpr bool debugServerInputProcessing = debugServer && true;
+constexpr bool debugServerNetworking = debugServer && true;
