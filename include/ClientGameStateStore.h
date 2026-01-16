@@ -3,14 +3,12 @@
 #include "GameState.h"
 #include "CircularArray.h"
 #include "Inputs.h"
-#include "Operations/GameStateUpdater.h"
 #include "Operations/LocalPlayerGameStateUpdater.h"
 #include "Operations/ClientGameStateUpdater.h"
 #include "GameUpdate.h"
 #include "plog/Log.h"
-
-
-#include <iostream>
+#include "GameStateUpdates.h"
+#include "Config.h"
 
 #include "GameStateHealth.h"
 
@@ -81,23 +79,23 @@ private:
 
     bool applySnapshot(TICK_TYPE tick){
         ClientGameStateUpdater gsUpdater(gameStates[tick].gameState, localPlayerId, gameStates[tick].localPlayer);
-        PLOG_DEBUG << "applying snapshot update";
+        PLOG_DEBUG_IF(debugClientGameStore) << "applying snapshot update";
         bool snapShotFound = false;
         for (UpdateInfo* updateInfo: gameStates[tick].updateInfos){
             gsUpdateInfo* snapshot = dynamic_cast<gsUpdateInfo*>(updateInfo);
             if(snapshot == NULL){continue;}
-            PLOG_DEBUG << "found the snapshot update";
+            PLOG_DEBUG_IF(debugClientGameStore) << "found the snapshot update";
             if(updateGameState(tick-1)){
                 gameStates[tick].gameState = gameStates[tick-1].gameState;
             }
-            PLOG_DEBUG << "applying the snapshot update";
+            PLOG_DEBUG_IF(debugClientGameStore) << "applying the snapshot update";
             snapshot->applyUpdate(gsUpdater, gameStates[tick].gameState);
-            PLOG_DEBUG << "applied the snapshot update";
+            PLOG_DEBUG_IF(debugClientGameStore) << "applied the snapshot update";
             if(snapshot->latestIncludedPInput != 0-1){
                 try{
                     Player& localPlayer = gameStates[tick].gameState.getPlayer(localPlayerId);
                     if(correctLocalPlayer(snapshot->latestIncludedPInput, gameStates[tick].gameState.getPlayer(localPlayerId))){
-                        PLOG_INFO << "localPlayer differed significantly!!";
+                        PLOG_INFO_IF(debugClientGameStore) << "localPlayer differed significantly!!";
                         for (TICK_TYPE i = snapshot->latestIncludedPInput + 1; i < gameStates.getSize(); i++)
                         {
                             updateLocalPlayer(i, true);
@@ -109,7 +107,7 @@ private:
                     PLOG_WARNING << e.what();
                 }
             }else{
-                PLOG_INFO << "got no latestIncludedPInput"; 
+                PLOG_INFO_IF(debugClientGameStore) << "got no latestIncludedPInput"; 
             }
             snapShotFound = true;
         }
@@ -229,7 +227,7 @@ public:
             gameStates[tick].hasSnapshot = true;
             gameStates[tick].updateInfos.push_back(new gsUpdateInfo(updateInfo));
         }else{
-            PLOG_INFO << "update already finalized";
+            PLOG_INFO_IF(debugClientGameStore) << "update already finalized";
         }
         return true;
     }
@@ -241,7 +239,7 @@ public:
         if(!gameStates[tick].updateInfosFinalized){
             gameStates[tick].updateInfos.push_back(new playerInputWithId(updateInfo));
         }else{
-            PLOG_INFO <<  "update already finalized";
+            PLOG_INFO_IF(debugClientGameStore) <<  "update already finalized";
         }
         return true;
     }
@@ -291,7 +289,7 @@ public:
         if(!gameStates[tick].localPlayerInitialized){
         }
         if(gameStates[tick].gameStateUpdated){
-            PLOG_DEBUG << tick << " gamestate already rendered";
+            PLOG_DEBUG_IF(debugClientGameStore) << tick << " gamestate already rendered";
             if(localPlayer != NULL && gameStates[tick].localPlayerInitialized){*localPlayer = &gameStates[tick].localPlayer;}
             return &(gameStates[tick].gameState);
         }else{

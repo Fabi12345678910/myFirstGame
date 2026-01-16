@@ -2,6 +2,7 @@
 #include "Client.h"
 #include "Threads/Threads.h"
 #include "Logger.h"
+#include <SFML/Network/IpAddress.hpp>
 pthread_t serverThread;
 pthread_t clientThread;
 
@@ -18,14 +19,14 @@ int sleep(unsigned long sec){
 #endif
 
 void* runServer(void*){
-    Server server = Server();
+    Server server = Server(4445);
     server.run();
     return NULL;
 }
 
 void* runClient(void*){
-    sf::RenderWindow window(sf::VideoMode(sf::Vector2u(1280, 720)), "LocalGamClient");
-    Client client(window);
+    sf::RenderWindow window(sf::VideoMode(sf::Vector2u(1920,1080)), "LocalGameClient");
+    Client client(window, sf::IpAddress(127,0,0,1), 4445);
     client.run();
     return NULL;
 }

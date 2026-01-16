@@ -31,7 +31,7 @@ void* serverTcpEventHandler(std::unique_ptr<Event> ev, Connection& conn, void* a
     }
     std::tuple<ServerConnection&, std::unique_ptr<Event>> queueEntry(*serverConn, std::move(ev));
     handle->connectionEventsQueue.push(std::move(queueEntry));
-    PLOG_VERBOSE << "handlung tcp event";
+    PLOG_VERBOSE_IF(debugServerNetworking) << "handlung tcp event";
     return NULL;
 };
 void* serverUdpEventHandler(std::unique_ptr<UdpClientSendableEvent> ev, std::optional<sf::IpAddress>& remoteAddress, unsigned short& remotePort, void* args){
@@ -42,10 +42,10 @@ void* serverUdpEventHandler(std::unique_ptr<UdpClientSendableEvent> ev, std::opt
     struct serverEventHandlerData *handle = (serverEventHandlerData*) args;
     std::lock_guard<std::mutex> queueLockGuard(handle->connectionEventsMutex);
     ServerConnection* serverConn = nullptr;
-    PLOG_DEBUG << "got an udp event";
+    PLOG_DEBUG_IF(debugServerNetworking) << "got an udp event";
     for (auto& connPtr : *handle->connections)
     {
-        PLOG_VERBOSE << "comparing against connection " << connPtr->udpRecipientIpAdress << ':' << connPtr->udpRecipientPort;
+        PLOG_VERBOSE_IF(debugServerNetworking) << "comparing against connection " << connPtr->udpRecipientIpAdress << ':' << connPtr->udpRecipientPort;
         //if(connPtr->udpRecipientIpAdress == remoteAddress.value() && connPtr->udpRecipientPort == remotePort){
         if(connPtr->getPlayerId() == ev->playerId){
             if(connPtr->udpRecipientPort != remotePort){
@@ -154,7 +154,7 @@ void Server::mainLoop(){
                 indexedPlayerInputWithId input(pInput.value(), conn->getPlayerId());
                 playerInputs.push_back(input);
             }else{
-                PLOG_VERBOSE << "got no input available";
+                PLOG_VERBOSE_IF(debugServerInputProcessing) << "got no input available";
             }
         }
 
@@ -165,7 +165,7 @@ void Server::mainLoop(){
             if(it == playerInputs.end()){
                 if(currentTick == 0){
                     //no inputs yet, just use an empty one
-                    PLOG_VERBOSE << "first frame, using empty userInput";
+                    PLOG_VERBOSE_IF(debugServerInputProcessing) << "first frame, using empty userInput";
                     playerInputs.emplace_back(0, playerInput(), player.getId());
                     //player.getId(), playerInput()
                     playerInputs.back().invalidateIdx();
@@ -176,7 +176,7 @@ void Server::mainLoop(){
                 auto itLastInput = std::find_if(lastInputs.begin(), lastInputs.end(),
                 [player](const indexedPlayerInputWithId& p){ return p.playerInputWithId.playerId == player.getId(); });
                 if(itLastInput != lastInputs.end()){
-                    PLOG_DEBUG << "reusing last userInput with userId: " << itLastInput->playerInputWithId.playerId;
+                    PLOG_DEBUG_IF(debugServerInputProcessing) << "reusing last userInput with userId: " << itLastInput->playerInputWithId.playerId;
                     playerInputs.push_back(*itLastInput);
                     playerInputs.back().invalidateIdx();
                 }else{
@@ -240,7 +240,7 @@ void Server::mainLoop(){
                     EventSelectMap selectMapEvent = EventSelectMap(currentTick + 2000); //20 seconds maybe put in config
                     //set latestUpdatedInputSync
                     connPtr->sendTcpEvent(selectMapEvent);
-                    PLOG_ERROR << "sending [Event] Players Ready";
+                    PLOG_INFO_IF(debugServerNetworking) << "sending [Event] Players Ready";
                 }
                 selectedMaps.byPlayer.clear();
                 selectedMaps.arrivalOrder.clear();
@@ -487,11 +487,11 @@ void Server::processEvents(std::vector<indexedPlayerInputWithId>& playerInputs){
 
         EventUserInput *evUserInput = dynamic_cast<EventUserInput*>(ev);
         if(evUserInput != NULL){
-            PLOG_DEBUG << "received user input";
+            PLOG_DEBUG_IF(debugServerNetworking) << "received user input";
             while (evUserInput->hasNextUserInput())
             {
                 auto input = evUserInput->getNextUserInput();
-                PLOG_DEBUG << "adding user input '" << input.idx << "' to queue";
+                PLOG_DEBUG_IF(debugServerInputProcessing) << "adding user input '" << input.idx << "' to queue";
                 conn.enqueueInput(input);
             }
         }
@@ -504,7 +504,7 @@ void Server::processEvents(std::vector<indexedPlayerInputWithId>& playerInputs){
                     selectedMaps.arrivalOrder.push_back(pid);
                 }
                 selectedMaps.byPlayer[pid] = evSelectedMap->stageId;
-                PLOG_DEBUG << "Received [Event] Selected Map from player " << pid << ": stageId=" << evSelectedMap->stageId;
+                PLOG_DEBUG_IF(debugServerNetworking) << "Received [Event] Selected Map from player " << pid << ": stageId=" << evSelectedMap->stageId;
             }
         }
 
@@ -556,7 +556,7 @@ void Server::resyncGameState(){
     //    for (TICK_TYPE i = syncEvent.startingGameTick; i <= currentTick; i++){
         for (TICK_TYPE i = 0; i < infosToSend; i++){
             TICK_TYPE currentTickToSend = syncEvent.startingGameTick + i;
-            PLOG_DEBUG << "tick(current, currentToSend, i): " << currentTick << ' ' << currentTickToSend << ' ' << i;
+            PLOG_DEBUG_IF(debugServerNetworking) << "tick(current, currentToSend, i): " << currentTick << ' ' << currentTickToSend << ' ' << i;
             if((i)%SNAPSHOT_DISTANCE == 0){
                 auto& eventUpdates = syncEvent.createCombinedUpdateInfo(gameStates[currentTickToSend], 0-1);
                 eventUpdates.pInput.reserve(inputHistory[currentTickToSend].size());
@@ -568,7 +568,7 @@ void Server::resyncGameState(){
                     eventUpdates.pInput.emplace_back(pInput.playerInputWithId);
                 }
 
-                PLOG_VERBOSE << "server: playerInfosSize: " << syncEvent.updateInfos.back().gsUpdate.playerInfos.size();
+                PLOG_VERBOSE_IF(debugServerNetworking) << "server: playerInfosSize: " << syncEvent.updateInfos.back().gsUpdate.playerInfos.size();
             }else{
                 auto& eventInputs = syncEvent.createNewPlayerInputs();
                 eventInputs.reserve(inputHistory[currentTickToSend].size());
@@ -582,7 +582,7 @@ void Server::resyncGameState(){
         //set latestUpdatedInputSync
         connPtr->sendUdpEvent(syncEvent);
         /* code */
-        PLOG_DEBUG << "sending " << syncEvent.updateInfos.size() << " updates at starting tick " << syncEvent.startingGameTick;
+        PLOG_DEBUG_IF(debugServerNetworking) << "sending " << syncEvent.updateInfos.size() << " updates at starting tick " << syncEvent.startingGameTick;
     }
 }
 
@@ -603,7 +603,7 @@ void Server::resyncLastInputs(){
 
         for (TICK_TYPE i = 0; i < infosToSend; i++){
             TICK_TYPE currentTickToSend = syncEvent.startingGameTick + i;
-            PLOG_DEBUG << "tick(current, currentToSend, i): " << currentTick << ' ' << currentTickToSend << ' ' << i;
+            PLOG_DEBUG_IF(debugServerNetworking) << "tick(current, currentToSend, i): " << currentTick << ' ' << currentTickToSend << ' ' << i;
 
             auto& eventInputs = syncEvent.createNewPlayerInputs();
             eventInputs.reserve(inputHistory[currentTickToSend].size());
@@ -616,6 +616,6 @@ void Server::resyncLastInputs(){
         //set latestUpdatedInputSync
         connPtr->sendUdpEvent(syncEvent);
         /* code */
-        PLOG_DEBUG << "sending " << syncEvent.updateInfos.size() << " updates at starting tick " << syncEvent.startingGameTick;
+        PLOG_DEBUG_IF(debugServerNetworking) << "sending " << syncEvent.updateInfos.size() << " updates at starting tick " << syncEvent.startingGameTick;
     }
 }

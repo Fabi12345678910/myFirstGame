@@ -1,7 +1,6 @@
 #pragma once
 #include "GameState.h"
 #include "SFML/Network/Packet.hpp"
-#include <iostream>
 #include "UpdateInfo.h"
 #include "plog/Log.h"
 
