@@ -424,8 +424,6 @@ void Server::mainLoop(){
             }
         }
 
-        int32_t sleep_ms = TICKRATE_MS - tickClock.getElapsedTime().asMilliseconds();
-
         #if ENABLE_SERVER_RENDERING
         renderer.render(gameStates[currentTick]);
         renderer.processDisplayEvents();
