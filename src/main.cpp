@@ -108,7 +108,9 @@ int main() {
 
         case Scene::CLIENT_LOBBY: {
             if (client) {
+                window.setFramerateLimit(0);
                 client->run();
+                window.setFramerateLimit(60);
             }
             if (serverThread.joinable())
                 serverThread.join();
