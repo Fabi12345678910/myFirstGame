@@ -73,7 +73,7 @@ int main() {
                         std::this_thread::sleep_for(std::chrono::milliseconds(10));
                     }
                     client = std::make_unique<Client>(window, sf::IpAddress::LocalHost, port);
-                    client->setIsHost(true);
+                    client->setIsHost(false);
                     currentScene = Scene::CLIENT_LOBBY;
                     break;
                 }

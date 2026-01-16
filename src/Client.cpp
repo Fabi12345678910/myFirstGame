@@ -92,7 +92,6 @@ void Client::performLogin(){
             eventData.connectionEventsQueue.pop();
         }
     }
-    sf::sleep(sf::milliseconds(20));
 }
 
 void Client::run(){
@@ -196,6 +195,8 @@ void Client::updateGameStates(EventGamestatePlayerInputHistory& ev){
     }
 }
 
+
+
 void Client::mainLoop(){
     PLOG_INFO << "entering main loop";
     sf::Clock tickClock;
@@ -215,6 +216,8 @@ void Client::mainLoop(){
             sf::Time startTickTime = tickClock.getElapsedTime();
             sf::Time currentDeltaTime = startTickTime - latestElapsedTick;
 
+            PLOG_ERROR_IF(1<2) << "timepoint: " << "test1" << ", elapsed tickTime: " <<  (tickClock.getElapsedTime() - startTickTime).asMilliseconds();
+            
             processEventsPlaying();
 
             GameState* generatedGameState = NULL;

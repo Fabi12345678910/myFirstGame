@@ -32,3 +32,7 @@ constexpr VERSION_TYPE CONF_API_VERSION = CONF_VERSION & 0xffff00;
 #else
     constexpr bool CONF_SHOW_SERVER_HEALTH = SHOW_SERVER_HEALTH;
 #endif
+
+//Debug config:
+constexpr bool debugClientGameStore = true;
+constexpr bool debugClientFrameGen = true;
