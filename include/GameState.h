@@ -3,7 +3,7 @@
 #include "Stage.h"
 #include "Projectile.h"
 
-enum gameState{RUNNING, WAITING, MAP_SELECT, LOADING, STARTING};
+enum gameState{RUNNING, WAITING, MAP_SELECT, LOADING, STARTING, END_OF_ROUND};
 
 class GameState {
 private:

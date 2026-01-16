@@ -367,6 +367,7 @@ void Server::mainLoop(){
         }
 
         //end of round
+        //TODO: when round is finished send out a ENDOFROUND event wait 5 seconds and then send out a START event.
         if (gameStates[currentTick].getGameState() == gameState::RUNNING && aliveCount <= 1) {
             auto& gs = gameStates[currentTick];
             const auto& spawns = gs.getStage().getSpawnPoints();
