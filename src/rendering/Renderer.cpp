@@ -1,14 +1,12 @@
 #include "Renderer.h"
 #include "StageObject.h"
-#include "plog/Log.h"
 #include <cmath>
 #include "CircularArray.h"
+#include "FontManager.h"
 
 void Renderer::renderWaitingMessage(int numDots) {
-    sf::Font font;
-    if(!font.openFromFile("../assets/fonts/PressStart2P-Regular.ttf")) {
-        PLOG_ERROR << "failed loading font\n";
-    }
+
+    sf::Font& font = FontManager::getDefaultFont();
 
     const float W = 1920.f;
     const float H = 1080.f;
@@ -128,10 +126,7 @@ void Renderer::renderGameStateHealth(HealthReport& report){
 }
 
 void Renderer::renderReadyMessage(bool isReady) {
-    sf::Font font;
-    if(!font.openFromFile("../assets/fonts/PressStart2P-Regular.ttf")) {
-        PLOG_ERROR << "failed loading font\n";
-    }
+    sf::Font& font = FontManager::getDefaultFont();
 
     const float W = 1920.f;
     const float H = 1080.f;
@@ -158,10 +153,7 @@ void Renderer::renderReadyMessage(bool isReady) {
 }
 
 void Renderer::renderMapSelection(TICK_TYPE timeLeft, int16_t& selectedId, bool& confirmed, std::vector<std::pair<int16_t, std::string>> maps) {
-    sf::Font font;
-    if(!font.openFromFile("../assets/fonts/PressStart2P-Regular.ttf")) {
-        PLOG_ERROR << "failed loading font\n";
-    }
+    sf::Font& font = FontManager::getDefaultFont();
 
     const float W = 1920.f;
     const float H = 1080.f;
@@ -253,10 +245,7 @@ void Renderer::renderLoading(float angle) {
 }
 
 void Renderer::renderGameStart(TICK_TYPE timeLeft) {
-    sf::Font font;
-    if(!font.openFromFile("../assets/fonts/PressStart2P-Regular.ttf")) {
-        PLOG_ERROR << "failed loading font\n";
-    }
+    sf::Font& font = FontManager::getDefaultFont();
 
     const float W = 1920.f;
     const float H = 1080.f;
