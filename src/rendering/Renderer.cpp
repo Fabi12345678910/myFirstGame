@@ -50,9 +50,9 @@ void Renderer::renderWaitingMessage(int numDots) {
                         startY + graphHeight - height));
 
         // Color gradient
-        if (ms < 16.f) bar.setFillColor(sf::Color::Green);
-        else if (ms < criticalMs) bar.setFillColor(sf::Color::Yellow);
+        if (ms < criticalMs) bar.setFillColor(sf::Color::Green);
         else bar.setFillColor(sf::Color::Red);
+        ;
 
         window.draw(bar);
     }

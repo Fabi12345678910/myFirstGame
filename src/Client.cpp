@@ -357,13 +357,13 @@ void Client::mainLoop(){
                 }
                 if (CONF_SHOW_CLIENT_HEALTH){
                     auto healthReport = gameStore.getHealthReport(tickToDisplay);
+                    renderer.renderFrameTimeGraph(clientFrameTimes, (HEALTH_FRAME_TIME_TYPE) tickrateMs, 50.F, 450.F);
                     renderer.renderGameStateHealth(healthReport);
                     LOG_TIMEPOINT("rendered client health");
                 }
                 if(CONF_SHOW_SERVER_HEALTH){
                     renderer.renderServerQueueHealth(serverQueueHealth);
                     renderer.renderFrameTimeGraph(serverFrameTimes, (HEALTH_FRAME_TIME_TYPE) tickrateMs, 50.F, 350.F);
-                    renderer.renderFrameTimeGraph(clientFrameTimes, (HEALTH_FRAME_TIME_TYPE) tickrateMs, 50.F, 450.F);
                     LOG_TIMEPOINT("rendered server health");
                 }
 
