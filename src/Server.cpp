@@ -1,7 +1,6 @@
 #include "Server.h"
 #include "GameUpdate.h"
 #include "Config.h"
-#include "PlayerOperations.h"
 #include "Operations/ServerGameStateUpdater.h"
 #include "StageManager.h"
 
@@ -10,8 +9,6 @@
 #include "Networking/EventDefinitions/EventLoginDenied.h"
 #include "Networking/EventDefinitions/EventDebugMessage.h"
 #include "Networking/EventDefinitions/EventSpawnNewPlayer.h"
-#include "Networking/EventDefinitions/EventPlayerVelocity.h"
-#include "Networking/EventDefinitions/EventPlayerLocation.h"
 #include "Networking/EventDefinitions/EventUserInput.h"
 #include "Networking/EventDefinitions/EventGamestatePlayerInputHistory.h"
 #include "Networking/EventDefinitions/EventSelectMap.h"
@@ -19,7 +16,6 @@
 #include "Networking/EventDefinitions/EventStartGame.h"
 
 #include "Networking/EventDefinitions/EventServerHealth.h"
-#include "maps/Map_TestAll.h"
 #include "Logger.h"
 #include "plog/Log.h"
 #include <algorithm>

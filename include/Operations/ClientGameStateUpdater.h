@@ -2,6 +2,7 @@
 
 #include "GameStateUpdater.h"
 #include "GameState.h"
+#include "plog/Log.h"
 class ClientGameStateUpdater: public GameStateUpdater
 {
 private:

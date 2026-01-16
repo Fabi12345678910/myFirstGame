@@ -1,5 +1,6 @@
 #include "Networking/Connection.h"
 #include "Networking/Events.h"
+#include "plog/Log.h"
 #include <SFML/Network.hpp>
 
 std::unique_ptr<Event> Connection::receiveNextEvent(){
@@ -22,7 +23,7 @@ static void* eventHandlerFunction(void* arg){
         }
         catch(const std::exception& e)
         {
-            std::cerr << e.what() << '\n';
+            PLOG_ERROR << e.what() << '\n';
             return NULL;
         }
     }

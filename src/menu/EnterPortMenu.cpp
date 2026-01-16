@@ -1,7 +1,6 @@
 #include "menu/EnterPortMenu.h"
 #include <cctype>
 #include <sstream>
-#include <iostream>
 
 EnterPortMenu::EnterPortMenu(sf::RenderWindow& win)
 : window(win),
@@ -24,7 +23,7 @@ void EnterPortMenu::set_values() {
     done = false;
 
     if (!font.openFromFile("../assets/fonts/PressStart2P-Regular.ttf"))
-        std::cout << "failed loading font\n";
+        throw std::runtime_error("failed loading font");
 
     // Set text sizes first
     portText.setCharacterSize(textScale*h);

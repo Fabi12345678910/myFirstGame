@@ -1,6 +1,5 @@
 #pragma once
 #include "Networking/Event.h"
-#include "Networking/EventTypeList.h"
 
 #include <memory>
 #include <SFML/Network/Packet.hpp>

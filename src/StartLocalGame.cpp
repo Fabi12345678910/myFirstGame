@@ -1,7 +1,6 @@
 #include "Server.h"
 #include "Client.h"
 #include "Threads/Threads.h"
-#include "SFML/Graphics.hpp"
 #include "Logger.h"
 pthread_t serverThread;
 pthread_t clientThread;

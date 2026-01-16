@@ -2,6 +2,7 @@
 #include "Networking/EventDefinitions/EventLoginRequest.h"
 #include "Networking/EventDefinitions/EventLoginConfirmation.h"
 #include "Networking/EventDefinitions/EventLoginDenied.h"
+#include <iostream>
 
 #ifdef _WIN32
 int usleep(unsigned long usec){

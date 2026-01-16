@@ -75,8 +75,8 @@ private:
 
 public:
     void run();
-    Client(sf::RenderWindow& win);
-    Client(sf::RenderWindow& win, sf::IpAddress ip, unsigned short port);
+    Client(sf::RenderWindow& win, bool isHost = false);
+    Client(sf::RenderWindow& win, sf::IpAddress ip, unsigned short port, bool isHost = false);
     ~Client(){};
     bool const& getIsHost() const{
         return isHost;

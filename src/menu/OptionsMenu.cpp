@@ -24,30 +24,31 @@ void OptionsMenu::set_values() {
     pos = 0;
     pressed = theselect = false;
 
-    if (!font.openFromFile("../assets/fonts/PressStart2P-Regular.ttf"))
-        std::cout << "failed loading font\n";
+    if (!font.openFromFile("../assets/fonts/PressStart2P-Regular.ttf")){
+                throw std::runtime_error("failed loading font");
+    }
 
-        options = {"Music", "Resolution", "Fullscreen"};
-        coords.resize(options.size());
+    options = {"Music", "Resolution", "Fullscreen"};
+    coords.resize(options.size());
 
-        coords.clear();
-        for (std::size_t i = 0; i < options.size(); ++i) {
-                coords.push_back({ w * 0.5f, topMargin + i * spacing });
-        }
+    coords.clear();
+    for (std::size_t i = 0; i < options.size(); ++i) {
+            coords.push_back({ w * 0.5f, topMargin + i * spacing });
+    }
 
-        texts.clear();
-        for (std::size_t i{}; i < options.size(); ++i){
-            sf::Text text(font, options[i], optionsSize);
-            text.setOutlineColor(sf::Color::Black);
-            sf::FloatRect bounds = text.getLocalBounds();
-            // Right-align in the middle: set origin to right edge, center vertically
-            text.setOrigin(sf::Vector2f{bounds.position.x + bounds.size.x, bounds.position.y + bounds.size.y / 2});
-            // Place at center X, appropriate Y
-            text.setPosition(sf::Vector2f{w * 0.5f, topMargin + i * spacing});
-            texts.push_back(text);
-        }
-        if (!texts.empty())
-                texts[0].setOutlineThickness(2);
+    texts.clear();
+    for (std::size_t i{}; i < options.size(); ++i){
+        sf::Text text(font, options[i], optionsSize);
+        text.setOutlineColor(sf::Color::Black);
+        sf::FloatRect bounds = text.getLocalBounds();
+        // Right-align in the middle: set origin to right edge, center vertically
+        text.setOrigin(sf::Vector2f{bounds.position.x + bounds.size.x, bounds.position.y + bounds.size.y / 2});
+        // Place at center X, appropriate Y
+        text.setPosition(sf::Vector2f{w * 0.5f, topMargin + i * spacing});
+        texts.push_back(text);
+    }
+    if (!texts.empty())
+            texts[0].setOutlineThickness(2);
 }
 
 void OptionsMenu::loop_events() {

@@ -1,5 +1,4 @@
 #include "StageManager.h"
-#include "plog/Log.h"
 #include <nlohmann/json.hpp>
 #include <fstream>
 

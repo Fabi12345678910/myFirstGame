@@ -1,7 +1,6 @@
 #pragma once
 #include "Networking/Event.h"
 #include "Networking/EventTypeList.h"
-#include "Types.h"
 
 class EventLoginDenied:public Event
 {

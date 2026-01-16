@@ -1,5 +1,7 @@
 #include <menu/Menu.h>
 #include <SFML/Graphics.hpp>
+#include <plog/Log.h>
+#include <stdexcept>
 
 Menu::Menu(sf::RenderWindow& win) : window(win) {
   set_values();
@@ -17,7 +19,7 @@ void Menu::set_values(){
   pos = 0;
   pressed = theselect = false;
   if(!font.openFromFile("../assets/fonts/PressStart2P-Regular.ttf")) {
-    std::cout << "failed loading font\n";
+    throw std::runtime_error("failed loading font");
   }
 
   pos_mouse = {0,0};
@@ -79,7 +81,7 @@ void Menu::loop_events(){
       // if( pos == 3){
       //   window.close();
       // }
-      std::cout << options[pos] << '\n';
+      PLOG_DEBUG << options[pos] << '\n';
     }
 
     // if(sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)){
@@ -119,6 +121,5 @@ std::string Menu::run_menu(){
 //   sf::RenderWindow window(sf::VideoMode(sf::Vector2u(1280, 720)), "Menu Test");
 //   Menu menu(window);
 //   std::string selected = menu.run_menu();
-//   std::cout << "Selected option: " << selected << std::endl;
 //   return 0;
 // }

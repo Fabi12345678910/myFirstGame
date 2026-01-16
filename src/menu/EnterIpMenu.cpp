@@ -1,7 +1,7 @@
 #include "menu/EnterIpMenu.h"
 #include <cctype>
 #include <sstream>
-#include <iostream>
+#include <stdexcept>
 
 EnterIpMenu::EnterIpMenu(sf::RenderWindow& win)
 : window(win),
@@ -27,8 +27,9 @@ void EnterIpMenu::set_values() {
     enteringIp = true;
     done = false;
 
-    if (!font.openFromFile("../assets/fonts/PressStart2P-Regular.ttf"))
-        std::cout << "failed loading font\n";
+    if (!font.openFromFile("../assets/fonts/PressStart2P-Regular.ttf")){
+        throw std::runtime_error("failed loading font\n");
+    }
 
     labelText.setCharacterSize(textScale*h);
     ipText.setCharacterSize(textScale*h);

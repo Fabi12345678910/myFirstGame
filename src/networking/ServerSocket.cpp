@@ -2,6 +2,7 @@
 #include "Networking/Events.h"
 #include "Networking/EventDefinitions/UdpClientSendableEvent.h"
 #include "plog/Log.h"
+#include <stdexcept>
 
 void *connectionAccepter(void * arg){
     ServerSocket *serverSock = (ServerSocket*) arg;
@@ -37,7 +38,9 @@ void *udpListener(void* arg){
         std::unique_ptr<Event> ev = getEventFromPacket(packet);
         UdpClientSendableEvent* clientEvent =  dynamic_cast<UdpClientSendableEvent*> (ev.get());
         if(clientEvent != NULL){
-            ev.release();
+            if(ev.release() == nullptr){
+                throw std::runtime_error("got empty Event pointer");
+            }
             auto udpEvPtr = std::unique_ptr<UdpClientSendableEvent>(clientEvent);
             serverSock->udpEventHandler(std::move(udpEvPtr), remoteAdress, remotePort, serverSock->udpArgs);
         }

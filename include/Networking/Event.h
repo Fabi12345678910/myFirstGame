@@ -1,6 +1,6 @@
 #pragma once
 #include <SFML/Network/Packet.hpp>
-#include <iostream>
+#include <stdexcept>
 
 #define DATATYPE_EVENT_TYPE int16_t
 class Event

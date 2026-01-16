@@ -2,8 +2,6 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/Audio.hpp>
 #include "Options.h"
-#include <string>
-#include <optional>
 
 class OptionsMenu {
     sf::RenderWindow& window;

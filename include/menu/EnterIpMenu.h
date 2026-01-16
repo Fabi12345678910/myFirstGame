@@ -1,8 +1,6 @@
 #pragma once
 #include <SFML/Network.hpp>
 #include <SFML/Graphics.hpp>
-#include <iostream>
-#include <vector>
 #include <optional>
 
 class EnterIpMenu {

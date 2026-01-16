@@ -1,8 +1,5 @@
 #include "Renderer.h"
 #include "StageObject.h"
-#include "StageManager.h"
-#include <cctype>
-#include <sstream>
 #include "plog/Log.h"
 #include <cmath>
 #include "CircularArray.h"

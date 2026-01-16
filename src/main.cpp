@@ -10,8 +10,8 @@
 #include "Options.h"
 #include <thread>
 #include <memory>
-#include <atomic>
 #include "Logger.h"
+#include "plog/Log.h"
 
 // Enum for scene management
 enum class Scene {
@@ -81,7 +81,7 @@ int main() {
                     EnterIpMenu enterIpMenu(window);
                     auto result = enterIpMenu.run_menu();
                     if (!result) {
-                        std::cout << "something went wrong when entering ip and port";
+                        PLOG_ERROR << "something went wrong when entering ip and port";
                         continue;
                     }
                     client = std::make_unique<Client>(window, result->first, result->second);

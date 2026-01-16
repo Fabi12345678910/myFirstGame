@@ -1,6 +1,5 @@
 #include "Collisions/PlayerCollisions.h"
 #include "Stage.h"
-#include <iostream>
 #include "plog/Log.h"
 
 bool handlePlayerSolidCollision(GameStateUpdater& gsUpdater, Player& player, GameObject& object, sf::RectangleShape& collisionPosition, sf::Vector2f playerVelocity);
@@ -32,6 +31,15 @@ bool handlePlayerCollision(GameStateUpdater& gsUpdater, Player& player, Collidab
         break;
     }
 }
+
+template <typename T>
+constexpr T abs(T value){
+    if(value<T(0)){
+        return -value;
+    }
+    return value;
+}
+
 bool handlePlayerSolidCollision(GameStateUpdater& gsUpdater, Player& player, GameObject& object, sf::RectangleShape& collisionPosition, sf::Vector2f playerVelocity){
     sf::FloatRect playerBounds = collisionPosition.getGlobalBounds();
     sf::FloatRect otherBounds = object.getShape().getGlobalBounds();

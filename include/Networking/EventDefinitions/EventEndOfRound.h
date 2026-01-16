@@ -27,7 +27,4 @@ public:
         return packet;
     }
 
-    
-
-
 };

@@ -4,7 +4,6 @@
 #include "Networking/EventTypeList.h"
 #include "Inputs.h"
 #include "GameState.h"
-#include <iterator>
 #include "GameStateUpdates.h"
 
 inline sf::Packet& operator <<(

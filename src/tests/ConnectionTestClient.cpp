@@ -1,6 +1,7 @@
 #include "Networking/ClientConnection.h"
 #include "Networking/EventDefinitions/EventDebugMessage.h"
 #include "Networking/EventDefinitions/EventLoginRequest.h"
+#include <iostream>
 
 #ifdef _WIN32
 int usleep(unsigned long usec){

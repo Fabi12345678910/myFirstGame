@@ -1,5 +1,6 @@
 #include "Networking/ClientConnection.h"
 #include "Networking/Events.h"
+#include "plog/Log.h"
 
 void *clientUdpListener(void* arg){
     ClientConnection *conn = (ClientConnection*) arg;
@@ -9,7 +10,7 @@ void *clientUdpListener(void* arg){
     while (true)
     {
         if(conn->udpSocket.receive(packet, remoteAdress, remotePort) != sf::Socket::Status::Done){
-            std::cerr << "error reading udp packet";
+            PLOG_ERROR << "error reading udp packet";
         }
 
         conn->udpEventHandler(getEventFromPacket(packet), remoteAdress, remotePort, conn->udpArgs);

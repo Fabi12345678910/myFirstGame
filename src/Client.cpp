@@ -1,18 +1,13 @@
 #include "Client.h"
-#include "PlayerOperations.h"
 #include "Inputs.h"
-#include "Projectile.h"
 #include "GameUpdate.h"
 #include "Renderer.h"
 #include "plog/Log.h"
-#include "Operations/ClientGameStateUpdater.h"
 #include "StageManager.h"
 
 #include "Networking/EventDefinitions/EventLoginRequest.h"
 #include "Networking/EventDefinitions/EventLoginDenied.h"
 #include "Networking/EventDefinitions/EventLoginConfirmation.h"
-#include "Networking/EventDefinitions/EventPlayerLocation.h"
-#include "Networking/EventDefinitions/EventPlayerVelocity.h"
 #include "Networking/EventDefinitions/EventSpawnNewPlayer.h"
 #include "Networking/EventDefinitions/EventUserInput.h"
 #include "Networking/EventDefinitions/EventGamestatePlayerInputHistory.h"
@@ -23,7 +18,6 @@
 
 #include "Config.h"
 
-#include "maps/Map_TestAll.h"
 
 void* clientEventHandler(std::unique_ptr<Event> evPtr, Connection& conn, void* args) {
     struct clientEventHandlerData *handle = (clientEventHandlerData*) args;
@@ -42,7 +36,7 @@ void* udpClientEventHandler(std::unique_ptr<Event> evPtr, std::optional<sf::IpAd
 }
 
 
-Client::Client(sf::RenderWindow& win)
+Client::Client(sf::RenderWindow& win, bool isHost)
         : renderer(win),
             conn(ClientConnection::createClientConnection({127, 0, 0, 1}, 4444)),
             isHost(isHost)
@@ -53,7 +47,7 @@ Client::Client(sf::RenderWindow& win)
 }
 
 // constructor with specified port
-Client::Client(sf::RenderWindow& win, sf::IpAddress ip, unsigned short port)
+Client::Client(sf::RenderWindow& win, sf::IpAddress ip, unsigned short port, bool isHost)
         : renderer(win),
             conn(ClientConnection::createClientConnection(ip, port)),
             isHost(isHost)

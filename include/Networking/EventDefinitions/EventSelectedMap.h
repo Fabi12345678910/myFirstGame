@@ -2,7 +2,6 @@
 
 #include "Networking/Event.h"
 #include "Networking/EventTypeList.h"
-#include "Types.h"
 #include <SFML/System/Vector2.hpp>
 
 class EventSelectedMap:public Event

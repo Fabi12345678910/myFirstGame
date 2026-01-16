@@ -1,8 +1,6 @@
 #pragma once
 
 #include <SFML/Graphics.hpp>
-#include <iostream>
-#include <vector>
 
 class EnterIpMenu {
     sf::RenderWindow& window;

@@ -1,5 +1,4 @@
 #include "GameUpdate.h"
-#include <iostream>
 #include "StageObject.h"
 #include "Projectile.h"
 #include "Collidable.h"
