@@ -1,4 +1,5 @@
 #include "Networking/Events.h"
+#include "Networking/EventTypeList.h"
 #include <memory>
 
 #include "Networking/EventDefinitions/EventDebugMessage.h"
