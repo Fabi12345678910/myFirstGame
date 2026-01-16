@@ -349,13 +349,9 @@ void Client::mainLoop(){
                         lastRenderedGameState = gameState::RUNNING;
                     }
                 }
-                else if (displayGameState.getGameState() != gameState::RUNNING) {
-                    renderer.renderReadyMessage(displayGameState.getPlayer(playerId).getReadyToPlay());
-                }
                 if (CONF_SHOW_CLIENT_HEALTH){
                     auto healthReport = gameStore.getHealthReport(tickToDisplay);
                     renderer.renderGameStateHealth(healthReport);
-                    renderer.renderReadyMessage(generatedGameState->getPlayer(playerId).getReadyToPlay());
                 }
                 if(CONF_SHOW_SERVER_HEALTH){
                     renderer.renderServerQueueHealth(serverQueueHealth);
@@ -402,7 +398,12 @@ playerInput Client::processInputs(){
     }
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::R)) {
         input.readyToPlay = true;
-        PLOG_ERROR << "Player " + gameStore.getGameState(tickToDisplay, true, NULL)->getPlayer(playerId).getReadyToPlay(); 
+        try {
+            const bool readyToPlay = gameStore.getGameState(tickToDisplay, true, NULL)->getPlayer(playerId).getReadyToPlay();
+            PLOG_DEBUG << "Player readyToPlay: " << readyToPlay;
+        } catch (const std::exception&) {
+            PLOG_DEBUG << "Player readyToPlay unavailable (player missing)";
+        }
     }
 
     return input;
