@@ -43,6 +43,11 @@ void updateGame(GameStateUpdater& gsUpdater, GameState& gameState, float deltaTi
     //move all movable objects
     for(Player* player : playersToUpdate){
 
+        // Dead players should not participate in physics/collisions.
+        if (player->getHealth() <= 0) {
+            continue;
+        }
+
         if(player->getProjectileCooldown() > 0){
             gsUpdater.setPlayerProjectileCooldown(*player, player->getProjectileCooldown() - 1);
         }
@@ -86,6 +91,10 @@ void updateGame(GameStateUpdater& gsUpdater, GameState& gameState, float deltaTi
             projectile->getShape().move(sf::Vector2f(projectile->getSpeed(), 0) * deltaTime);
             // check collision with players
             for (Player &player: gameState.getPlayers()){
+
+                if (player.getHealth() <= 0) {
+                    continue;
+                }
             
                 const Collidable *collidable = dynamic_cast<const Collidable*>(&player);
                 if(collidable != NULL){

@@ -90,6 +90,9 @@ void Client::performLogin(){
             if(evLoginDenied != NULL){
                 throw std::runtime_error("Login denied");
             }
+
+            // Ignore unrelated events during login to avoid blocking on a non-login packet.
+            eventData.connectionEventsQueue.pop();
         }
     }
     sf::sleep(sf::milliseconds(20));
@@ -117,7 +120,10 @@ void Client::processEventsAwaitingSpawn(){
         //somehow handle tha event
         EventSpawnNewPlayer *evSpawnNewPlayer = dynamic_cast<EventSpawnNewPlayer*>(ev);
         if(evSpawnNewPlayer != NULL){
-            clientState = PLAYING;
+            // Only start playing once *we* have spawned.
+            if(evSpawnNewPlayer->playerId == this->playerId){
+                clientState = PLAYING;
+            }
 //TODO store player in GameStore.addPlayer()
 /*            gameStates[latestGeneratedTick].gameState.addPlayer(Player(evSpawnNewPlayer->playerId, sf::Vector2f(40.f, 40.f),evSpawnNewPlayer->location));
             if(evSpawnNewPlayer->playerId == this->playerId){
@@ -246,14 +252,24 @@ void Client::mainLoop(){
             if(generatedGameState != NULL){
                 lastRenderedGameState = generatedGameState->getGameState();
                 GameState displayGameState = *generatedGameState;
-                if(localPlayer != NULL){
+                const bool hasLocalPrediction = (localPlayer != NULL);
+                bool localAliveOnServer = true;
+                try {
+                    localAliveOnServer = (generatedGameState->getPlayer(this->playerId).getHealth() > 0);
+                } catch (const std::exception&) {
+                    // If we don't have the local player yet (e.g., joining mid-stream),
+                    // fall back to rendering whatever is in the authoritative gamestate.
+                    localAliveOnServer = true;
+                }
+
+                if (hasLocalPrediction && localAliveOnServer) {
                     Player locPlayer = *localPlayer;
                     locPlayer.getShape().setFillColor(sf::Color::Magenta);
                     displayGameState.addPlayer(locPlayer);
-                }else{
                 }
+
                 constexpr bool renderLocalServerPlayer = false;
-                if (!renderLocalServerPlayer){
+                if (!renderLocalServerPlayer && hasLocalPrediction && localAliveOnServer){
                     displayGameState.removePlayer(this->playerId);
                 }
 
@@ -275,7 +291,14 @@ void Client::mainLoop(){
                     renderer.renderWaitingMessage(dotFrame);
                 }
                 else if (displayGameState.getGameState() == gameState::WAITING) {
-                    renderer.renderReadyMessage(generatedGameState->getPlayer(playerId).getReadyToPlay());
+                        bool readyToPlay = false;
+                        try {
+                            readyToPlay = generatedGameState->getPlayer(playerId).getReadyToPlay();
+                        } catch (const std::exception&) {
+                            // Joining mid-stream: local player may not be in the buffered gamestate yet.
+                            readyToPlay = false;
+                        }
+                        renderer.renderReadyMessage(readyToPlay);
                 }
                 else if (displayGameState.getGameState() == gameState::MAP_SELECT) {
                     if (tickToDisplay <= mapSelectionState.selectUntil) {

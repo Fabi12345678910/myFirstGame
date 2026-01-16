@@ -1,5 +1,6 @@
 #pragma once
 #include "Types.h"
+#include "GameState.h"
 #include <SFML/Network.hpp>
 #include "UpdateInfo.h"
 #include <iostream>
@@ -12,7 +13,13 @@ struct playerInput{
     bool jump = false;
     bool projectile = false;
     bool readyToPlay = false;
-    bool applyUpdate(Player& player, GameStateUpdater& gsUpdater, GameState & gameState){
+    bool applyUpdate(Player& player, GameStateUpdater& gsUpdater, GameState & gS){
+
+        if (player.getHealth() <= 0) {
+            return true;
+        }
+
+        GameState gameState = gS;
         OBJECT_ID_TYPE playerId = player.getId();
         sf::Vector2f playerVelocity = player.getVelocity();
         if(moveLeft){
@@ -55,6 +62,7 @@ struct playerInput{
             gsUpdater.addProjectile(proj);
             gsUpdater.setPlayerProjectileCooldown(player, 100);
         }
+        // readyToPlay isn't used in RUNNING, but keeping it here is harmless.
         if(readyToPlay) {
             gsUpdater.setReadyToPlay(player, !player.getReadyToPlay());
         }

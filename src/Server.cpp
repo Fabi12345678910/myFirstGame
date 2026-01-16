@@ -220,35 +220,9 @@ void Server::mainLoop(){
                     }
                 }
             }
-            // During RUNNING, players can die and respawn after a short delay.
+            // During RUNNING, players can die and stay dead until the round ends.
             else {
-                static constexpr TICK_TYPE RESPAWN_DELAY_TICKS = 80; // ~0.8s at 10ms tick
-
-                for (auto& p : gs.getPlayers()) {
-                    if (p.getHealth() > 0) {
-                        // If they already respawned, clear any pending timer.
-                        respawnAtTick.erase(p.getId());
-                        continue;
-                    }
-
-                    auto it = respawnAtTick.find(p.getId());
-                    if (it == respawnAtTick.end()) {
-                        respawnAtTick.emplace(p.getId(), currentTick + RESPAWN_DELAY_TICKS);
-                        continue;
-                    }
-
-                    if (currentTick >= it->second) {
-                        p.setHealth(10.f);
-                        p.setVelocity({0.f, 0.f});
-                        p.setProjectileCooldown(0);
-                        if (!spawns.empty()) {
-                            const std::uint64_t pid = static_cast<std::uint64_t>(p.getId());
-                            const std::size_t spawnIdx = static_cast<std::size_t>((pid + currentTick) % spawns.size());
-                            p.setPosition(spawns[spawnIdx]);
-                        }
-                        respawnAtTick.erase(it);
-                    }
-                }
+                respawnAtTick.clear();
             }
         }
 
@@ -390,8 +364,67 @@ void Server::mainLoop(){
                 // Notify clients: lastAlive->getId() won the game
                 // Optionally reset scores, return to lobby, etc.
             }
-            // Reset round: restore health, positions, set readyToPlay = false, etc.
-        }       
+        }
+
+        //end of round
+        if (gameStates[currentTick].getGameState() == gameState::RUNNING && aliveCount <= 1) {
+            auto& gs = gameStates[currentTick];
+            const auto& spawns = gs.getStage().getSpawnPoints();
+            const int16_t stageId = gs.getStage().getStageId();
+
+            // Assign spawns deterministically by sorting players by id.
+            std::vector<Player*> playersSorted;
+            playersSorted.reserve(gs.getPlayers().size());
+            for (auto& p : gs.getPlayers()) {
+                playersSorted.push_back(&p);
+            }
+            std::sort(playersSorted.begin(), playersSorted.end(), [](const Player* a, const Player* b) {
+                return a->getId() < b->getId();
+            });
+
+            std::vector<std::uint8_t> spawnPoints;
+            spawnPoints.reserve(playersSorted.size());
+
+            if (spawns.empty()) {
+                PLOG_ERROR << "Cannot reset round: stage has no spawn points";
+            } else {
+                std::vector<std::uint8_t> availableSpawnIdx;
+                const std::size_t maxUnique = std::min<std::size_t>(4, spawns.size());
+                availableSpawnIdx.reserve(maxUnique);
+                for (std::size_t i = 0; i < maxUnique; ++i) {
+                    availableSpawnIdx.push_back(static_cast<std::uint8_t>(i));
+                }
+                static std::mt19937 spawnGen{ std::random_device{}() };
+                std::shuffle(availableSpawnIdx.begin(), availableSpawnIdx.end(), spawnGen);
+
+                for (std::size_t i = 0; i < playersSorted.size(); ++i) {
+                    const std::uint8_t spawnIdx = availableSpawnIdx[i % availableSpawnIdx.size()];
+                    spawnPoints.push_back(spawnIdx);
+
+                    playersSorted[i]->setHealth(10.f);
+                    playersSorted[i]->setVelocity({0.f, 0.f});
+                    playersSorted[i]->setProjectileCooldown(0);
+                    playersSorted[i]->setPosition(spawns[spawnIdx]);
+                }
+            }
+
+            // Deactivate all projectiles so clients don't see leftover shots in the next round.
+            for (auto& pr : gs.getProjectiles()) {
+                pr.setIsActive(false);
+                pr.setVelocity({0.f, 0.f});
+            }
+
+            respawnAtTick.clear();
+
+            const TICK_TYPE nextStartTick = currentTick + 600;
+            gs.setGameStartTick(nextStartTick);
+            gs.setGameState(gameState::STARTING);
+
+            EventStartGame eventStartGame(nextStartTick, stageId, spawnPoints);
+            for (std::unique_ptr<ServerConnection> &connPtr : serverSocket.connections) {
+                connPtr->sendTcpEvent(eventStartGame);
+            }
+        }
 
         someTimesResyncGameState();
         int32_t sleep_ms = TICKRATE_MS - tickClock.getElapsedTime().asMilliseconds();
