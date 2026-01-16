@@ -2,7 +2,7 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/System.hpp>
 #include <string>
-#include <Types.h>
+#include "Types.h"
 
 class GameObject {
 protected:
