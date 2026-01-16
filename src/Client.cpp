@@ -381,7 +381,7 @@ void Client::mainLoop(){
             }else{
                 PLOG_INFO << "can't render tick:(\n";
             }
-
+            #undef LOG_TIMEPOINT
         }
         else if(clientState == AWAITING_SPAWN){
             PLOG_DEBUG_IF(debugClientState) << "be awaiting spawn";
