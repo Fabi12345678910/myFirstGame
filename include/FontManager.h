@@ -20,7 +20,7 @@ public:
 
 private:
     static FontManager& instance(){
-        static FontManager instance{};
+        static thread_local FontManager instance{};
         return instance;
     }
     sf::Font defaultFont;
