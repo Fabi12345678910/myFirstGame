@@ -1,6 +1,5 @@
 #pragma once
 
-#include "GameState.h"
 #include "Renderer.h"
 #include "Networking/ClientConnection.h"
 #include "Networking/Event.h"
@@ -20,12 +19,18 @@ struct clientEventHandlerData{
 };
 struct MapSelectionState {
         TICK_TYPE selectUntil;
-        int16_t selectedStageId = -1;
         int16_t selectedIndex = 0;
         bool confirmed = false;
         std::vector<std::pair<int16_t, std::string>> maps = StageManager::loadStageList();
 };
-enum clientState{CONNECTING, PLAYING, AWAITING_SPAWN};
+
+struct MapSelectionInput{
+    bool goLeft = false;
+    bool goRight = false;
+    bool confirm = false;
+};
+
+enum clientState{CONNECTING, PLAYING, MAP_SELECTION, COUNTDOWN, WAITING_FOR_COUNTDOWN, GAME_RUNNING};
 
 /*struct ClientGameState{
     enum State{
@@ -58,13 +63,15 @@ private:
     //the targeted Tick to display(higher means)
     
     TICK_TYPE displayTickDifference = 4;
-    gameState lastRenderedGameState = gameState::WAITING;
     void performLogin();
     void processEventsPlaying();
     void processEventsAwaitingSpawn();
+    void processMapSelectionInputs(MapSelectionInput input);
+    void renderStateSpecificInfo(bool readyToPlay);
     void mainLoop();
     void updateGameStates(EventGamestatePlayerInputHistory &ev);
     playerInput processInputs();
+    MapSelectionInput processInputsMapSelection();
 //    CircularArray<ClientGameState, clientGameStateBufferSize> gameStates;
 //    GameState gameState = GameState();
     struct clientEventHandlerData eventData;
@@ -72,7 +79,10 @@ private:
 
     bool isHost = false;
     MapSelectionState mapSelectionState;
+    TICK_TYPE gameStartTick;
 
+    void storeInputs(const TICK_TYPE& startingTick, const TICK_TYPE& currentTick, playerInput input);
+    void sendInputs(const TICK_TYPE& startingTick, const TICK_TYPE& currentTick);
 public:
     void run();
     Client(sf::RenderWindow& win, bool isHost = false);

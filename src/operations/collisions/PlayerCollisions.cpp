@@ -1,4 +1,5 @@
 #include "Collisions/PlayerCollisions.h"
+#include "Config.h"
 #include "Stage.h"
 #include "plog/Log.h"
 
@@ -108,7 +109,7 @@ bool handlePlayerSemiSolidCollision(GameStateUpdater& gsUpdater, Player& player,
     sf::Vector2f playerMovement = collisionPosition.getGlobalBounds().position - player.getShape().getGlobalBounds().position;
 
 //    const bool movingDown = playerVelocity.y > 0.f;
-    PLOG_VERBOSE << ", crossedTopFromAbove: " << crossedTopFromAbove(player.getShape(), collisionPosition, tBox);
+    PLOG_VERBOSE_IF(debugCollision) << ", crossedTopFromAbove: " << crossedTopFromAbove(player.getShape(), collisionPosition, tBox);
     if (crossedTopFromAbove(player.getShape(), collisionPosition, tBox)) {
         const float platformTop = tBox.position.y;
         const float correction  = platformTop - collisionPosition.getGlobalBounds().position.y - collisionPosition.getGlobalBounds().size.y;

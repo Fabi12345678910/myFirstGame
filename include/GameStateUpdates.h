@@ -1,4 +1,5 @@
 #pragma once
+#include "Config.h"
 #include "GameState.h"
 #include "SFML/Network/Packet.hpp"
 #include "UpdateInfo.h"
@@ -27,7 +28,7 @@ struct playerUpdateInfo{
         projectileCooldown = p.getProjectileCooldown();
     }
     void applyUpdate(Player &player){
-        PLOG_VERBOSE << "update player position to " << position.x << ":" << position.y;
+        PLOG_VERBOSE_IF(debugClientGameStore) << "update player position to " << position.x << ":" << position.y;
         player.setPosition(position);
         player.setVelocity(velocity);
         player.setFacing(facing);
@@ -66,7 +67,7 @@ struct gsUpdateInfo : public UpdateInfo{
     std::vector<playerUpdateInfo> playerInfos;
     std::vector<projectileUpdateInfo> projectileInfos;
     virtual bool applyUpdate(GameStateUpdater& gsUpdater, GameState& gameState) override{
-        PLOG_VERBOSE << "gsUpdate info contains " << playerInfos.size() << " players";
+        PLOG_VERBOSE_IF(debugClientGameStore) << "gsUpdate info contains " << playerInfos.size() << " players";
         for (auto& playerInfo : playerInfos)
         {
             try
@@ -75,7 +76,7 @@ struct gsUpdateInfo : public UpdateInfo{
             }
             catch(const std::runtime_error& e)
             {
-                PLOG_VERBOSE << "could not update player because he was not found";
+                PLOG_DEBUG_IF(debugClientGameStore) << "could not update player because he was not found";
                 Player newPlayer(playerInfo.id, sf::Vector2f(40.f, 40.f), playerInfo.position);
                 playerInfo.applyUpdate(newPlayer);
                 gsUpdater.addPlayer(newPlayer);
@@ -93,7 +94,7 @@ struct gsUpdateInfo : public UpdateInfo{
                 Projectile proj(projectileInfo.id, {20.f,20.f}, projectileInfo.position);
                 gameState.addProjectile(proj);
                 projectileInfo.applyUpdate(gameState.getProjectile(projectileInfo.id));
-                PLOG_DEBUG << "did not found projectile with id "<< projectileInfo.id <<" for update, spawned instead";
+                PLOG_DEBUG_IF(debugClientGameStore) << "did not found projectile with id "<< projectileInfo.id <<" for update, spawned instead";
             }
         }
         return true;
@@ -163,7 +164,6 @@ inline sf::Packet& operator <<(sf::Packet& packet, const gsUpdateInfo& gs)
     // Players
     packet << gs.latestIncludedPInput;
     packet << static_cast<uint32_t>(gs.playerInfos.size());
-    PLOG_VERBOSE << "writing " << static_cast<uint32_t>(gs.playerInfos.size()) << " players\n";
     for (const auto& p : gs.playerInfos){
         packet << p;
     }

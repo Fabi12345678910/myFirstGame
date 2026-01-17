@@ -127,13 +127,13 @@ void Server::mainLoop(){
         sf::Time startTickTime = tickClock.getElapsedTime();
         sf::Time currentDeltaTime = startTickTime - latestElapsedTick;
         if(currentDeltaTime < tickRate){
-            PLOG_VERBOSE << "not there yet";
+            PLOG_VERBOSE_IF(debugServerGenerations) << "not there yet";
             sf::sleep(tickRate - currentDeltaTime);
             continue;
         }
         latestElapsedTick += tickRate;
         currentTick++;
-        PLOG_VERBOSE << "calculating tick " << currentTick;
+        PLOG_VERBOSE_IF(debugServerGenerations) << "calculating tick " << currentTick;
         std::vector<indexedPlayerInputWithId> playerInputs;
         playerInputs.reserve(numPlayers);
         //copy gameState to next gameState

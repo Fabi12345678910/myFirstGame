@@ -9,18 +9,19 @@ class Renderer
 {
 private:
     sf::RenderWindow& window;
+    sf::Clock waitingDotClock;
+    float waitingAngle = 0;
 public:
     Renderer(sf::RenderWindow& win) : window(win) {}
-    ~Renderer(){};
+    ~Renderer(){waitingDotClock.start();};
     void renderFrameTimeGraph(const CircularArray<HEALTH_FRAME_TIME_TYPE, 256>& frameTimes, HEALTH_FRAME_TIME_TYPE criticalMs = 33, float startX = 50.f, float startY = 100.f);
     void processDisplayEvents();
     void render(GameState& gamestate);
     void renderWaitingMessage();
     void renderGameStateHealth(HealthReport& report);
-    void renderWaitingMessage(int numDots = 3);
     void renderReadyMessage(bool isReady);
     void renderMapSelection(TICK_TYPE timeLeft, int16_t& selectionIndex, bool& confirmed, std::vector<std::pair<int16_t, std::string>> maps);
-    void renderLoading(float angle);
+    void renderLoading();
     void renderGameStart(TICK_TYPE gameStartTick);
     sf::RenderWindow& getWindow() {
         return window;

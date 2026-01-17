@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Config.h"
 #include "Networking/Connection.h"
 #include "Types.h"
 #include "Inputs.h"
@@ -16,7 +17,7 @@ private:
 public:
 
     std::optional<indexedPlayerInput> getNextPlayerInput(){
-        PLOG_VERBOSE << this <<", queue size: " << inputQueue.size();
+        PLOG_VERBOSE_IF(debugServerInputQueues) << this <<", queue size: " << inputQueue.size();
         if(inputQueue.size() == 0){
             return std::nullopt;
         }
@@ -32,13 +33,13 @@ public:
     }
 
     int enqueueInput(indexedPlayerInput const & input){
-        PLOG_VERBOSE << this <<", queue size: " << inputQueue.size();
+        PLOG_VERBOSE_IF(debugServerInputQueues) << this <<", queue size: " << inputQueue.size();
         if(inputQueue.size()>= 6){
-            PLOG_VERBOSE << "too many inputs enqueued";
+            PLOG_DEBUG_IF(debugServerInputQueues) << "too many inputs enqueued";
             return -1;
         }
         if(!inputQueue.empty() && inputQueue.back().idx >= input.idx){
-            PLOG_VERBOSE << "input already enqueued";
+            PLOG_VERBOSE_IF(debugServerInputQueues) << "input already enqueued";
             return -2;
         }
         inputQueue.emplace(input);

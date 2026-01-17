@@ -4,6 +4,8 @@
 #include <cstdint>
 #define VERSION_TYPE std::uint16_t
 
+constexpr uint16_t DEFAUL_PORT = 4444;
+
 //0x.MM.mm.hh
 //MM = major changes
 //mm = minor changes
@@ -34,14 +36,18 @@ constexpr VERSION_TYPE CONF_API_VERSION = CONF_VERSION & 0xffff00;
 #endif
 
 //Debug config:
-constexpr bool debugClient = false;
-constexpr bool debugClientGameStore = debugClient && true;
-constexpr bool debugClientFrameGen = debugClient && true;
-constexpr bool debugClientNetworking = debugClient && true;
-constexpr bool debugClientInputs = debugClient && true;
+constexpr bool debugClient = true;
+constexpr bool debugClientGameStore = debugClient && false;
+constexpr bool debugClientFrameGen = debugClient && false;
+constexpr bool debugClientNetworking = debugClient && false;
+constexpr bool debugClientInputs = debugClient && false;
 constexpr bool debugClientState = debugClient && true;
-constexpr bool debugClientPerformance = true;
+constexpr bool debugClientPerformance = debugClient && false;
 
 constexpr bool debugServer = false;
 constexpr bool debugServerInputProcessing = debugServer && true;
+constexpr bool debugServerInputQueues = debugServer && true;
 constexpr bool debugServerNetworking = debugServer && true;
+constexpr bool debugServerGenerations = debugServer && true;
+
+constexpr bool debugCollision = false;

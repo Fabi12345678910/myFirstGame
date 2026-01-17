@@ -189,13 +189,6 @@ public:
         this->localPlayerId = id;
     }
 
-    bool addPlayer(TICK_TYPE tick, Player const& player){
-        if(!ensureGameStateIsAvailable(tick)){
-            return false;
-        }
-        gameStates[tick].localPlayer = player;
-    }
-
     void setTickrate(float tickrateSeconds){
         this->tickrateSeconds = tickrateSeconds;
     }
@@ -253,7 +246,7 @@ public:
     }
 
     bool setLocalInput(TICK_TYPE tick, playerInput input){
-        if (!isGameStateAvailable(tick))
+        if (!ensureGameStateIsAvailable(tick))
         {
             return false;
         }
@@ -276,7 +269,11 @@ public:
         }
         return false;
     }
-
+    
+    bool loadStage(Stage& stage){
+        gameStates.back().gameState.setStage(stage);
+        return true;
+    }
     bool isGameStateAvailable(TICK_TYPE tick){
         return (tick >= gameStates.getMinIndex() && tick < gameStates.getSize());
     }

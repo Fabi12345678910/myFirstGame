@@ -1,10 +1,26 @@
 #include "Renderer.h"
 #include "StageObject.h"
+#include <SFML/System/Clock.hpp>
+#include <SFML/System/Time.hpp>
 #include <cmath>
 #include "CircularArray.h"
 #include "FontManager.h"
 
-void Renderer::renderWaitingMessage(int numDots) {
+void Renderer::renderWaitingMessage() {
+    //0  -199 = 1 dot
+    //200-399 = 2 dots
+    //400-599 = 3 dots
+    
+    int numDots;
+    sf::Time elapsedWaitTime = waitingDotClock.getElapsedTime();
+    if(elapsedWaitTime >= sf::milliseconds(400)){
+        numDots = 3;
+        waitingDotClock.restart();
+    }else if(elapsedWaitTime >= sf::milliseconds(200)){
+        numDots = 2;
+    }else{
+        numDots = 1;
+    }
 
     sf::Font& font = FontManager::getDefaultFont();
 
@@ -221,7 +237,7 @@ void Renderer::renderMapSelection(TICK_TYPE timeLeft, int16_t& selectedId, bool&
     window.draw(entry);
 }
 
-void Renderer::renderLoading(float angle) {
+void Renderer::renderLoading() {
     const float W = 1920.f;
     const float H = 1080.f;
     sf::Vector2f center(W / 2.f, H / 2.f);
@@ -231,17 +247,18 @@ void Renderer::renderLoading(float angle) {
     float twoPi = 6.2831853f;
     for (int i = 0; i < numDots; ++i) {
         float t = static_cast<float>(i) / numDots;
-        float theta = angle + t * twoPi;
+        float theta = waitingAngle + t * twoPi;
         float x = center.x + radius * std::cos(theta);
         float y = center.y + radius * std::sin(theta);
         sf::CircleShape dot(dotRadius);
         dot.setOrigin(sf::Vector2f(dotRadius, dotRadius));
         // Fade effect for spinner
-        int alpha = static_cast<int>(180 + 75 * std::sin(theta - angle));
+        int alpha = static_cast<int>(180 + 75 * std::sin(theta - waitingAngle));
         dot.setFillColor(sf::Color(255, 255, 255, alpha));
         dot.setPosition(sf::Vector2f(x, y));
         window.draw(dot);
     }
+    waitingAngle+=1.f;
 }
 
 void Renderer::renderGameStart(TICK_TYPE timeLeft) {
