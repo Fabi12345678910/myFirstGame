@@ -13,7 +13,7 @@ constexpr uint16_t DEFAUL_PORT = 4444;
 //hotfixes do not affect the api
 //when major and minor versions are equal, a server should be able to work together with a client
 constexpr uint16_t mapSelectionTime = 2000; //1k ms
-constexpr VERSION_TYPE CONF_VERSION = 0x000901;
+constexpr VERSION_TYPE CONF_VERSION = 0x000a00;
 constexpr VERSION_TYPE CONF_API_VERSION = CONF_VERSION & 0xffff00;
 
 //Debugging configuration, configurable via macros
@@ -47,9 +47,9 @@ constexpr bool debugClientPerformance = debugClient && false;
 constexpr bool debugServer = true;
 constexpr bool debugServerInputProcessing = debugServer && false;
 constexpr bool debugServerInputQueues = debugServer && false;
-constexpr bool debugServerNetworking = debugServer && true;
+constexpr bool debugServerNetworking = debugServer && false;
 constexpr bool debugServerGenerations = debugServer && false;
-constexpr bool debugServerGameState = debugServer && true;
+constexpr bool debugServerGameState = debugServer && false;
 
 constexpr bool debugCollision = false;
 
