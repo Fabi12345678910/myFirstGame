@@ -1,4 +1,5 @@
 #pragma once
+#include "Types.h"
 #include "Collidable.h"
 #include "Movable.h"
 #include "GameObject.h"

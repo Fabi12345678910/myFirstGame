@@ -41,13 +41,20 @@ constexpr bool debugClientGameStore = debugClient && false;
 constexpr bool debugClientFrameGen = debugClient && false;
 constexpr bool debugClientNetworking = debugClient && false;
 constexpr bool debugClientInputs = debugClient && false;
-constexpr bool debugClientState = debugClient && true;
+constexpr bool debugClientState = debugClient && false;
 constexpr bool debugClientPerformance = debugClient && false;
 
-constexpr bool debugServer = false;
-constexpr bool debugServerInputProcessing = debugServer && true;
-constexpr bool debugServerInputQueues = debugServer && true;
+constexpr bool debugServer = true;
+constexpr bool debugServerInputProcessing = debugServer && false;
+constexpr bool debugServerInputQueues = debugServer && false;
 constexpr bool debugServerNetworking = debugServer && true;
-constexpr bool debugServerGenerations = debugServer && true;
+constexpr bool debugServerGenerations = debugServer && false;
+constexpr bool debugServerGameState = debugServer && true;
 
 constexpr bool debugCollision = false;
+
+
+//Timings
+constexpr uint16_t mapSelectionTimeS = 20;
+constexpr uint16_t mapStartTimeS = 5;
+constexpr uint16_t selectionTimeoutMs = 100;

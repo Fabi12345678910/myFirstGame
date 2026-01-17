@@ -1,4 +1,5 @@
 #include "Server.h"
+#include "GameState.h"
 #include "GameUpdate.h"
 #include "Config.h"
 #include "Operations/ServerGameStateUpdater.h"
@@ -18,6 +19,7 @@
 #include "Networking/EventDefinitions/EventServerHealth.h"
 #include "Logger.h"
 #include "plog/Log.h"
+#include <SFML/System/Time.hpp>
 #include <algorithm>
 #include <random>
 
@@ -197,6 +199,7 @@ void Server::mainLoop(){
         }
         updateGame(updater, gameStates[currentTick], tickRate.asSeconds());
 
+        PLOG_DEBUG_IF(debugServerGameState) << "generated gamestate: " << GameState::toString(gameStates[currentTick].getGameState());
         {
             auto& gs = gameStates[currentTick];
             const auto state = gs.getGameState();
@@ -227,121 +230,120 @@ void Server::mainLoop(){
 
         // --- Start ---
 
-        if(gameStates[currentTick].getGameState() == gameState::WAITING){
-            bool allReady = true; 
-            for (const auto& p : gameStates[currentTick].getPlayers()) {
-                if (!p.getReadyToPlay()) {
-                    allReady = false;
-                    break;
+        if(gameStates[currentTick].getGameState() == gameState::LOBBY){
+            if(gameStates[currentTick].getPlayers().size() >= 1){
+                bool allReady = true; 
+                for (const auto& p : gameStates[currentTick].getPlayers()) {
+                    if (!p.getReadyToPlay()) {
+                        allReady = false;
+                        break;
+                    }
                 }
-            }
-            if (allReady) {
-                for (std::unique_ptr<ServerConnection> &connPtr : serverSocket.connections) {
-                    EventSelectMap selectMapEvent = EventSelectMap(currentTick + 2000); //20 seconds maybe put in config
-                    //set latestUpdatedInputSync
-                    connPtr->sendTcpEvent(selectMapEvent);
+                if (allReady) {
+                    selectUntil = currentTick + sf::seconds(mapSelectionTimeS)/tickRate;
+                    serverSocket.sendTcpEventToEveryone(EventSelectMap(selectUntil));
                     PLOG_INFO_IF(debugServerNetworking) << "sending [Event] Players Ready";
+
+                    selectedMaps.byPlayer.clear();
+                    selectedMaps.arrivalOrder.clear();
+                    gameStates[currentTick].setGameState(gameState::MAP_SELECT);
                 }
-                selectedMaps.byPlayer.clear();
-                selectedMaps.arrivalOrder.clear();
-                selectUntil = currentTick + 2000;
-                gameStates[currentTick].setGameState(gameState::MAP_SELECT);
             }
         }
         if (gameStates[currentTick].getGameState() == gameState::MAP_SELECT) {
-        if (currentTick >= selectUntil + 100 ) {
+            if (currentTick >= selectUntil + 100 ) {
 
-            static std::mt19937 gen(std::random_device{}());
+                static std::mt19937 gen(std::random_device{}());
 
-            std::vector<std::pair<int16_t, std::string>> stageList = StageManager::loadStageList();
-            int16_t chosenStageId;
+                std::vector<std::pair<int16_t, std::string>> stageList = StageManager::loadStageList();
+                int16_t chosenStageId;
 
-            if (selectedMaps.byPlayer.empty()) {
-                std::uniform_int_distribution<size_t> dist(0, stageList.size() - 1);
-                chosenStageId = stageList[dist(gen)].first;
-            }
-            else {
-                std::unordered_map<int16_t, int> voteCount;
-                voteCount.reserve(selectedMaps.byPlayer.size());
-                for (const auto& kv : selectedMaps.byPlayer) {
-                    voteCount[kv.second]++;
+                if (selectedMaps.byPlayer.empty()) {
+                    std::uniform_int_distribution<size_t> dist(0, stageList.size() - 1);
+                    chosenStageId = stageList[dist(gen)].first;
                 }
-                int bestVotes = -1;
-                bool bestSet = false;
-                for (OBJECT_ID_TYPE pid : selectedMaps.arrivalOrder) {
-                    auto it = selectedMaps.byPlayer.find(pid);
-                    if (it == selectedMaps.byPlayer.end()) continue;
-                    const int16_t stageId = it->second;
-                    const int votes = voteCount[stageId];
-                    if (!bestSet || votes > bestVotes) {
-                        bestSet = true;
-                        bestVotes = votes;
-                        chosenStageId = stageId;
-                    }
-                }
-                if (!bestSet) {
-                    // Fallback: deterministic smallest stageId.
-                    chosenStageId = selectedMaps.byPlayer.begin()->second;
+                else {
+                    std::unordered_map<int16_t, int> voteCount;
+                    voteCount.reserve(selectedMaps.byPlayer.size());
                     for (const auto& kv : selectedMaps.byPlayer) {
-                        chosenStageId = std::min(chosenStageId, kv.second);
+                        voteCount[kv.second]++;
+                    }
+                    int bestVotes = -1;
+                    bool bestSet = false;
+                    for (OBJECT_ID_TYPE pid : selectedMaps.arrivalOrder) {
+                        auto it = selectedMaps.byPlayer.find(pid);
+                        if (it == selectedMaps.byPlayer.end()) continue;
+                        const int16_t stageId = it->second;
+                        const int votes = voteCount[stageId];
+                        if (!bestSet || votes > bestVotes) {
+                            bestSet = true;
+                            bestVotes = votes;
+                            chosenStageId = stageId;
+                        }
+                    }
+                    if (!bestSet) {
+                        // Fallback: deterministic smallest stageId.
+                        chosenStageId = selectedMaps.byPlayer.begin()->second;
+                        for (const auto& kv : selectedMaps.byPlayer) {
+                            chosenStageId = std::min(chosenStageId, kv.second);
+                        }
                     }
                 }
+
+                Stage selectedStage = StageManager::loadStage(chosenStageId);
+                const auto& spawns = selectedStage.getSpawnPoints();
+                if (spawns.empty()) {
+                    PLOG_ERROR << "Selected stage has no spawn points";
+                    return;
+                }
+
+                // Assign spawns deterministically by sorting players by id.
+                std::vector<Player*> playersSorted;
+                playersSorted.reserve(gameStates[currentTick].getPlayers().size());
+                for (auto& p : gameStates[currentTick].getPlayers()) {
+                    playersSorted.push_back(&p);
+                }
+                std::sort(playersSorted.begin(), playersSorted.end(), [](const Player* a, const Player* b) {
+                    return a->getId() < b->getId();
+                });
+
+                // Create a shuffled list of spawn indices [0..min(3, spawns.size()-1)] then reuse if needed.
+                std::vector<std::uint8_t> availableSpawnIdx;
+                const std::size_t maxUnique = std::min<std::size_t>(4, spawns.size());
+                availableSpawnIdx.reserve(maxUnique);
+                for (std::size_t i = 0; i < maxUnique; ++i) {
+                    availableSpawnIdx.push_back(static_cast<std::uint8_t>(i));
+                }
+                static std::mt19937 spawnGen{ std::random_device{}() };
+                std::shuffle(availableSpawnIdx.begin(), availableSpawnIdx.end(), spawnGen);
+
+                // spawnPoints[i] corresponds to playersSorted[i] (sorted by playerId)
+                std::vector<std::uint8_t> spawnPoints;
+                spawnPoints.reserve(playersSorted.size());
+                for (std::size_t i = 0; i < playersSorted.size(); ++i) {
+                    const std::uint8_t spawnIdx = availableSpawnIdx[i % availableSpawnIdx.size()];
+                    spawnPoints.push_back(spawnIdx);
+                    playersSorted[i]->setPosition(spawns[spawnIdx]);
+                    playersSorted[i]->setVelocity({0.f, 0.f});
+                }
+
+                // Start a short time in the future so clients can load stage + apply spawns.
+                const TICK_TYPE gameStartTick = currentTick + sf::seconds(mapStartTimeS)/tickRate;
+
+                gameStates[currentTick].setStage(selectedStage);
+                gameStates[currentTick].setGameStartTick(gameStartTick);
+                gameStates[currentTick].setGameState(gameState::STARTING);
+
+                EventStartGame eventStartGame(gameStartTick, chosenStageId, spawnPoints);
+                for (std::unique_ptr<ServerConnection> &connPtr : serverSocket.connections) {
+                    connPtr->sendTcpEvent(eventStartGame);
+                }
+
+                // Done with map selection for this round.
+                selectedMaps.byPlayer.clear();
+                selectedMaps.arrivalOrder.clear();
             }
-
-            Stage selectedStage = StageManager::loadStage(chosenStageId);
-            const auto& spawns = selectedStage.getSpawnPoints();
-            if (spawns.empty()) {
-                PLOG_ERROR << "Selected stage has no spawn points";
-                return;
-            }
-
-            // Assign spawns deterministically by sorting players by id.
-            std::vector<Player*> playersSorted;
-            playersSorted.reserve(gameStates[currentTick].getPlayers().size());
-            for (auto& p : gameStates[currentTick].getPlayers()) {
-                playersSorted.push_back(&p);
-            }
-            std::sort(playersSorted.begin(), playersSorted.end(), [](const Player* a, const Player* b) {
-                return a->getId() < b->getId();
-            });
-
-            // Create a shuffled list of spawn indices [0..min(3, spawns.size()-1)] then reuse if needed.
-            std::vector<std::uint8_t> availableSpawnIdx;
-            const std::size_t maxUnique = std::min<std::size_t>(4, spawns.size());
-            availableSpawnIdx.reserve(maxUnique);
-            for (std::size_t i = 0; i < maxUnique; ++i) {
-                availableSpawnIdx.push_back(static_cast<std::uint8_t>(i));
-            }
-            static std::mt19937 spawnGen{ std::random_device{}() };
-            std::shuffle(availableSpawnIdx.begin(), availableSpawnIdx.end(), spawnGen);
-
-            // spawnPoints[i] corresponds to playersSorted[i] (sorted by playerId)
-            std::vector<std::uint8_t> spawnPoints;
-            spawnPoints.reserve(playersSorted.size());
-            for (std::size_t i = 0; i < playersSorted.size(); ++i) {
-                const std::uint8_t spawnIdx = availableSpawnIdx[i % availableSpawnIdx.size()];
-                spawnPoints.push_back(spawnIdx);
-                playersSorted[i]->setPosition(spawns[spawnIdx]);
-                playersSorted[i]->setVelocity({0.f, 0.f});
-            }
-
-            // Start a short time in the future so clients can load stage + apply spawns.
-            const TICK_TYPE gameStartTick = currentTick + 500;
-
-            gameStates[currentTick].setStage(selectedStage);
-            gameStates[currentTick].setGameStartTick(gameStartTick);
-            gameStates[currentTick].setGameState(gameState::STARTING);
-
-            EventStartGame eventStartGame(gameStartTick, chosenStageId, spawnPoints);
-            for (std::unique_ptr<ServerConnection> &connPtr : serverSocket.connections) {
-                connPtr->sendTcpEvent(eventStartGame);
-            }
-
-            // Done with map selection for this round.
-            selectedMaps.byPlayer.clear();
-            selectedMaps.arrivalOrder.clear();
         }
-    }
 
 
         auto& players = gameStates[currentTick].getPlayers();
@@ -418,10 +420,7 @@ void Server::mainLoop(){
             gs.setGameStartTick(nextStartTick);
             gs.setGameState(gameState::STARTING);
 
-            EventStartGame eventStartGame(nextStartTick, stageId, spawnPoints);
-            for (std::unique_ptr<ServerConnection> &connPtr : serverSocket.connections) {
-                connPtr->sendTcpEvent(eventStartGame);
-            }
+            serverSocket.sendTcpEventToEveryone(EventStartGame(nextStartTick, stageId, spawnPoints));
         }
 
         #if ENABLE_SERVER_RENDERING

@@ -198,6 +198,13 @@ void Client::updateGameStates(EventGamestatePlayerInputHistory& ev){
 
 void Client::storeInputs(const TICK_TYPE& startingTick, const TICK_TYPE& currentTick, playerInput input){
     for (TICK_TYPE tick = startingTick; tick <= currentTick; tick++) {
+        if(input.readyToPlay){
+            if(!isReadyForSelection()){
+                input.readyToPlay = false;
+            }else{
+                selectedSomething();
+            }
+        }
         gameStore.setLocalInput(tick, input);
         gameStore.finalizeLocalInput(tick);
     }
@@ -218,16 +225,22 @@ void Client::sendInputs(const TICK_TYPE& startingTick, const TICK_TYPE& currentT
 
 void Client::processMapSelectionInputs(MapSelectionInput input){
     if(this->mapSelectionState.confirmed){return;}
+    if(!isReadyForSelection()){
+        return;
+    }
     if(input.goLeft){
         mapSelectionState.selectedIndex = (mapSelectionState.selectedIndex + 1) % mapSelectionState.maps.size();
+        selectedSomething();
     }
     if(input.goRight){
         mapSelectionState.selectedIndex = (mapSelectionState.selectedIndex - 1) % mapSelectionState.maps.size();
+        selectedSomething();
     }
     if(input.confirm){
         EventSelectedMap eventSelectedMap(mapSelectionState.maps[mapSelectionState.selectedIndex].first);
         conn.sendTcpEvent(eventSelectedMap);
         mapSelectionState.confirmed = true;
+        selectedSomething();
     }
 }
 
@@ -276,19 +289,19 @@ void Client::mainLoop(){
 
         PLOG_DEBUG_IF(debugClientPerformance) << "--- starting frame ---";
         PLOG_DEBUG_IF(debugClientState) << "clientState: " << clientState;
+        processEventsPlaying();
         if(clientState == PLAYING){
-            processEventsPlaying();
             LOG_TIMEPOINT("processedEvents");
 
             playerInput input = processInputs();
             storeInputs(prevDisplayedTick + 1, tickToDisplay, processInputs());
             sendInputs(prevDisplayedTick + 1, tickToDisplay);
             LOG_TIMEPOINT("processed playerInputs");
-            latestProcessedInputsTick += tickRate * (std::int64_t)(tickToDisplay-prevDisplayedTick);
         }
         else if(clientState == MAP_SELECTION){
             MapSelectionInput input = processInputsMapSelection();
             processMapSelectionInputs(input);
+            storeInputs(prevDisplayedTick + 1, tickToDisplay, playerInput());
             if(tickToDisplay > mapSelectionState.selectUntil){
                 clientState = WAITING_FOR_COUNTDOWN;
             }
@@ -299,6 +312,7 @@ void Client::mainLoop(){
                 clientState = GAME_RUNNING;
             }
         }
+        latestProcessedInputsTick += tickRate * (std::int64_t)(tickToDisplay-prevDisplayedTick);
 
         Player* localPlayer = NULL;
         PLOG_VERBOSE_IF(debugClientFrameGen) << "attempting to generate gameState at tick: " << tickToDisplay;
@@ -327,11 +341,12 @@ void Client::mainLoop(){
                 readyToPlay = generatedGameState->getPlayer(this->playerId).getReadyToPlay();
             } catch (std::runtime_error e) {
             }
-            renderStateSpecificInfo(readyToPlay);
             
             LOG_TIMEPOINT("prepared interpolatedGameState");
             renderer.render(interpolatedGameState);
             LOG_TIMEPOINT("rendered interpolatedGameState");
+            renderStateSpecificInfo(readyToPlay);
+            LOG_TIMEPOINT("rendered statespecific info");
             
 
             if (CONF_SHOW_CLIENT_HEALTH){
@@ -356,9 +371,6 @@ void Client::mainLoop(){
             LOG_TIMEPOINT("finished frame");
         }else{
             PLOG_INFO << "can't render tick " << tickToDisplay;
-            if(tickToDisplay > 1000){
-                exit(-1);
-            }
         }
         renderer.processDisplayEvents();
         #undef LOG_TIMEPOINT
@@ -383,12 +395,6 @@ playerInput Client::processInputs(){
     }
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::R)) {
         input.readyToPlay = true;
-        try {
-            const bool readyToPlay = gameStore.getGameState(tickToDisplay, true, NULL)->getPlayer(playerId).getReadyToPlay();
-            PLOG_DEBUG_IF(debugClientInputs) << "Player readyToPlay: " << readyToPlay;
-        } catch (const std::exception&) {
-            PLOG_DEBUG_IF(debugClientInputs) << "Player readyToPlay unavailable (player missing)";
-        }
     }
 
     return input;

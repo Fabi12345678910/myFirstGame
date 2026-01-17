@@ -1,5 +1,9 @@
+#include "Config.h"
 #include "GameStateUpdater.h"
 #include "GameState.h"
+
+#include "plog/Log.h"
+
 class ServerGameStateUpdater: public GameStateUpdater
 {
 private:
@@ -18,7 +22,7 @@ public:
     virtual void addPlayer(Player& player) override {gameState.addPlayer(player);};
     virtual void projectileHitPlayer(Projectile& projectile, Player& player) override {gameState.getPlayer(player.getId()).setHealth(0);};
     virtual void setReadyToPlay(Player& player, bool ready) override {
-        PLOG_ERROR << "[SERVER] setReadyToPlay called for player " << player.getId() << ", ready=" << ready;
+        PLOG_INFO_IF(debugServerInputProcessing) << "setReadyToPlay called for player " << player.getId() << ", ready=" << ready;
         player.setReadyToPlay(ready);
     };
 };
