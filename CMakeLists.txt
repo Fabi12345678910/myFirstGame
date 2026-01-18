@@ -68,6 +68,7 @@ add_executable(Main
     src/menu/EnterIpMenu.cpp
     src/menu/EnterPortMenu.cpp
     src/menu/OptionsMenu.cpp
+    src/threads/WinPThread.c
     src/StageManager.cpp
     src/Options.cpp
     src/Client.cpp
