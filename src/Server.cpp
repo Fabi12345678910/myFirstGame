@@ -22,6 +22,7 @@
 #include <SFML/System/Time.hpp>
 #include <algorithm>
 #include <random>
+#include <stdexcept>
 
 void* serverTcpEventHandler(std::unique_ptr<Event> ev, Connection& conn, void* args) {
     struct serverEventHandlerData *handle = (serverEventHandlerData*) args;
@@ -579,7 +580,11 @@ void Server::resyncGameState(){
         }
         
         //set latestUpdatedInputSync
-        connPtr->sendUdpEvent(syncEvent);
+        try{
+            connPtr->sendUdpEvent(syncEvent);
+        }catch(std::runtime_error){
+            PLOG_WARNING_IF(debugServerNetworking) << "error sending udp sync to " << connPtr->udpRecipientIpAdress << ':' << connPtr->udpRecipientPort;
+        }
         /* code */
         PLOG_DEBUG_IF(debugServerNetworking) << "sending " << syncEvent.updateInfos.size() << " updates at starting tick " << syncEvent.startingGameTick;
     }
@@ -613,7 +618,11 @@ void Server::resyncLastInputs(){
         }
         
         //set latestUpdatedInputSync
-        connPtr->sendUdpEvent(syncEvent);
+        try{
+            connPtr->sendUdpEvent(syncEvent);
+        }catch(std::runtime_error){
+            PLOG_WARNING_IF(debugServerNetworking) << "error sending udp sync to " << connPtr->udpRecipientIpAdress << ':' << connPtr->udpRecipientPort;
+        }
         /* code */
         PLOG_DEBUG_IF(debugServerNetworking) << "sending " << syncEvent.updateInfos.size() << " updates at starting tick " << syncEvent.startingGameTick;
     }
