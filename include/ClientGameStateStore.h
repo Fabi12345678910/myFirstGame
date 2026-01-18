@@ -271,7 +271,12 @@ public:
     }
     
     bool loadStage(Stage& stage){
-        gameStates.back().gameState.setStage(stage);
+        for (size_t idx = gameStates.getSize() - 1; idx >= gameStates.getMinIndex(); idx--){
+            gameStates[idx].gameState.setStage(stage);
+            if(gameStates[idx].gameStateUpdated){
+                return true;
+            }
+        }
         return true;
     }
     bool isGameStateAvailable(TICK_TYPE tick){
