@@ -4,7 +4,7 @@
 #pragma once
 
 #ifndef LOG_LEVEL
-    #define LOG_LEVEL plog::verbose
+    #define LOG_LEVEL plog::warning
 #endif
 
 static plog::Logger<0>& initLogger(){

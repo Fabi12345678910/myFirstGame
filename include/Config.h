@@ -47,7 +47,7 @@ constexpr bool debugClientPerformance = debugClient && false;
 constexpr bool debugServer = true;
 constexpr bool debugServerInputProcessing = debugServer && false;
 constexpr bool debugServerInputQueues = debugServer && false;
-constexpr bool debugServerNetworking = debugServer && false;
+constexpr bool debugServerNetworking = debugServer && true;
 constexpr bool debugServerGenerations = debugServer && false;
 constexpr bool debugServerGameState = debugServer && false;
 
