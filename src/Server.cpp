@@ -22,7 +22,6 @@
 #include <SFML/System/Time.hpp>
 #include <algorithm>
 #include <random>
-#include <stdexcept>
 
 void* serverTcpEventHandler(std::unique_ptr<Event> ev, Connection& conn, void* args) {
     struct serverEventHandlerData *handle = (serverEventHandlerData*) args;
@@ -160,7 +159,13 @@ void Server::mainLoop(){
                 PLOG_VERBOSE_IF(debugServerInputProcessing) << "got no input available";
             }
         }
-
+        if(gameStates[currentTick].getGameState() == STARTING){
+            playerInputs.clear();
+            for(Player& player: gameStates[currentTick].getPlayers()){
+                //add non moving input
+                playerInputs.emplace_back(0, playerInput(), player.getId());
+            }
+        }
         //assumeInputs for each Player
         for (Player& player : gameStates[currentTick].getPlayers()){
             auto it = std::find_if(playerInputs.begin(), playerInputs.end(),
@@ -527,9 +532,15 @@ void Server::someTimesResyncGameState(){
 void Server::sendServerHealth(sf::Time frameTime){
     for (auto& conn : serverSocket.connections)
     {
+        if(conn->udpRecipientPort == 0){
+            return;
+        }
+        try{
         conn->sendUdpEvent(EventServerHealth((HEALTH_INPUT_QUEUE_TYPE) conn->getInputQueueSize(),(HEALTH_FRAME_TIME_TYPE) frameTime.asMilliseconds()));
+        }catch(...){
+            PLOG_WARNING_IF(debugServerNetworking) << "error sending udp sync to " << conn->udpRecipientIpAdress << ':' << conn->udpRecipientPort;
+        }
     }
-    
 }
 
 void Server::resyncGameState(){
@@ -580,9 +591,13 @@ void Server::resyncGameState(){
         }
         
         //set latestUpdatedInputSync
+
+        if(connPtr->udpRecipientPort == 0){
+            continue;
+        }
         try{
             connPtr->sendUdpEvent(syncEvent);
-        }catch(std::runtime_error){
+        }catch(...){
             PLOG_WARNING_IF(debugServerNetworking) << "error sending udp sync to " << connPtr->udpRecipientIpAdress << ':' << connPtr->udpRecipientPort;
         }
         /* code */
@@ -618,9 +633,12 @@ void Server::resyncLastInputs(){
         }
         
         //set latestUpdatedInputSync
+        if(connPtr->udpRecipientPort == 0){
+            continue;
+        }
         try{
             connPtr->sendUdpEvent(syncEvent);
-        }catch(std::runtime_error){
+        }catch(...){
             PLOG_WARNING_IF(debugServerNetworking) << "error sending udp sync to " << connPtr->udpRecipientIpAdress << ':' << connPtr->udpRecipientPort;
         }
         /* code */
