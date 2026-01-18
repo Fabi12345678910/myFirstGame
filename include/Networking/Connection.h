@@ -2,6 +2,7 @@
 #include "Networking/Event.h"
 #include "Threads/Threads.h"
 #include <SFML/Network.hpp>
+#include <atomic>
 #include <memory>
 
 
@@ -9,6 +10,7 @@ class Connection
 {
 private:
     std::unique_ptr<sf::TcpSocket> tcpSocket;
+    std::atomic_bool connectionDead = false;
 public:
     void*(*eventHandler)(std::unique_ptr<Event>, Connection&, void* args) = NULL;
     void* eventHandlerArgs;

@@ -161,20 +161,20 @@ void Server::mainLoop(){
         }
         if(gameStates[currentTick].getGameState() == STARTING){
             playerInputs.clear();
-            for(Player& player: gameStates[currentTick].getPlayers()){
+            for (auto it = gameStates[currentTick].getPlayersBegin(); it != gameStates[currentTick].getPlayersEnd(); it++){
                 //add non moving input
-                playerInputs.emplace_back(0, playerInput(), player.getId());
+                playerInputs.emplace_back(0, playerInput(), it->first);
             }
         }
         //assumeInputs for each Player
-        for (Player& player : gameStates[currentTick].getPlayers()){
+        for (auto itPlayer = gameStates[currentTick].getPlayersBegin(); itPlayer != gameStates[currentTick].getPlayersEnd(); itPlayer++){
             auto it = std::find_if(playerInputs.begin(), playerInputs.end(),
-                [player](const indexedPlayerInputWithId& p){ return p.playerInputWithId.playerId == player.getId(); });
+                [itPlayer](const indexedPlayerInputWithId& p){ return p.playerInputWithId.playerId == itPlayer->first; });
             if(it == playerInputs.end()){
                 if(currentTick == 0){
                     //no inputs yet, just use an empty one
                     PLOG_VERBOSE_IF(debugServerInputProcessing) << "first frame, using empty userInput";
-                    playerInputs.emplace_back(0, playerInput(), player.getId());
+                    playerInputs.emplace_back(0, playerInput(), itPlayer->first);
                     //player.getId(), playerInput()
                     playerInputs.back().invalidateIdx();
                     continue;
@@ -182,14 +182,14 @@ void Server::mainLoop(){
                 //no input received, copy input from last input
                 auto& lastInputs = inputHistory[currentTick-1];
                 auto itLastInput = std::find_if(lastInputs.begin(), lastInputs.end(),
-                [player](const indexedPlayerInputWithId& p){ return p.playerInputWithId.playerId == player.getId(); });
+                [itPlayer](const indexedPlayerInputWithId& p){ return p.playerInputWithId.playerId == itPlayer->first; });
                 if(itLastInput != lastInputs.end()){
                     PLOG_DEBUG_IF(debugServerInputProcessing) << "reusing last userInput with userId: " << itLastInput->playerInputWithId.playerId;
                     playerInputs.push_back(*itLastInput);
                     playerInputs.back().invalidateIdx();
                 }else{
                     //no last inputs, use empty one
-                    playerInputs.emplace_back(0, playerInput(), player.getId());
+                    playerInputs.emplace_back(0, playerInput(), itPlayer->first);
                     playerInputs.back().invalidateIdx();
                 }
             }else{
@@ -214,7 +214,8 @@ void Server::mainLoop(){
             // Outside RUNNING, nobody stays dead.
             if (state != gameState::RUNNING) {
                 respawnAtTick.clear();
-                for (auto& p : gs.getPlayers()) {
+                for (auto itPlayer = gameStates[currentTick].getPlayersBegin(); itPlayer != gameStates[currentTick].getPlayersEnd(); itPlayer++){
+                    Player &p = itPlayer->second;
                     if (p.getHealth() <= 0) {
                         p.setHealth(10.f);
                         p.setVelocity({0.f, 0.f});
@@ -237,10 +238,10 @@ void Server::mainLoop(){
         // --- Start ---
 
         if(gameStates[currentTick].getGameState() == gameState::LOBBY){
-            if(gameStates[currentTick].getPlayers().size() >= 2){
+            if(gameStates[currentTick].getPlayerCount() >= 2){
                 bool allReady = true; 
-                for (const auto& p : gameStates[currentTick].getPlayers()) {
-                    if (!p.getReadyToPlay()) {
+                for (auto itPlayer = gameStates[currentTick].getPlayersBegin(); itPlayer != gameStates[currentTick].getPlayersEnd(); itPlayer++){
+                    if (!itPlayer->second.getReadyToPlay()) {
                         allReady = false;
                         break;
                     }
@@ -305,8 +306,10 @@ void Server::mainLoop(){
 
                 // Assign spawns deterministically by sorting players by id.
                 std::vector<Player*> playersSorted;
-                playersSorted.reserve(gameStates[currentTick].getPlayers().size());
-                for (auto& p : gameStates[currentTick].getPlayers()) {
+                playersSorted.reserve(gameStates[currentTick].getPlayerCount());
+                
+                for (auto itPlayer = gameStates[currentTick].getPlayersBegin(); itPlayer != gameStates[currentTick].getPlayersEnd(); itPlayer++){
+                    Player p = itPlayer->second;
                     playersSorted.push_back(&p);
                 }
                 std::sort(playersSorted.begin(), playersSorted.end(), [](const Player* a, const Player* b) {
@@ -352,13 +355,12 @@ void Server::mainLoop(){
         }
 
 
-        auto& players = gameStates[currentTick].getPlayers();
         int aliveCount = 0;
         Player* lastAlive = nullptr;
-        for (auto& p : players) {
-            if (p.getHealth() > 0) {
+        for (auto itPlayer = gameStates[currentTick].getPlayersBegin(); itPlayer != gameStates[currentTick].getPlayersEnd(); itPlayer++){
+            if (itPlayer->second.getHealth() > 0) {
                 aliveCount++;
-                lastAlive = &p;
+                lastAlive = &itPlayer->second;
             }
         }
 
@@ -380,8 +382,9 @@ void Server::mainLoop(){
 
             // Assign spawns deterministically by sorting players by id.
             std::vector<Player*> playersSorted;
-            playersSorted.reserve(gs.getPlayers().size());
-            for (auto& p : gs.getPlayers()) {
+            playersSorted.reserve(gs.getPlayerCount());
+                for (auto itPlayer = gameStates[currentTick].getPlayersBegin(); itPlayer != gameStates[currentTick].getPlayersEnd(); itPlayer++){
+                Player p = itPlayer->second;
                 playersSorted.push_back(&p);
             }
             std::sort(playersSorted.begin(), playersSorted.end(), [](const Player* a, const Player* b) {
@@ -472,9 +475,9 @@ void Server::processEvents(std::vector<indexedPlayerInputWithId>& playerInputs){
                 conn.sendTcpEvent(EventLoginConfirmation(nextPlayerId, currentTick, TICKRATE_MS));
                 
                 //send all players to current player for now, should later be included in a gamestate sync
-                for(Player& p : gameStates[currentTick].getPlayers()){
-                    conn.sendTcpEvent(EventSpawnNewPlayer(p.getPosition(), p.getId()));
-                }
+//                for(Player& p : gameStates[currentTick].getPlayers()){
+//                    conn.sendTcpEvent(EventSpawnNewPlayer(p.getPosition(), p.getId()));
+//                }
                 gameStates[currentTick].addPlayer(Player(nextPlayerId, sf::Vector2f(40.f, 40.f), sf::Vector2f(400.f, 10.f)));
                 numPlayers++;
                 //generate empty inputData for new player

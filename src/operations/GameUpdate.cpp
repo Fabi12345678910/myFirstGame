@@ -89,8 +89,8 @@ void updateGame(GameStateUpdater& gsUpdater, GameState& gameState, float deltaTi
         if (projectile->getIsActive()) {
             projectile->getShape().move(sf::Vector2f(projectile->getSpeed(), 0) * deltaTime);
             // check collision with players
-            for (Player &player: gameState.getPlayers()){
-
+            for (auto itPlayer = gameState.getPlayersBegin(); itPlayer != gameState.getPlayersEnd(); itPlayer++){
+                Player& player = itPlayer->second;
                 if (player.getHealth() <= 0) {
                     continue;
                 }
@@ -122,10 +122,10 @@ void updateGame(GameStateUpdater& gsUpdater, GameState& gameState, float deltaTi
 void updateGame(GameStateUpdater& gsUpdater, GameState& gameState, float deltaTime){
     std::vector<Player*> playersToUpdate;
     std::vector<Projectile*> projectilesToUpdate;
-    for (Player& p : gameState.getPlayers())
+    for (auto itPlayer = gameState.getPlayersBegin(); itPlayer != gameState.getPlayersEnd(); itPlayer++)
     {
-        if(!p.getIsGhostPlayer()){
-            playersToUpdate.push_back(&p);
+        if(!itPlayer->second.getIsGhostPlayer()){
+            playersToUpdate.push_back(&itPlayer->second);
         }
     }
     for (Projectile& p : gameState.getProjectiles()){

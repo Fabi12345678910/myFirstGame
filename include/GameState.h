@@ -2,6 +2,8 @@
 #include "Player.h"
 #include "Stage.h"
 #include "Projectile.h"
+#include "Types.h"
+#include <map>
 
 enum gameState{RUNNING, LOBBY, MAP_SELECT, LOADING, STARTING, END_OF_ROUND};
 
@@ -9,7 +11,7 @@ class GameState {
 private:
     gameState currentGameState = LOBBY;
     TICK_TYPE gameStartTick;
-
+    std::map<OBJECT_ID_TYPE, Player> playerrs;
     std::vector<Player> players;
     std::vector<Projectile> projectiles;
     std::vector<GameObject> gameObjects;
@@ -18,42 +20,52 @@ private:
 
 public:
     Player &getPlayer(OBJECT_ID_TYPE id){
-        for (auto& player:players)
-        {
-            if(player.getId() == id){
-                return player;
-            }
+        if(playerrs.count(id)){
+            return playerrs.at(id);
+        }else{
+            throw std::runtime_error("player not found");
         }
-        throw std::runtime_error("player not found");
     }
     Player const& getPlayer(OBJECT_ID_TYPE id) const{
-        for (auto& player:players)
-        {
-            if(player.getId() == id){
-                return player;
-            }
+        if(playerrs.count(id)){
+            return playerrs.at(id);
+        }else{
+            throw std::runtime_error("player not found");
         }
-        throw std::runtime_error("player not found");
     }
 
     void removePlayer(OBJECT_ID_TYPE id){
-        for (size_t i = 0; i < players.size(); i++)
-        {
-            if(players[i].getId() == id){
-                players.erase(players.begin()+i);
-                return;
-            }
+        auto it = playerrs.find(id);
+
+        // Deleting the key-value pair using erase()
+        if (it != playerrs.end()) {
+            playerrs.erase(it);
         }
     }
-    std::vector<Player>&getPlayers(){
-        return players;
+    size_t getPlayerCount() const{
+        return playerrs.size();
     }
+
+    std::map<OBJECT_ID_TYPE, Player>::const_iterator getPlayersBegin() const{
+        return playerrs.begin();
+    }
+    std::map<OBJECT_ID_TYPE, Player>::iterator getPlayersBegin(){
+        return playerrs.begin();
+    }
+
+    std::map<OBJECT_ID_TYPE, Player>::const_iterator getPlayersEnd() const{
+        return playerrs.end();
+    }
+    std::map<OBJECT_ID_TYPE, Player>::iterator getPlayersEnd(){
+        return playerrs.end();
+    }
+
     void addPlayer(Player& player){
-        players.push_back(player);
+        playerrs.insert({player.getId(), player});
     }
 
     void addPlayer(Player&& player){
-        players.push_back(player);
+        playerrs.insert({player.getId(), player});
     }
 
     std::vector<Projectile> &getProjectiles(){

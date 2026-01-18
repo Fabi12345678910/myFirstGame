@@ -337,9 +337,9 @@ void Client::mainLoop(){
                 localPlayer->getShape().setFillColor(sf::Color::Magenta);
                 interpolatedGameState.addPlayer(*localPlayer);
             }
-            for (auto& player :interpolatedGameState.getPlayers())
+            for (auto it = interpolatedGameState.getPlayersBegin(); it != interpolatedGameState.getPlayersEnd(); it++)
             {
-                PLOG_VERBOSE_IF(debugClientFrameGen) << "incl. player: " << player.getId() << '\n';
+                PLOG_VERBOSE_IF(debugClientFrameGen) << "incl. player: " << it->first << '\n';
             }
 
             bool readyToPlay = false;
