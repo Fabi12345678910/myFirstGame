@@ -55,6 +55,6 @@ constexpr bool debugCollision = false;
 
 
 //Timings
-constexpr uint16_t mapSelectionTimeS = 20;
+constexpr uint16_t mapSelectionTimeS = 10;
 constexpr uint16_t mapStartTimeS = 5;
 constexpr uint16_t selectionTimeoutMs = 100;

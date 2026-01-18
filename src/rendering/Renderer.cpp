@@ -258,7 +258,7 @@ void Renderer::renderLoading() {
         dot.setPosition(sf::Vector2f(x, y));
         window.draw(dot);
     }
-    waitingAngle+=1.f;
+    waitingAngle+=0.2f;
 }
 
 void Renderer::renderGameStart(TICK_TYPE timeLeft) {

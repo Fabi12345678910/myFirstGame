@@ -82,7 +82,7 @@ void Client::performLogin(){
                 if(evLoginSuccess->latestServerTick < displayTickDifference){
                     throw std::runtime_error("unable to initiate entity interpolation");
                 }
-                clientState = PLAYING;
+                clientState = C_LOBBY;
                 conn.setUdpArgs(&eventData);
                 conn.setUdpEventHandler(udpClientEventHandler);
                 return;
@@ -123,7 +123,7 @@ void Client::processEventsAwaitingSpawn(){
         if(evSpawnNewPlayer != NULL){
             // Only start playing once *we* have spawned.
             if(evSpawnNewPlayer->playerId == this->playerId){
-                clientState = PLAYING;
+                clientState = C_LOBBY;
             }
         }
         eventData.connectionEventsQueue.pop();
@@ -146,14 +146,14 @@ void Client::processEventsPlaying(){
         if(eventSelectMap != nullptr){
             PLOG_DEBUG_IF(debugClientNetworking) << "Received [Event] Select Map";
             mapSelectionState.selectUntil = eventSelectMap->selectMapUntil;
-            this->clientState = MAP_SELECTION;
+            this->clientState = C_MAP_SELECTION;
         }
 
         EventStartGame* eventStartGame = dynamic_cast<EventStartGame*>(ev);
         if (eventStartGame != nullptr) {
-            PLOG_ERROR << "Received [Event] Start Game (stageId=" << eventStartGame->stageId << ")";
+            PLOG_INFO_IF(debugClientNetworking) << "Received [Event] Start Game (stageId=" << eventStartGame->stageId << ")";
             Stage selectedStage = StageManager::loadStage(eventStartGame->stageId);
-            this->clientState = COUNTDOWN;
+            this->clientState = C_COUNTDOWN;
             this->gameStartTick = eventStartGame->gameStartTick;
             this->gameStore.loadStage(selectedStage);
         }
@@ -245,19 +245,18 @@ void Client::processMapSelectionInputs(MapSelectionInput input){
 }
 
 void Client::renderStateSpecificInfo(bool readyToPlay){
-    if (this->clientState == PLAYING) {
+    if (this->clientState == C_LOBBY) {
 //        TODO make some state PLAYING->READY_SELECTION
 //        renderer.renderWaitingMessage();
         renderer.renderReadyMessage(readyToPlay);
     }
-    else if (this->clientState == MAP_SELECTION) {
+    else if (this->clientState == C_MAP_SELECTION) {
         renderer.renderMapSelection(mapSelectionState.selectUntil - tickToDisplay, mapSelectionState.selectedIndex, mapSelectionState.confirmed, mapSelectionState.maps);
     }
-    else if (this->clientState == WAITING_FOR_COUNTDOWN) {
+    else if (this->clientState == C_WAITING_FOR_COUNTDOWN) {
         renderer.renderLoading();
     }
-    else if (this->clientState == COUNTDOWN) {
-        TICK_TYPE gameStartTick = gameStore.getGameState(tickToDisplay, true, NULL)->getGameStartTick();
+    else if (this->clientState == C_COUNTDOWN) {
         renderer.renderGameStart(gameStartTick - tickToDisplay);
     }
 }
@@ -290,27 +289,34 @@ void Client::mainLoop(){
         PLOG_DEBUG_IF(debugClientPerformance) << "--- starting frame ---";
         PLOG_DEBUG_IF(debugClientState) << "clientState: " << clientState;
         processEventsPlaying();
-        if(clientState == PLAYING){
+        if(clientState == C_LOBBY){
             LOG_TIMEPOINT("processedEvents");
-
-            playerInput input = processInputs();
             storeInputs(prevDisplayedTick + 1, tickToDisplay, processInputs());
             sendInputs(prevDisplayedTick + 1, tickToDisplay);
             LOG_TIMEPOINT("processed playerInputs");
         }
-        else if(clientState == MAP_SELECTION){
+        else if(clientState == C_MAP_SELECTION){
             MapSelectionInput input = processInputsMapSelection();
             processMapSelectionInputs(input);
             storeInputs(prevDisplayedTick + 1, tickToDisplay, playerInput());
             if(tickToDisplay > mapSelectionState.selectUntil){
-                clientState = WAITING_FOR_COUNTDOWN;
+                clientState = C_WAITING_FOR_COUNTDOWN;
             }
         }
-        else if(clientState == COUNTDOWN){
-            //do not process any inputs
+        else if(clientState == C_WAITING_FOR_COUNTDOWN){
+            storeInputs(prevDisplayedTick + 1, tickToDisplay, playerInput());
             if(tickToDisplay >= gameStartTick - 1){
-                clientState = GAME_RUNNING;
+                clientState = C_GAME_RUNNING;
             }
+        }
+        else if(clientState == C_COUNTDOWN){
+            storeInputs(prevDisplayedTick + 1, tickToDisplay, playerInput());
+            if(tickToDisplay >= gameStartTick - 1){
+                clientState = C_GAME_RUNNING;
+            }
+        }else if (clientState == C_GAME_RUNNING){
+            storeInputs(prevDisplayedTick + 1, tickToDisplay, processInputs());
+            sendInputs(prevDisplayedTick + 1, tickToDisplay);
         }
         latestProcessedInputsTick += tickRate * (std::int64_t)(tickToDisplay-prevDisplayedTick);
 
@@ -370,7 +376,7 @@ void Client::mainLoop(){
             }
             LOG_TIMEPOINT("finished frame");
         }else{
-            PLOG_INFO << "can't render tick " << tickToDisplay;
+            PLOG_DEBUG << "can't render tick " << tickToDisplay;
         }
         renderer.processDisplayEvents();
         #undef LOG_TIMEPOINT

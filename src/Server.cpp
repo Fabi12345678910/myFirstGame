@@ -231,7 +231,7 @@ void Server::mainLoop(){
         // --- Start ---
 
         if(gameStates[currentTick].getGameState() == gameState::LOBBY){
-            if(gameStates[currentTick].getPlayers().size() >= 1){
+            if(gameStates[currentTick].getPlayers().size() >= 2){
                 bool allReady = true; 
                 for (const auto& p : gameStates[currentTick].getPlayers()) {
                     if (!p.getReadyToPlay()) {

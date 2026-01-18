@@ -32,7 +32,7 @@ struct MapSelectionInput{
     bool confirm = false;
 };
 
-enum clientState{CONNECTING, PLAYING, MAP_SELECTION, COUNTDOWN, WAITING_FOR_COUNTDOWN, GAME_RUNNING};
+enum clientState{C_CONNECTING, C_LOBBY, C_MAP_SELECTION, C_COUNTDOWN, C_WAITING_FOR_COUNTDOWN, C_GAME_RUNNING};
 
 /*struct ClientGameState{
     enum State{
@@ -52,7 +52,7 @@ class Client
 {
 private:
     ClientGameStateStore<clientGameStateBufferSize> gameStore = ClientGameStateStore<clientGameStateBufferSize>(32);
-    enum clientState clientState = CONNECTING;
+    enum clientState clientState = C_CONNECTING;
     int playerId;
     Renderer renderer;
     std::uint64_t latestGeneratedTick = 0;
