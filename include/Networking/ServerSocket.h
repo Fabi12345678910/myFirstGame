@@ -43,4 +43,6 @@ public:
     void* getUdpArgs(){
         return this->udpArgs;
     };
+
+    void removeConnection(OBJECT_ID_TYPE playerId);
 };

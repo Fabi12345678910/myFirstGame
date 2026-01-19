@@ -112,11 +112,11 @@ public:
 
     UpdateInfo1& createCombinedUpdateInfo(GameState& gameState, TICK_TYPE latestIncludedPlayerInput){
         UpdateInfo1& updateInfo = updateInfos.emplace_back();
-        for (Player& p : gameState.getPlayers()){
-            updateInfo.gsUpdate.playerInfos.emplace_back(p);
+        for (auto it = gameState.getPlayersBegin(); it != gameState.getPlayersEnd(); it++){
+            updateInfo.gsUpdate.playerInfos.emplace_back(it->second);
         }
-        for (Projectile &p : gameState.getProjectiles()){
-            updateInfo.gsUpdate.projectileInfos.emplace_back(p);
+        for(auto projectileIt = gameState.getProjectilesBegin(); projectileIt != gameState.getProjectilesEnd(); projectileIt++){
+            updateInfo.gsUpdate.projectileInfos.emplace_back(projectileIt->second);
         }
         updateInfo.gsUpdate.latestIncludedPInput = latestIncludedPlayerInput;
         return updateInfo;

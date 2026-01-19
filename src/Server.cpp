@@ -2,6 +2,8 @@
 #include "GameState.h"
 #include "GameUpdate.h"
 #include "Config.h"
+#include "Inputs.h"
+#include "Networking/ServerConnection.h"
 #include "Operations/ServerGameStateUpdater.h"
 #include "StageManager.h"
 
@@ -9,7 +11,6 @@
 #include "Networking/EventDefinitions/EventLoginConfirmation.h"
 #include "Networking/EventDefinitions/EventLoginDenied.h"
 #include "Networking/EventDefinitions/EventDebugMessage.h"
-#include "Networking/EventDefinitions/EventSpawnNewPlayer.h"
 #include "Networking/EventDefinitions/EventUserInput.h"
 #include "Networking/EventDefinitions/EventGamestatePlayerInputHistory.h"
 #include "Networking/EventDefinitions/EventSelectMap.h"
@@ -18,9 +19,11 @@
 
 #include "Networking/EventDefinitions/EventServerHealth.h"
 #include "Logger.h"
+#include "Types.h"
 #include "plog/Log.h"
 #include <SFML/System/Time.hpp>
 #include <algorithm>
+#include <cstddef>
 #include <random>
 
 void* serverTcpEventHandler(std::unique_ptr<Event> ev, Connection& conn, void* args) {
@@ -137,11 +140,29 @@ void Server::mainLoop(){
         currentTick++;
         PLOG_VERBOSE_IF(debugServerGenerations) << "calculating tick " << currentTick;
         std::vector<indexedPlayerInputWithId> playerInputs;
-        playerInputs.reserve(numPlayers);
         //copy gameState to next gameState
         gameStates.back();
         gameStates.push(gameStates[currentTick-1]);
         gameStates[currentTick] = gameStates[currentTick-1];
+
+
+        OBJECT_ID_TYPE deleteList[MAX_PLAYERS] = {0};
+        size_t connectionsToDelete = 0;
+        //remove players with deadConnections
+        for (auto& conn: serverSocket.connections) {
+            if(conn->connectionDead.load()){
+                deleteList[connectionsToDelete] = conn->getPlayerId();
+                connectionsToDelete++;
+            }
+        }
+
+        for (size_t deletedPlayer = 0; deletedPlayer < connectionsToDelete; deletedPlayer++) {
+            gameStates[currentTick].removePlayer(deleteList[deletedPlayer]);
+            availablePlayerIds.push(deleteList[deletedPlayer]);
+            serverSocket.removeConnection(deleteList[deletedPlayer]);
+        }
+
+        playerInputs.reserve(gameStates[currentTick].getPlayerCount());
 
         if (gameStates[currentTick].getGameState() == gameState::STARTING &&
             currentTick >= gameStates[currentTick].getGameStartTick()) {
@@ -160,21 +181,19 @@ void Server::mainLoop(){
             }
         }
         if(gameStates[currentTick].getGameState() == STARTING){
-            playerInputs.clear();
-            for(Player& player: gameStates[currentTick].getPlayers()){
-                //add non moving input
-                playerInputs.emplace_back(0, playerInput(), player.getId());
+            for(auto& pInput: playerInputs){
+                pInput.playerInputWithId.playerInput = playerInput();
             }
         }
         //assumeInputs for each Player
-        for (Player& player : gameStates[currentTick].getPlayers()){
+        for (auto itPlayer = gameStates[currentTick].getPlayersBegin(); itPlayer != gameStates[currentTick].getPlayersEnd(); itPlayer++){
             auto it = std::find_if(playerInputs.begin(), playerInputs.end(),
-                [player](const indexedPlayerInputWithId& p){ return p.playerInputWithId.playerId == player.getId(); });
+                [itPlayer](const indexedPlayerInputWithId& p){ return p.playerInputWithId.playerId == itPlayer->first; });
             if(it == playerInputs.end()){
                 if(currentTick == 0){
                     //no inputs yet, just use an empty one
                     PLOG_VERBOSE_IF(debugServerInputProcessing) << "first frame, using empty userInput";
-                    playerInputs.emplace_back(0, playerInput(), player.getId());
+                    playerInputs.emplace_back(0, playerInput(), itPlayer->first);
                     //player.getId(), playerInput()
                     playerInputs.back().invalidateIdx();
                     continue;
@@ -182,14 +201,14 @@ void Server::mainLoop(){
                 //no input received, copy input from last input
                 auto& lastInputs = inputHistory[currentTick-1];
                 auto itLastInput = std::find_if(lastInputs.begin(), lastInputs.end(),
-                [player](const indexedPlayerInputWithId& p){ return p.playerInputWithId.playerId == player.getId(); });
+                [itPlayer](const indexedPlayerInputWithId& p){ return p.playerInputWithId.playerId == itPlayer->first; });
                 if(itLastInput != lastInputs.end()){
                     PLOG_DEBUG_IF(debugServerInputProcessing) << "reusing last userInput with userId: " << itLastInput->playerInputWithId.playerId;
                     playerInputs.push_back(*itLastInput);
                     playerInputs.back().invalidateIdx();
                 }else{
                     //no last inputs, use empty one
-                    playerInputs.emplace_back(0, playerInput(), player.getId());
+                    playerInputs.emplace_back(0, playerInput(), itPlayer->first);
                     playerInputs.back().invalidateIdx();
                 }
             }else{
@@ -214,7 +233,8 @@ void Server::mainLoop(){
             // Outside RUNNING, nobody stays dead.
             if (state != gameState::RUNNING) {
                 respawnAtTick.clear();
-                for (auto& p : gs.getPlayers()) {
+                for (auto itPlayer = gameStates[currentTick].getPlayersBegin(); itPlayer != gameStates[currentTick].getPlayersEnd(); itPlayer++){
+                    Player &p = itPlayer->second;
                     if (p.getHealth() <= 0) {
                         p.setHealth(10.f);
                         p.setVelocity({0.f, 0.f});
@@ -237,10 +257,10 @@ void Server::mainLoop(){
         // --- Start ---
 
         if(gameStates[currentTick].getGameState() == gameState::LOBBY){
-            if(gameStates[currentTick].getPlayers().size() >= 2){
+            if(gameStates[currentTick].getPlayerCount() >= 2){
                 bool allReady = true; 
-                for (const auto& p : gameStates[currentTick].getPlayers()) {
-                    if (!p.getReadyToPlay()) {
+                for (auto itPlayer = gameStates[currentTick].getPlayersBegin(); itPlayer != gameStates[currentTick].getPlayersEnd(); itPlayer++){
+                    if (!itPlayer->second.getReadyToPlay()) {
                         allReady = false;
                         break;
                     }
@@ -305,9 +325,10 @@ void Server::mainLoop(){
 
                 // Assign spawns deterministically by sorting players by id.
                 std::vector<Player*> playersSorted;
-                playersSorted.reserve(gameStates[currentTick].getPlayers().size());
-                for (auto& p : gameStates[currentTick].getPlayers()) {
-                    playersSorted.push_back(&p);
+                playersSorted.reserve(gameStates[currentTick].getPlayerCount());
+                
+                for (auto itPlayer = gameStates[currentTick].getPlayersBegin(); itPlayer != gameStates[currentTick].getPlayersEnd(); itPlayer++){
+                    playersSorted.push_back(&itPlayer->second);
                 }
                 std::sort(playersSorted.begin(), playersSorted.end(), [](const Player* a, const Player* b) {
                     return a->getId() < b->getId();
@@ -340,10 +361,7 @@ void Server::mainLoop(){
                 gameStates[currentTick].setGameStartTick(gameStartTick);
                 gameStates[currentTick].setGameState(gameState::STARTING);
 
-                EventStartGame eventStartGame(gameStartTick, chosenStageId, spawnPoints);
-                for (std::unique_ptr<ServerConnection> &connPtr : serverSocket.connections) {
-                    connPtr->sendTcpEvent(eventStartGame);
-                }
+                serverSocket.sendTcpEventToEveryone(EventStartGame(gameStartTick, chosenStageId, spawnPoints));
 
                 // Done with map selection for this round.
                 selectedMaps.byPlayer.clear();
@@ -352,13 +370,12 @@ void Server::mainLoop(){
         }
 
 
-        auto& players = gameStates[currentTick].getPlayers();
         int aliveCount = 0;
         Player* lastAlive = nullptr;
-        for (auto& p : players) {
-            if (p.getHealth() > 0) {
+        for (auto itPlayer = gameStates[currentTick].getPlayersBegin(); itPlayer != gameStates[currentTick].getPlayersEnd(); itPlayer++){
+            if (itPlayer->second.getHealth() > 0) {
                 aliveCount++;
-                lastAlive = &p;
+                lastAlive = &itPlayer->second;
             }
         }
 
@@ -380,9 +397,9 @@ void Server::mainLoop(){
 
             // Assign spawns deterministically by sorting players by id.
             std::vector<Player*> playersSorted;
-            playersSorted.reserve(gs.getPlayers().size());
-            for (auto& p : gs.getPlayers()) {
-                playersSorted.push_back(&p);
+            playersSorted.reserve(gs.getPlayerCount());
+                for (auto itPlayer = gameStates[currentTick].getPlayersBegin(); itPlayer != gameStates[currentTick].getPlayersEnd(); itPlayer++){
+                playersSorted.push_back(&itPlayer->second);
             }
             std::sort(playersSorted.begin(), playersSorted.end(), [](const Player* a, const Player* b) {
                 return a->getId() < b->getId();
@@ -415,10 +432,7 @@ void Server::mainLoop(){
             }
 
             // Deactivate all projectiles so clients don't see leftover shots in the next round.
-            for (auto& pr : gs.getProjectiles()) {
-                pr.setIsActive(false);
-                pr.setVelocity({0.f, 0.f});
-            }
+            gs.clearProjectiles();
 
             respawnAtTick.clear();
 
@@ -459,28 +473,28 @@ void Server::processEvents(std::vector<indexedPlayerInputWithId>& playerInputs){
             PLOG_INFO << "got a new login request";
             if(availablePlayerIds.empty()){
                 //no new SLOT
+                try {
                 conn.sendTcpEvent(EventLoginDenied(0));
-            }else{
-                if(evLoginRequest->apiVersion != CONF_API_VERSION){
-                    conn.sendTcpEvent(EventLoginDenied(1));
-                    continue;
+                } catch (...) {
                 }
+            }else if(evLoginRequest->apiVersion != CONF_API_VERSION){
+                try {
+                conn.sendTcpEvent(EventLoginDenied(1));
+                } catch (...) {
+                }
+            }else{
                 OBJECT_ID_TYPE nextPlayerId = availablePlayerIds.front();
                 availablePlayerIds.pop();
                 conn.setPlayerId(nextPlayerId);
                 conn.udpRecipientPort = evLoginRequest->udpPort;
-                conn.sendTcpEvent(EventLoginConfirmation(nextPlayerId, currentTick, TICKRATE_MS));
-                
-                //send all players to current player for now, should later be included in a gamestate sync
-                for(Player& p : gameStates[currentTick].getPlayers()){
-                    conn.sendTcpEvent(EventSpawnNewPlayer(p.getPosition(), p.getId()));
-                }
                 gameStates[currentTick].addPlayer(Player(nextPlayerId, sf::Vector2f(40.f, 40.f), sf::Vector2f(400.f, 10.f)));
-                numPlayers++;
                 //generate empty inputData for new player
                 playerInputs.emplace_back(0, playerInput(), nextPlayerId);
+                try {
+                    conn.sendTcpEvent(EventLoginConfirmation(nextPlayerId, currentTick, TICKRATE_MS));
+                } catch (...) {
 
-                serverSocket.sendTcpEventToEveryone(EventSpawnNewPlayer(gameStates[currentTick].getPlayer(nextPlayerId).getPosition(), nextPlayerId));
+                }
             }
         }
 

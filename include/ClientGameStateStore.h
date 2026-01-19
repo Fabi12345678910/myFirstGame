@@ -288,8 +288,6 @@ public:
         if(!isGameStateAvailable(tick)){
             return NULL;
         }
-        if(!gameStates[tick].localPlayerInitialized){
-        }
         if(gameStates[tick].gameStateUpdated){
             PLOG_DEBUG_IF(debugClientGameStore) << tick << " gamestate already rendered";
             if(localPlayer != NULL && gameStates[tick].localPlayerInitialized){*localPlayer = &gameStates[tick].localPlayer;}

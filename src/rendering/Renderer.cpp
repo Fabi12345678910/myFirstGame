@@ -310,24 +310,22 @@ void Renderer::render(GameState& gameState) {
     }
 
     // ---- Players ----
-    for (Player& player : gameState.getPlayers()) {
-        if (player.getHealth() <= 0) {continue;}
-        sf::RectangleShape rect = player.getShape();
-        rect.setFillColor(player.getShape().getFillColor());
+    for (auto itPlayer = gameState.getPlayersBegin(); itPlayer != gameState.getPlayersEnd(); itPlayer++){
+        if (itPlayer->second.getHealth() <= 0) {continue;}
+        sf::RectangleShape rect = itPlayer->second.getShape();
+        rect.setFillColor(itPlayer->second.getShape().getFillColor());
         rect.setOutlineThickness(1.f);
         rect.setOutlineColor(sf::Color(0, 0, 0, 70));
         window.draw(rect);
     }
 
     // ---- Projectiles ----
-    for (Projectile& projectile : gameState.getProjectiles()) {
-        if (projectile.getIsActive()) {
-            sf::RectangleShape rect = projectile.getShape();
-            rect.setFillColor(sf::Color(255, 220, 60));
-            rect.setOutlineThickness(1.f);
-            rect.setOutlineColor(sf::Color(0, 0, 0, 70));
-            window.draw(rect);
-        }
+    for (auto itProjectile = gameState.getProjectilesBegin(); itProjectile != gameState.getProjectilesEnd(); itProjectile++){
+        sf::RectangleShape rect = itProjectile->second.getShape();
+        rect.setFillColor(sf::Color(255, 220, 60));
+        rect.setOutlineThickness(1.f);
+        rect.setOutlineColor(sf::Color(0, 0, 0, 70));
+        window.draw(rect);
     }
 
     //window.display();

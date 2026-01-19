@@ -2,6 +2,7 @@
 #include "Networking/Event.h"
 #include "Threads/Threads.h"
 #include <SFML/Network.hpp>
+#include <atomic>
 #include <memory>
 
 
@@ -10,16 +11,25 @@ class Connection
 private:
     std::unique_ptr<sf::TcpSocket> tcpSocket;
 public:
+
+    std::atomic_bool connectionDead = false;
     void*(*eventHandler)(std::unique_ptr<Event>, Connection&, void* args) = NULL;
     void* eventHandlerArgs;
 
     pthread_t eventHandlerThread;
+    bool eventHandlerThreadRunning = false;
+    std::atomic_bool cancelEventHandler = false;
     std::unique_ptr<Event> receiveNextEvent();
     //additional arguments passed into the event handler
     Connection(std::unique_ptr<sf::TcpSocket> tcpSocket, void* eventHandlerArgs = NULL)
     : eventHandlerArgs(eventHandlerArgs), tcpSocket(std::move(tcpSocket)){};
 
-    ~Connection() = default;
+    ~Connection(){
+        if(this->eventHandlerThreadRunning){
+            cancelEventHandler.store(true);
+            pthread_join(eventHandlerThread, NULL);
+        }
+    };
 
     virtual void setArgs(void* args){
         this->eventHandlerArgs = args;

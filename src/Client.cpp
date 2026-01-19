@@ -311,6 +311,7 @@ void Client::mainLoop(){
         }
         else if(clientState == C_COUNTDOWN){
             storeInputs(prevDisplayedTick + 1, tickToDisplay, playerInput());
+            sendInputs(prevDisplayedTick + 1, tickToDisplay);
             if(tickToDisplay >= gameStartTick - 1){
                 clientState = C_GAME_RUNNING;
             }
@@ -337,9 +338,9 @@ void Client::mainLoop(){
                 localPlayer->getShape().setFillColor(sf::Color::Magenta);
                 interpolatedGameState.addPlayer(*localPlayer);
             }
-            for (auto& player :interpolatedGameState.getPlayers())
+            for (auto it = interpolatedGameState.getPlayersBegin(); it != interpolatedGameState.getPlayersEnd(); it++)
             {
-                PLOG_VERBOSE_IF(debugClientFrameGen) << "incl. player: " << player.getId() << '\n';
+                PLOG_VERBOSE_IF(debugClientFrameGen) << "incl. player: " << it->first << '\n';
             }
 
             bool readyToPlay = false;

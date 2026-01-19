@@ -1,6 +1,7 @@
 #include "Config.h"
 #include "GameStateUpdater.h"
 #include "GameState.h"
+#include <set>
 
 #include "plog/Log.h"
 
@@ -8,6 +9,8 @@ class ServerGameStateUpdater: public GameStateUpdater
 {
 private:
     GameState& gameState;
+    std::set<OBJECT_ID_TYPE> projectilesToDelete;
+    std::set<OBJECT_ID_TYPE> playersToDelete;
 public:
     ServerGameStateUpdater(GameState& gameState):gameState(gameState){};
     ~ServerGameStateUpdater(){};
@@ -24,5 +27,23 @@ public:
     virtual void setReadyToPlay(Player& player, bool ready) override {
         PLOG_INFO_IF(debugServerInputProcessing) << "setReadyToPlay called for player " << player.getId() << ", ready=" << ready;
         player.setReadyToPlay(ready);
+    };
+    virtual void registerRemoveProjectile(Projectile& projectile) override{
+        projectilesToDelete.insert(projectile.getId());
+    }
+    virtual void removeRegisteredProjectiles() override{
+        for(const auto& projectileId: projectilesToDelete){
+            gameState.removeProjectile(projectileId);
+        }
+        projectilesToDelete.clear();
+    }
+    virtual void registerRemovePlayer(Player& player) override{
+        playersToDelete.insert(player.getId());
+    };
+    virtual void removeRegisteredPlayers() override{
+        for(const auto& playerId: playersToDelete){
+            gameState.removePlayer(playerId);
+        }
+        playersToDelete.clear();
     };
 };

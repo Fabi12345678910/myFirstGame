@@ -86,33 +86,31 @@ void updateGame(GameStateUpdater& gsUpdater, GameState& gameState, float deltaTi
         }
     }
     for (Projectile* projectile : projectilesToUpdate) {
-        if (projectile->getIsActive()) {
-            projectile->getShape().move(sf::Vector2f(projectile->getSpeed(), 0) * deltaTime);
-            // check collision with players
-            for (Player &player: gameState.getPlayers()){
-
-                if (player.getHealth() <= 0) {
-                    continue;
-                }
-            
-                const Collidable *collidable = dynamic_cast<const Collidable*>(&player);
-                if(collidable != NULL){
-                    if (projectile->getShape().getGlobalBounds().findIntersection(player.getShape().getGlobalBounds())) {
-                        projectile->setIsActive(false);
-                        gsUpdater.projectileHitPlayer(*projectile, player);
-                    }
-                }
-                else { PLOG_WARNING << "projectile collided with a non collidable player"; } 
+        projectile->getShape().move(sf::Vector2f(projectile->getSpeed(), 0) * deltaTime);
+        // check collision with players
+        for (auto itPlayer = gameState.getPlayersBegin(); itPlayer != gameState.getPlayersEnd(); itPlayer++){
+            Player& player = itPlayer->second;
+            if (player.getHealth() <= 0) {
+                continue;
             }
-            // check collision with stage objects
-            for (StageObject &stageObject: gameState.getStage().getStageObjects()){
+        
+            const Collidable *collidable = dynamic_cast<const Collidable*>(&player);
+            if(collidable != NULL){
+                if (projectile->getShape().getGlobalBounds().findIntersection(player.getShape().getGlobalBounds())) {
+                    gsUpdater.registerRemoveProjectile(*projectile);
+                    gsUpdater.projectileHitPlayer(*projectile, player);
+                }
+            }
+            else { PLOG_WARNING << "projectile collided with a non collidable player"; } 
+        }
+        // check collision with stage objects
+        for (StageObject &stageObject: gameState.getStage().getStageObjects()){
 
-                const Collidable *collidable = dynamic_cast<const Collidable*>(&stageObject);
-                if(collidable != NULL){
+            const Collidable *collidable = dynamic_cast<const Collidable*>(&stageObject);
+            if(collidable != NULL){
 
-                    if (projectile->getShape().getGlobalBounds().findIntersection(stageObject.getShape().getGlobalBounds())) {
-                        projectile->setIsActive(false);
-                    }
+                if (projectile->getShape().getGlobalBounds().findIntersection(stageObject.getShape().getGlobalBounds())) {
+                    gsUpdater.registerRemoveProjectile(*projectile);
                 }
             }
         }
@@ -122,14 +120,14 @@ void updateGame(GameStateUpdater& gsUpdater, GameState& gameState, float deltaTi
 void updateGame(GameStateUpdater& gsUpdater, GameState& gameState, float deltaTime){
     std::vector<Player*> playersToUpdate;
     std::vector<Projectile*> projectilesToUpdate;
-    for (Player& p : gameState.getPlayers())
+    for (auto itPlayer = gameState.getPlayersBegin(); itPlayer != gameState.getPlayersEnd(); itPlayer++)
     {
-        if(!p.getIsGhostPlayer()){
-            playersToUpdate.push_back(&p);
+        if(!itPlayer->second.getIsGhostPlayer()){
+            playersToUpdate.push_back(&itPlayer->second);
         }
     }
-    for (Projectile& p : gameState.getProjectiles()){
-        projectilesToUpdate.push_back(&p);
+    for (auto itProjectile = gameState.getProjectilesBegin(); itProjectile != gameState.getProjectilesEnd(); itProjectile++){
+        projectilesToUpdate.push_back(&itProjectile->second);
     }
     
     updateGame(gsUpdater, gameState, deltaTime, playersToUpdate, projectilesToUpdate);
