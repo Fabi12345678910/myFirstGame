@@ -329,8 +329,7 @@ void Server::mainLoop(){
                 playersSorted.reserve(gameStates[currentTick].getPlayerCount());
                 
                 for (auto itPlayer = gameStates[currentTick].getPlayersBegin(); itPlayer != gameStates[currentTick].getPlayersEnd(); itPlayer++){
-                    Player p = itPlayer->second;
-                    playersSorted.push_back(&p);
+                    playersSorted.push_back(&itPlayer->second);
                 }
                 std::sort(playersSorted.begin(), playersSorted.end(), [](const Player* a, const Player* b) {
                     return a->getId() < b->getId();
@@ -404,8 +403,7 @@ void Server::mainLoop(){
             std::vector<Player*> playersSorted;
             playersSorted.reserve(gs.getPlayerCount());
                 for (auto itPlayer = gameStates[currentTick].getPlayersBegin(); itPlayer != gameStates[currentTick].getPlayersEnd(); itPlayer++){
-                Player p = itPlayer->second;
-                playersSorted.push_back(&p);
+                playersSorted.push_back(&itPlayer->second);
             }
             std::sort(playersSorted.begin(), playersSorted.end(), [](const Player* a, const Player* b) {
                 return a->getId() < b->getId();
