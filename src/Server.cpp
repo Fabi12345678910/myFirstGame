@@ -362,10 +362,7 @@ void Server::mainLoop(){
                 gameStates[currentTick].setGameStartTick(gameStartTick);
                 gameStates[currentTick].setGameState(gameState::STARTING);
 
-                EventStartGame eventStartGame(gameStartTick, chosenStageId, spawnPoints);
-                for (std::unique_ptr<ServerConnection> &connPtr : serverSocket.connections) {
-                    connPtr->sendTcpEvent(eventStartGame);
-                }
+                serverSocket.sendTcpEventToEveryone(EventStartGame(gameStartTick, chosenStageId, spawnPoints));
 
                 // Done with map selection for this round.
                 selectedMaps.byPlayer.clear();
