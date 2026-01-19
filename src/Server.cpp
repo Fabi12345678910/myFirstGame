@@ -2,6 +2,7 @@
 #include "GameState.h"
 #include "GameUpdate.h"
 #include "Config.h"
+#include "Inputs.h"
 #include "Networking/ServerConnection.h"
 #include "Operations/ServerGameStateUpdater.h"
 #include "StageManager.h"
@@ -180,10 +181,8 @@ void Server::mainLoop(){
             }
         }
         if(gameStates[currentTick].getGameState() == STARTING){
-            playerInputs.clear();
-            for (auto it = gameStates[currentTick].getPlayersBegin(); it != gameStates[currentTick].getPlayersEnd(); it++){
-                //add non moving input
-                playerInputs.emplace_back(0, playerInput(), it->first);
+            for(auto& pInput: playerInputs){
+                pInput.playerInputWithId.playerInput = playerInput();
             }
         }
         //assumeInputs for each Player

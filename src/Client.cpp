@@ -311,6 +311,7 @@ void Client::mainLoop(){
         }
         else if(clientState == C_COUNTDOWN){
             storeInputs(prevDisplayedTick + 1, tickToDisplay, playerInput());
+            sendInputs(prevDisplayedTick + 1, tickToDisplay);
             if(tickToDisplay >= gameStartTick - 1){
                 clientState = C_GAME_RUNNING;
             }
