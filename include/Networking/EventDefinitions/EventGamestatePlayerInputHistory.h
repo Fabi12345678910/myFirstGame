@@ -115,8 +115,8 @@ public:
         for (auto it = gameState.getPlayersBegin(); it != gameState.getPlayersEnd(); it++){
             updateInfo.gsUpdate.playerInfos.emplace_back(it->second);
         }
-        for (Projectile &p : gameState.getProjectiles()){
-            updateInfo.gsUpdate.projectileInfos.emplace_back(p);
+        for(auto projectileIt = gameState.getProjectilesBegin(); projectileIt != gameState.getProjectilesEnd(); projectileIt++){
+            updateInfo.gsUpdate.projectileInfos.emplace_back(projectileIt->second);
         }
         updateInfo.gsUpdate.latestIncludedPInput = latestIncludedPlayerInput;
         return updateInfo;

@@ -44,20 +44,17 @@ struct projectileUpdateInfo{
     OBJECT_ID_TYPE id;
     sf::Vector2f position;
     sf::Vector2f velocity;
-    bool  isActive;
     float speed;
     projectileUpdateInfo(){};
     projectileUpdateInfo(Projectile &p){
         id = p.getId();
         position = p.getPosition();
         velocity = p.getVelocity();
-        isActive = p.getIsActive();
         speed = p.getSpeed();
     }
     void applyUpdate(Projectile& projectile){
         projectile.setPosition(position);
         projectile.setVelocity(velocity);
-        projectile.setIsActive(isActive);
         projectile.setSpeed(speed);
     }
 };
@@ -145,7 +142,6 @@ inline sf::Packet& operator <<(sf::Packet& packet, const projectileUpdateInfo& p
         << pr.id
         << pr.position
         << pr.velocity
-        << pr.isActive
         << pr.speed;
 }
 
@@ -155,7 +151,6 @@ inline sf::Packet& operator >>(sf::Packet& packet, projectileUpdateInfo& pr)
         >> pr.id
         >> pr.position
         >> pr.velocity
-        >> pr.isActive
         >> pr.speed;
 }
 

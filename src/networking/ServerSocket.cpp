@@ -1,7 +1,9 @@
 #include "Networking/ServerSocket.h"
 #include "Config.h"
+#include "Networking/Connection.h"
 #include "Networking/Events.h"
 #include "Networking/EventDefinitions/UdpClientSendableEvent.h"
+#include "Networking/ServerConnection.h"
 #include "plog/Log.h"
 #include <stdexcept>
 
@@ -15,11 +17,11 @@ void *connectionAccepter(void * arg){
             std::cerr << "error accepting new client";
             continue;
         }
-
-        serverSock->connections.push_back(std::make_unique<ServerConnection>(std::move(sock), serverSock->udpSocket , sock->getRemoteAddress().value(), 0, serverSock->args));
+        auto newConn = std::make_unique<ServerConnection>(std::move(sock), serverSock->udpSocket , sock->getRemoteAddress().value(), 0, serverSock->args);
         if (serverSock->eventHandler != NULL){
-            serverSock->connections.back()->setEventHandler(serverSock->eventHandler);
+             newConn->setEventHandler(serverSock->eventHandler);
         }
+        serverSock->connections.push_back(std::move(newConn));
         PLOG_INFO << "ServerSocket: created new client";
     }    
 }
@@ -75,6 +77,16 @@ void ServerSocket::setEventHandler(void* handleEvent(std::unique_ptr<Event>, Con
     }
 }
 
+void ServerSocket::removeConnection(OBJECT_ID_TYPE playerId){
+    //end listening thread
+/*    for (auto& connection : connections) {
+        if(connection->getPlayerId() == playerId){
+            connection->stopEventHandler();
+        }
+    }*/
+    connections.remove_if([playerId](const auto & conn){return conn->getPlayerId() == playerId;});
+}
+
 void ServerSocket::setUdpEventHandler(void* udpEventHandler(std::unique_ptr<UdpClientSendableEvent>, std::optional<sf::IpAddress>& remoteAddress, unsigned short& remotePort, void* args)){
     if (this->udpEventHandler == NULL){
         this->udpEventHandler = udpEventHandler;
@@ -94,7 +106,11 @@ void ServerSocket::setArgs(void* args){
 
 void ServerSocket::sendTcpEventToEveryone(Event &&ev){
     for (std::unique_ptr<ServerConnection>& connection : connections){
-        connection->sendTcpEvent(ev);
+        try {
+            connection->sendTcpEvent(ev);
+        } catch (...) {
+            connection->connectionDead.store(true);
+        }
     }
 }
 

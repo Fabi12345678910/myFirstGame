@@ -14,8 +14,11 @@ private:
     sf::UdpSocket& udpSocket;
     std::queue<indexedPlayerInput> inputQueue = std::queue<indexedPlayerInput>();
     TICK_TYPE highestProcessedInput = 0;
+    
 public:
-
+    ~ServerConnection(){
+        PLOG_ERROR << "running destructor in ServerConnection";
+    }
     std::optional<indexedPlayerInput> getNextPlayerInput(){
         PLOG_VERBOSE_IF(debugServerInputQueues) << this <<", queue size: " << inputQueue.size();
         if(inputQueue.size() == 0){
@@ -54,7 +57,7 @@ public:
     ServerConnection(std::unique_ptr<sf::TcpSocket> tcpSocket, sf::UdpSocket& udpSocket, sf::IpAddress udpRecipientIpAdress, unsigned short udpRecipientPort, void* eventHandlerArgs = NULL)
         : Connection(std::move(tcpSocket), eventHandlerArgs), udpSocket(udpSocket), udpRecipientIpAdress(udpRecipientIpAdress), udpRecipientPort(udpRecipientPort) {
     }
-    OBJECT_ID_TYPE getPlayerId(){
+    OBJECT_ID_TYPE getPlayerId() const{
         return playerId;
     }
     void setPlayerId(OBJECT_ID_TYPE id){

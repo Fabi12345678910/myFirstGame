@@ -1,4 +1,5 @@
 #pragma once
+#include "GameObject.h"
 #include "Player.h"
 #include "Stage.h"
 #include "Projectile.h"
@@ -9,103 +10,117 @@ enum gameState{RUNNING, LOBBY, MAP_SELECT, LOADING, STARTING, END_OF_ROUND};
 
 class GameState {
 private:
+    typedef std::map<OBJECT_ID_TYPE, Player> PlayerMap;
+    typedef std::map<OBJECT_ID_TYPE, Projectile> ProjectileMap;
+    typedef std::map<OBJECT_ID_TYPE, GameObject> GameObjectMap;
     gameState currentGameState = LOBBY;
     TICK_TYPE gameStartTick;
-    std::map<OBJECT_ID_TYPE, Player> playerrs;
-    std::vector<Player> players;
-    std::vector<Projectile> projectiles;
-    std::vector<GameObject> gameObjects;
+    PlayerMap players;
+    ProjectileMap projectiles;
+    GameObjectMap gameObjects;
     Stage stage;
     OBJECT_ID_TYPE projectileIds = 0;
 
 public:
     Player &getPlayer(OBJECT_ID_TYPE id){
-        if(playerrs.count(id)){
-            return playerrs.at(id);
+        if(players.count(id)){
+            return players.at(id);
         }else{
             throw std::runtime_error("player not found");
         }
     }
     Player const& getPlayer(OBJECT_ID_TYPE id) const{
-        if(playerrs.count(id)){
-            return playerrs.at(id);
+        if(players.count(id)){
+            return players.at(id);
         }else{
             throw std::runtime_error("player not found");
         }
     }
 
     void removePlayer(OBJECT_ID_TYPE id){
-        auto it = playerrs.find(id);
+        auto it = players.find(id);
 
         // Deleting the key-value pair using erase()
-        if (it != playerrs.end()) {
-            playerrs.erase(it);
+        if (it != players.end()) {
+            players.erase(it);
         }
     }
     size_t getPlayerCount() const{
-        return playerrs.size();
+        return players.size();
     }
 
-    std::map<OBJECT_ID_TYPE, Player>::const_iterator getPlayersBegin() const{
-        return playerrs.begin();
+    PlayerMap::const_iterator getPlayersBegin() const{
+        return players.begin();
     }
-    std::map<OBJECT_ID_TYPE, Player>::iterator getPlayersBegin(){
-        return playerrs.begin();
+    PlayerMap::iterator getPlayersBegin(){
+        return players.begin();
+    }
+    PlayerMap::const_iterator getPlayersEnd() const{
+        return players.end();
+    }
+    PlayerMap::iterator getPlayersEnd(){
+        return players.end();
     }
 
-    std::map<OBJECT_ID_TYPE, Player>::const_iterator getPlayersEnd() const{
-        return playerrs.end();
+    ProjectileMap::const_iterator getProjectilesBegin() const{
+        return projectiles.begin();
     }
-    std::map<OBJECT_ID_TYPE, Player>::iterator getPlayersEnd(){
-        return playerrs.end();
+    ProjectileMap::iterator getProjectilesBegin(){
+        return projectiles.begin();
+    }
+    ProjectileMap::const_iterator getProjectilesEnd() const{
+        return projectiles.end();
+    }
+    ProjectileMap::iterator getProjectilesEnd(){
+        return projectiles.end();
+    }
+    void clearProjectiles(){
+        projectiles.clear();
+    }
+
+    GameObjectMap::const_iterator getGameObjectsBegin() const{
+        return gameObjects.begin();
+    }
+    GameObjectMap::iterator getGameObjectsBegin(){
+        return gameObjects.begin();
+    }
+    GameObjectMap::const_iterator getGameObjectsEnd() const{
+        return gameObjects.end();
+    }
+    GameObjectMap::iterator getGameObjectsEnd(){
+        return gameObjects.end();
+    }
+    void clearGameObjects(){
+        gameObjects.clear();
     }
 
     void addPlayer(Player& player){
-        playerrs.insert({player.getId(), player});
+        players.insert({player.getId(), player});
     }
 
     void addPlayer(Player&& player){
-        playerrs.insert({player.getId(), player});
-    }
-
-    std::vector<Projectile> &getProjectiles(){
-        return projectiles;
+        players.insert({player.getId(), player});
     }
     
     Projectile &getProjectile(OBJECT_ID_TYPE id){
-        for (auto& projectile: projectiles)
-        {
-            if(projectile.getId() == id){
-                return projectile;
-            }
+        if(projectiles.count(id)){
+            return projectiles.at(id);
+        }else{
+            throw std::runtime_error("projectile not found");
         }
-        throw std::runtime_error("projectile not found");
     }
 
     void removeProjectile(OBJECT_ID_TYPE id){
-        for (size_t i = 0; i < projectiles.size(); i++)
-        {
-            if(projectiles[i].getId() == id){
-                projectiles.erase(projectiles.begin()+i);
-                return;
-            }
-        }
-    }
+        auto it = projectiles.find(id);
 
-    std::vector<Projectile> getActiveProjectiles() {
-        std::vector<Projectile> active;
-        active.reserve(projectiles.size());
-
-        for (auto& p : projectiles) {
-            if (p.getIsActive()) {
-                active.push_back(p);
-            }
+        // Deleting the key-value pair using erase()
+        if (it != projectiles.end()) {
+            projectiles.erase(it);
         }
-        return active;
     }
 
     void addProjectile(Projectile& projectile){
-        projectiles.push_back(projectile);
+        projectiles.insert({projectile.getId(),projectile});
     }
 
     OBJECT_ID_TYPE getProjectileIds() const { return projectileIds; }

@@ -2,14 +2,18 @@
 
 #include "GameStateUpdater.h"
 #include "GameState.h"
+#include "Projectile.h"
 #include "plog/Log.h"
+#include <set>
 class ClientGameStateUpdater: public GameStateUpdater
 {
 private:
-    GameState& gameState;
     OBJECT_ID_TYPE localPlayerId;
     Player& localPlayer;
     bool localPlayerAdded = false;
+    GameState& gameState;
+    std::set<OBJECT_ID_TYPE> projectilesToDelete;
+
 public:
     void setGameState(GameState& gameState){
         this->gameState  = gameState;
@@ -37,4 +41,12 @@ public:
     }
     virtual void projectileHitPlayer(Projectile& projectile, Player& player) override {};
     virtual void setReadyToPlay(Player& player, bool ready) override {};
+    virtual void registerRemoveProjectile(Projectile& projectile) override{
+        projectilesToDelete.insert(projectile.getId());
+    }
+    virtual void removeRegisteredProjectiles() override{
+        for(const auto& projectileId: projectilesToDelete){
+            gameState.removeProjectile(projectileId);
+        }
+    }
 };

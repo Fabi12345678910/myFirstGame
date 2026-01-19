@@ -2,6 +2,7 @@
 #include "GameState.h"
 #include "GameUpdate.h"
 #include "Config.h"
+#include "Networking/ServerConnection.h"
 #include "Operations/ServerGameStateUpdater.h"
 #include "StageManager.h"
 
@@ -9,7 +10,6 @@
 #include "Networking/EventDefinitions/EventLoginConfirmation.h"
 #include "Networking/EventDefinitions/EventLoginDenied.h"
 #include "Networking/EventDefinitions/EventDebugMessage.h"
-#include "Networking/EventDefinitions/EventSpawnNewPlayer.h"
 #include "Networking/EventDefinitions/EventUserInput.h"
 #include "Networking/EventDefinitions/EventGamestatePlayerInputHistory.h"
 #include "Networking/EventDefinitions/EventSelectMap.h"
@@ -18,9 +18,11 @@
 
 #include "Networking/EventDefinitions/EventServerHealth.h"
 #include "Logger.h"
+#include "Types.h"
 #include "plog/Log.h"
 #include <SFML/System/Time.hpp>
 #include <algorithm>
+#include <cstddef>
 #include <random>
 
 void* serverTcpEventHandler(std::unique_ptr<Event> ev, Connection& conn, void* args) {
@@ -137,11 +139,29 @@ void Server::mainLoop(){
         currentTick++;
         PLOG_VERBOSE_IF(debugServerGenerations) << "calculating tick " << currentTick;
         std::vector<indexedPlayerInputWithId> playerInputs;
-        playerInputs.reserve(numPlayers);
         //copy gameState to next gameState
         gameStates.back();
         gameStates.push(gameStates[currentTick-1]);
         gameStates[currentTick] = gameStates[currentTick-1];
+
+
+        OBJECT_ID_TYPE deleteList[MAX_PLAYERS] = {0};
+        size_t connectionsToDelete = 0;
+        //remove players with deadConnections
+        for (auto& conn: serverSocket.connections) {
+            if(conn->connectionDead.load()){
+                deleteList[connectionsToDelete] = conn->getPlayerId();
+                connectionsToDelete++;
+            }
+        }
+
+        for (size_t deletedPlayer = 0; deletedPlayer < connectionsToDelete; deletedPlayer++) {
+            PLOG_ERROR << "deleting Player " << deleteList[deletedPlayer];
+            gameStates[currentTick].removePlayer(deleteList[deletedPlayer]);
+            serverSocket.removeConnection(deleteList[deletedPlayer]);
+        }
+
+        playerInputs.reserve(gameStates[currentTick].getPlayerCount());
 
         if (gameStates[currentTick].getGameState() == gameState::STARTING &&
             currentTick >= gameStates[currentTick].getGameStartTick()) {
@@ -418,10 +438,7 @@ void Server::mainLoop(){
             }
 
             // Deactivate all projectiles so clients don't see leftover shots in the next round.
-            for (auto& pr : gs.getProjectiles()) {
-                pr.setIsActive(false);
-                pr.setVelocity({0.f, 0.f});
-            }
+            gs.clearProjectiles();
 
             respawnAtTick.clear();
 
@@ -462,28 +479,28 @@ void Server::processEvents(std::vector<indexedPlayerInputWithId>& playerInputs){
             PLOG_INFO << "got a new login request";
             if(availablePlayerIds.empty()){
                 //no new SLOT
+                try {
                 conn.sendTcpEvent(EventLoginDenied(0));
-            }else{
-                if(evLoginRequest->apiVersion != CONF_API_VERSION){
-                    conn.sendTcpEvent(EventLoginDenied(1));
-                    continue;
+                } catch (...) {
                 }
+            }else if(evLoginRequest->apiVersion != CONF_API_VERSION){
+                try {
+                conn.sendTcpEvent(EventLoginDenied(1));
+                } catch (...) {
+                }
+            }else{
                 OBJECT_ID_TYPE nextPlayerId = availablePlayerIds.front();
                 availablePlayerIds.pop();
                 conn.setPlayerId(nextPlayerId);
                 conn.udpRecipientPort = evLoginRequest->udpPort;
-                conn.sendTcpEvent(EventLoginConfirmation(nextPlayerId, currentTick, TICKRATE_MS));
-                
-                //send all players to current player for now, should later be included in a gamestate sync
-//                for(Player& p : gameStates[currentTick].getPlayers()){
-//                    conn.sendTcpEvent(EventSpawnNewPlayer(p.getPosition(), p.getId()));
-//                }
                 gameStates[currentTick].addPlayer(Player(nextPlayerId, sf::Vector2f(40.f, 40.f), sf::Vector2f(400.f, 10.f)));
-                numPlayers++;
                 //generate empty inputData for new player
                 playerInputs.emplace_back(0, playerInput(), nextPlayerId);
+                try {
+                    conn.sendTcpEvent(EventLoginConfirmation(nextPlayerId, currentTick, TICKRATE_MS));
+                } catch (...) {
 
-                serverSocket.sendTcpEventToEveryone(EventSpawnNewPlayer(gameStates[currentTick].getPlayer(nextPlayerId).getPosition(), nextPlayerId));
+                }
             }
         }
 

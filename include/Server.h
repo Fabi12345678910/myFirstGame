@@ -10,6 +10,7 @@
 #include <Networking/ServerConnection.h>
 #include <Networking/ServerSocket.h>
 #include "CircularArray.h"
+#include "Types.h"
 
 #ifndef ENABLE_SERVER_RENDERING
     #define ENABLE_SERVER_RENDERING false

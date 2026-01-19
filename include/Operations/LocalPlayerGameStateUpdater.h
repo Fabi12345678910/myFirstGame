@@ -2,10 +2,13 @@
 
 #include "GameStateUpdater.h"
 #include "GameState.h"
+#include <set>
 class LocalPlayerGameStateUpdater: public GameStateUpdater
 {
 private:
     GameState& gameState;
+    std::set<OBJECT_ID_TYPE> projectilesToDelete;
+
 public:
     void setGameState(GameState& gameState){
         this->gameState  = gameState;
@@ -23,4 +26,12 @@ public:
     virtual void addPlayer(Player& player) override {};
     virtual void projectileHitPlayer(Projectile& projectile, Player& player) override {};
     virtual void setReadyToPlay(Player& player, bool isReady) override {};
+    virtual void registerRemoveProjectile(Projectile& projectile) override{
+        projectilesToDelete.insert(projectile.getId());
+    }
+    virtual void removeRegisteredProjectiles() override{
+        for(const auto& projectileId: projectilesToDelete){
+            gameState.removeProjectile(projectileId);
+        }
+    }
 };
