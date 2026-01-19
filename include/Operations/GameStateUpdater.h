@@ -23,4 +23,6 @@ public:
     virtual void setReadyToPlay(Player& player, bool ready) = 0;
     virtual void registerRemoveProjectile(Projectile& projectile) = 0;
     virtual void removeRegisteredProjectiles() = 0;
+    virtual void registerRemovePlayer(Player& projectile) = 0;
+    virtual void removeRegisteredPlayers() = 0;
 };

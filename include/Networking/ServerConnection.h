@@ -16,9 +16,7 @@ private:
     TICK_TYPE highestProcessedInput = 0;
     
 public:
-    ~ServerConnection(){
-        PLOG_ERROR << "running destructor in ServerConnection";
-    }
+    ~ServerConnection(){}
     std::optional<indexedPlayerInput> getNextPlayerInput(){
         PLOG_VERBOSE_IF(debugServerInputQueues) << this <<", queue size: " << inputQueue.size();
         if(inputQueue.size() == 0){

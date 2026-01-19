@@ -13,7 +13,7 @@ private:
     bool localPlayerAdded = false;
     GameState& gameState;
     std::set<OBJECT_ID_TYPE> projectilesToDelete;
-
+    std::set<OBJECT_ID_TYPE> playersToDelete;
 public:
     void setGameState(GameState& gameState){
         this->gameState  = gameState;
@@ -48,5 +48,15 @@ public:
         for(const auto& projectileId: projectilesToDelete){
             gameState.removeProjectile(projectileId);
         }
+        projectilesToDelete.clear();
     }
+    virtual void registerRemovePlayer(Player& player) override{
+        playersToDelete.insert(player.getId());
+    };
+    virtual void removeRegisteredPlayers() override{
+        for(const auto& playerId: playersToDelete){
+            gameState.removePlayer(playerId);
+        }
+        playersToDelete.clear();
+    };
 };

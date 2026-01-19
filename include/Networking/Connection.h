@@ -1,7 +1,6 @@
 #pragma once
 #include "Networking/Event.h"
 #include "Threads/Threads.h"
-#include "plog/Log.h"
 #include <SFML/Network.hpp>
 #include <atomic>
 #include <memory>
@@ -26,8 +25,6 @@ public:
     : eventHandlerArgs(eventHandlerArgs), tcpSocket(std::move(tcpSocket)){};
 
     ~Connection(){
-        PLOG_ERROR << "running destructor in Connection";
-
         if(this->eventHandlerThreadRunning){
             cancelEventHandler.store(true);
             pthread_join(eventHandlerThread, NULL);

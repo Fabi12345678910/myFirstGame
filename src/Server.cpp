@@ -156,8 +156,8 @@ void Server::mainLoop(){
         }
 
         for (size_t deletedPlayer = 0; deletedPlayer < connectionsToDelete; deletedPlayer++) {
-            PLOG_ERROR << "deleting Player " << deleteList[deletedPlayer];
             gameStates[currentTick].removePlayer(deleteList[deletedPlayer]);
+            availablePlayerIds.push(deleteList[deletedPlayer]);
             serverSocket.removeConnection(deleteList[deletedPlayer]);
         }
 

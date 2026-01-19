@@ -94,14 +94,17 @@ public:
         gameObjects.clear();
     }
 
-    void addPlayer(Player& player){
-        players.insert({player.getId(), player});
+    Player& addPlayer(Player& player){
+        return players.insert({player.getId(), player}).first->second;
     }
 
-    void addPlayer(Player&& player){
-        players.insert({player.getId(), player});
+    Player& addPlayer(Player&& player){
+        return players.insert({player.getId(), player}).first->second;
     }
-    
+    void clearPlayers(){
+        players.clear();
+    }
+
     Projectile &getProjectile(OBJECT_ID_TYPE id){
         if(projectiles.count(id)){
             return projectiles.at(id);
@@ -119,8 +122,8 @@ public:
         }
     }
 
-    void addProjectile(Projectile& projectile){
-        projectiles.insert({projectile.getId(),projectile});
+    Projectile& addProjectile(Projectile& projectile){
+        return projectiles.insert({projectile.getId(),projectile}).first->second;
     }
 
     OBJECT_ID_TYPE getProjectileIds() const { return projectileIds; }

@@ -10,6 +10,13 @@ protected:
     sf::Texture* texture = nullptr;
 
 public:
+
+    //various data just to be used by some algorithm
+    union{
+        bool updatedOnFrameTick;
+    } algorithmData;
+
+
     GameObject(OBJECT_ID_TYPE id, const sf::Vector2f& size, const sf::Vector2f& position)
         : id(id), shape(size)
     {

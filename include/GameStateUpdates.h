@@ -65,17 +65,28 @@ struct gsUpdateInfo : public UpdateInfo{
     std::vector<projectileUpdateInfo> projectileInfos;
     virtual bool applyUpdate(GameStateUpdater& gsUpdater, GameState& gameState) override{
         PLOG_VERBOSE_IF(debugClientGameStore) << "gsUpdate info contains " << playerInfos.size() << " players";
+
+        for (auto it = gameState.getPlayersBegin(); it != gameState.getPlayersEnd(); it++) {
+            it->second.algorithmData.updatedOnFrameTick = false;
+        }
+        for (auto it = gameState.getProjectilesBegin(); it != gameState.getProjectilesEnd(); it++) {
+            it->second.algorithmData.updatedOnFrameTick = false;
+        }
+
         for (auto& playerInfo : playerInfos)
         {
             try
             {
-                playerInfo.applyUpdate(gameState.getPlayer(playerInfo.id));
+                Player &p = gameState.getPlayer(playerInfo.id);
+                playerInfo.applyUpdate(p);
+                p.algorithmData.updatedOnFrameTick = true;
             }
             catch(const std::runtime_error& e)
             {
                 PLOG_DEBUG_IF(debugClientGameStore) << "could not update player because he was not found";
                 Player newPlayer(playerInfo.id, sf::Vector2f(40.f, 40.f), playerInfo.position);
                 playerInfo.applyUpdate(newPlayer);
+                newPlayer.algorithmData.updatedOnFrameTick = true;
                 gsUpdater.addPlayer(newPlayer);
             }
         }
@@ -84,16 +95,33 @@ struct gsUpdateInfo : public UpdateInfo{
         {
             try
             {
-                projectileInfo.applyUpdate(gameState.getProjectile(projectileInfo.id));
+                Projectile& p = gameState.getProjectile(projectileInfo.id);
+                projectileInfo.applyUpdate(p);
+                p.algorithmData.updatedOnFrameTick = true;
             }
             catch(const std::runtime_error& e)
             {
                 Projectile proj(projectileInfo.id, {20.f,20.f}, projectileInfo.position);
-                gameState.addProjectile(proj);
-                projectileInfo.applyUpdate(gameState.getProjectile(projectileInfo.id));
+                Projectile& p = gameState.addProjectile(proj);
+                projectileInfo.applyUpdate(p);
+                p.algorithmData.updatedOnFrameTick = true;
                 PLOG_DEBUG_IF(debugClientGameStore) << "did not found projectile with id "<< projectileInfo.id <<" for update, spawned instead";
             }
         }
+
+        for (auto it = gameState.getPlayersBegin(); it != gameState.getPlayersEnd(); it++) {
+            if(!it->second.algorithmData.updatedOnFrameTick){
+                gsUpdater.registerRemovePlayer(it->second);
+            };
+        }
+        for (auto it = gameState.getProjectilesBegin(); it != gameState.getProjectilesEnd(); it++) {
+            if(!it->second.algorithmData.updatedOnFrameTick){
+                gsUpdater.registerRemoveProjectile(it->second);
+            };
+        }
+        gsUpdater.removeRegisteredPlayers();
+        gsUpdater.removeRegisteredProjectiles();
+
         return true;
     };
 };

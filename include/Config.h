@@ -58,3 +58,7 @@ constexpr bool debugCollision = false;
 constexpr uint16_t mapSelectionTimeS = 10;
 constexpr uint16_t mapStartTimeS = 5;
 constexpr uint16_t selectionTimeoutMs = 100;
+
+
+constexpr int MAX_PLAYERS = 4;
+constexpr int MAX_GAMEOBJECTS = 10000;
