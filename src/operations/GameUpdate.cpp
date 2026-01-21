@@ -115,6 +115,7 @@ void updateGame(GameStateUpdater& gsUpdater, GameState& gameState, float deltaTi
             }
         }
     }
+    gsUpdater.removeRegisteredProjectiles();
 }
 
 void updateGame(GameStateUpdater& gsUpdater, GameState& gameState, float deltaTime){
