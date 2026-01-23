@@ -25,6 +25,10 @@ enum class Scene {
 
 int main(int argc, char const *argv[]) {
     initLogger();
+
+    USER_ID_TYPE playerId;
+    bool loggedIn = false;
+
     Options opts = load_options("config.json");
     save_options(opts, "config.json");
     sf::State style = opts.fullscreen ? sf::State::Fullscreen : sf::State::Windowed;
@@ -61,8 +65,12 @@ int main(int argc, char const *argv[]) {
                     break;
                 }
                 if(menuResult == "Account"){
-                    AccountMenu accMenu(window, username, character);
-                    accMenu.run_menu();
+                    if(!loggedIn){
+                        PLOG_WARNING << "unable to open account settings, no connection to LoginServer";
+                    }else{
+                        AccountMenu accMenu(window, username, character);
+                        accMenu.run_menu();
+                    }
                 }
                 if (menuResult == "Host") {
                     EnterPortMenu enterPortMenu(window);

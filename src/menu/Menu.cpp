@@ -1,4 +1,5 @@
 #include "menu/Menu.h"
+#include "WindowMessage.h"
 #include "plog/Log.h"
 #include <SFML/Graphics.hpp>
 #include <stdexcept>
@@ -122,7 +123,7 @@ void Menu::loop_events(){
 void Menu::draw_all(){
   window.clear();
   for(auto t : texts){
-   window.draw(t); 
+    window.draw(t); 
   }
   window.display();
 }
