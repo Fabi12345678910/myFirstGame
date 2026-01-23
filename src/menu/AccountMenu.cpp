@@ -1,22 +1,23 @@
-#include "menu/EnterIpMenu.h"
+#include "menu/AccountMenu.h"
+#include "FontManager.h"
+#include <SFML/Window/Keyboard.hpp>
 #include <cctype>
-#include <sstream>
-#include <stdexcept>
+#include "Character.h"
 
-EnterIpMenu::EnterIpMenu(sf::RenderWindow& win)
+AccountMenu::AccountMenu(sf::RenderWindow& win, std::string& userName, Characters::type& character)
 : window(win),
-  ipText(font, "", 32),
+  userName(userName),
+  character(character),
+  font(FontManager::getDefaultFont()),
+  playerNameText(font, "", 32),
   portText(font, "", 32),
-  labelText(font, "Enter IP and Port", 28),
+  labelText(font, "Account Info", 28),
   infoText(font, "Press Enter to confirm, Tab to switch", 20)
 {
     set_values();
 }
 
-void EnterIpMenu::set_values() {
-    ipBuffer.clear();
-    portBuffer.clear();
-    ip.reset();
+void AccountMenu::set_values() {
 
     float w = window.getSize().x;
     float h = window.getSize().y;
@@ -24,48 +25,46 @@ void EnterIpMenu::set_values() {
     float spacing   = 0.125f * h; // 10% of window height between items
     float textScale = 0.05f;
 
-    enteringIp = true;
+    enteringName = true;
     done = false;
 
-    if (!font.openFromFile("../assets/fonts/PressStart2P-Regular.ttf")){
-        throw std::runtime_error("failed loading font\n");
-    }
+    int maxCharactes = Characters::size();
 
     labelText.setCharacterSize(textScale*h);
-    ipText.setCharacterSize(textScale*h);
+    playerNameText.setCharacterSize(textScale*h);
     portText.setCharacterSize(textScale*h);
     infoText.setCharacterSize(textScale*h*0.5);
 
     // Set origins to left edge, vertical center
     sf::FloatRect labelBounds = labelText.getLocalBounds();
     labelText.setOrigin(sf::Vector2f{labelBounds.position.x + labelBounds.size.x/2, labelBounds.position.y + labelBounds.size.y/2});
-    sf::FloatRect ipBounds = ipText.getLocalBounds();
-    ipText.setOrigin(sf::Vector2f{ipBounds.position.x + labelBounds.size.x/2, ipBounds.position.y + ipBounds.size.y/2});
+    sf::FloatRect ipBounds = playerNameText.getLocalBounds();
+    playerNameText.setOrigin(sf::Vector2f{ipBounds.position.x + labelBounds.size.x/2, ipBounds.position.y + ipBounds.size.y/2});
     sf::FloatRect portBounds = portText.getLocalBounds();
     portText.setOrigin(sf::Vector2f{portBounds.position.x + labelBounds.size.x/2, portBounds.position.y + portBounds.size.y/2});
     sf::FloatRect infoBounds = infoText.getLocalBounds();
     infoText.setOrigin(sf::Vector2f{infoBounds.position.x + infoBounds.size.x/2, infoBounds.position.y + infoBounds.size.y/2});
 
     labelText.setPosition({w*0.5f, topMargin + 0 * spacing});
-    ipText.setPosition({w*0.5f, topMargin + 1 * spacing});
+    playerNameText.setPosition({w*0.5f, topMargin + 1 * spacing});
     portText.setPosition({w*0.5f, topMargin + 2 * spacing});
     infoText.setPosition({w*0.5f, topMargin + 5 * spacing});
 
-    ipText.setFillColor(sf::Color::White);
+    playerNameText.setFillColor(sf::Color::White);
     portText.setFillColor(sf::Color::White);
     labelText.setFillColor(sf::Color::Yellow);
     infoText.setFillColor(sf::Color::Cyan);
 
-    ipText.setOutlineColor(sf::Color::Black);
+    playerNameText.setOutlineColor(sf::Color::Black);
     portText.setOutlineColor(sf::Color::Black);
     labelText.setOutlineColor(sf::Color::Black);
     infoText.setOutlineColor(sf::Color::Black);
 
-    ipText.setOutlineThickness(2);
+    playerNameText.setOutlineThickness(2);
     portText.setOutlineThickness(2);
 }
 
-void EnterIpMenu::loop_events() {
+void AccountMenu::loop_events() {
     while (auto ev = window.pollEvent()) {
         const sf::Event& event = *ev;
 
@@ -76,58 +75,60 @@ void EnterIpMenu::loop_events() {
             char c = static_cast<char>(text->unicode);
 
             if (c == '\b') {
-                if (enteringIp && !ipBuffer.empty()) ipBuffer.pop_back();
-                else if (!enteringIp && !portBuffer.empty()) portBuffer.pop_back();
+                if (enteringName && !userName.empty()) userName.pop_back();
             }
             else if (c == '\r' || c == '\n') {
-                if (!ipBuffer.empty() && !portBuffer.empty()) {
-                    auto resolved = sf::IpAddress::resolve(ipBuffer);
-                    if (resolved.has_value()) {
-                        ip = resolved.value();
-                        done = true;
-                    }
-                }
+                enteringName = false;
             }
             else if (std::isprint(c)) {
-                if (enteringIp && ipBuffer.size() < 64)
-                    ipBuffer += c;
-                else if (!enteringIp && portBuffer.size() < 5 && std::isdigit(c))
-                    portBuffer += c;
+                if (enteringName && userName.size() < 64)
+                    userName += c;
             }
         }
 
         if (auto key = event.getIf<sf::Event::KeyPressed>()) {
             if (key->code == sf::Keyboard::Key::Tab)
-                enteringIp = !enteringIp;
-            else if (key->code == sf::Keyboard::Key::Escape)
-                done = true, ip.reset();
+                enteringName = !enteringName;
+            else if (key->code == sf::Keyboard::Key::Escape){
+                done = true;
+            }
             else if(key->code == sf::Keyboard::Key::Down){
-                if(enteringIp){
-                    enteringIp = false;
+                if(enteringName){
+                    enteringName = false;
                 }
             }
             else if(key->code == sf::Keyboard::Key::Up){
-                if(!enteringIp){
-                    enteringIp = true;
+                if(!enteringName){
+                    enteringName = true;
+                }
+            }
+            else if(key->code == sf::Keyboard::Key::Left){
+                if(!enteringName){
+                    character = Characters::fromInt((Characters::toInt(character) - 1 + Characters::size()) % Characters::size());
+                }
+            }
+            else if(key->code == sf::Keyboard::Key::Right){
+                if(!enteringName){
+                    character = Characters::fromInt((Characters::toInt(character) + 1) % Characters::size());
                 }
             }
         }
     }
 }
 
-void EnterIpMenu::draw_all() {
-    ipText.setString(std::string("IP: ") + ipBuffer + (enteringIp ? "_" : ""));
-    portText.setString(std::string("Port: ") + portBuffer + (!enteringIp ? "_" : ""));
+void AccountMenu::draw_all() {
+    playerNameText.setString(std::string("Name: ") + userName + (enteringName ? "_" : ""));
+    portText.setString(std::string("Character: ") + (!enteringName ? "<" : "") + std::to_string(Characters::toInt(character)) + (!enteringName ? ">" : ""));
 
     window.clear(sf::Color(30, 30, 30));
     window.draw(labelText);
-    window.draw(ipText);
+    window.draw(playerNameText);
     window.draw(portText);
     window.draw(infoText);
     window.display();
 }
 
-std::optional<std::pair<sf::IpAddress, unsigned short>> EnterIpMenu::run_menu() {
+bool AccountMenu::run_menu() {
     set_values();
 
     while (window.isOpen() && !done) {
@@ -135,9 +136,5 @@ std::optional<std::pair<sf::IpAddress, unsigned short>> EnterIpMenu::run_menu() 
         draw_all();
     }
 
-    if (!ip.has_value())
-        return std::nullopt;
-    unsigned short port = 0;
-    std::istringstream(portBuffer) >> port;
-    return std::make_pair(ip.value(), port);
+    return true;
 }

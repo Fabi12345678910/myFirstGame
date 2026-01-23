@@ -5,6 +5,7 @@
 #define VERSION_TYPE std::uint16_t
 
 constexpr uint16_t DEFAUL_PORT = 4444;
+constexpr uint16_t DEFAUL_LOGIN_PORT = 4448;
 
 //0x.MM.mm.hh
 //MM = major changes

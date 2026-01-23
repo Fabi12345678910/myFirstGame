@@ -1,6 +1,8 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/Audio.hpp>
 #include <nlohmann/json.hpp>
+#include "Character.h"
+#include "menu/AccountMenu.h"
 #include "menu/Menu.h"
 #include "menu/EnterIpMenu.h"
 #include "menu/EnterPortMenu.h"
@@ -21,7 +23,7 @@ enum class Scene {
     EXIT
 };
 
-int main() {
+int main(int argc, char const *argv[]) {
     initLogger();
     Options opts = load_options("config.json");
     save_options(opts, "config.json");
@@ -30,6 +32,8 @@ int main() {
     window.setFramerateLimit(60);
 
     Scene currentScene = Scene::MENU;
+    std::string username = "anonymous";
+    Characters::type character = Characters::ALI; 
 
     std::unique_ptr<Client> client;
     std::unique_ptr<Server> server;
@@ -55,6 +59,10 @@ int main() {
                     menuMusic.stop();
                     currentScene = Scene::EXIT;
                     break;
+                }
+                if(menuResult == "Account"){
+                    AccountMenu accMenu(window, username, character);
+                    accMenu.run_menu();
                 }
                 if (menuResult == "Host") {
                     EnterPortMenu enterPortMenu(window);

@@ -15,6 +15,9 @@
 #include "Networking/EventDefinitions/EventSelectedMap.h"
 #include "Networking/EventDefinitions/EventStartGame.h"
 #include "Networking/EventDefinitions/EventServerHealth.h"
+#include "Networking/EventDefinitions/Login/EventNewUserCreated.h"
+#include "Networking/EventDefinitions/Login/EventRequestCreateUser.h"
+#include "Networking/EventDefinitions/Login/EventUserCreationDenied.h"
 
 
 std::unique_ptr<Event> getEventFromPacket(sf::Packet& packet){
@@ -51,6 +54,12 @@ std::unique_ptr<Event> getEventFromPacket(sf::Packet& packet){
             return std::make_unique<EventStartGame>(packet);
         case EVENT_TYPE_SERVER_HEALTH:
             return std::make_unique<EventServerHealth>(packet);
+        case EVENT_TYPE_NEW_USER_CREATED:
+            return std::make_unique<EventNewUserCreated>(packet);
+        case EVENT_TYPE_REQUEST_CREATE_USER:
+            return std::make_unique<EventRequestCreateUser>(packet);
+        case EVENT_TYPE_USER_CREATION_DENIED:
+            return std::make_unique<EventUserCreationDenied>(packet);
         default:
             throw std::runtime_error("invalid event type");
     }

@@ -28,9 +28,9 @@ void Menu::set_values(){
   pos_mouse = {0,0};
   mouse_coord = {0, 0};
 
-  options = {"Host", "Join", "Options", "Quit"};
-  coords = {{w*0.5f,200},{w*0.5f,300},{w*0.5f,400},{w*0.5f,500}};
-  sizes = {220,40,40,40};
+  options = {"Account", "Host", "Join", "Options", "Quit"};
+  coords = {{w*0.5f,150},{w*0.5f,250},{w*0.5f,350},{w*0.5f,450},{w*0.5f,550}};
+  sizes = {40, 220,40,40,40};
 
   coords.clear();
   for (std::size_t i = 0; i < options.size(); ++i) {
@@ -74,7 +74,7 @@ void Menu::loop_events(){
     // mouse_coord = window.mapPixelToCoords(pos_mouse);
 
     if(sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Down) && !pressed){
-      if( pos < 3){
+      if( pos < options.size() - 1){
         ++pos;
         pressed = true;
         texts[pos].setOutlineThickness(4);

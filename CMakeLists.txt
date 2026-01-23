@@ -32,6 +32,8 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(json)
 
+find_package(SQLite3)
+
 include_directories(include)
 
 # Helper function: auto-copy dependent DLLs beside the exe (Windows)
@@ -67,6 +69,7 @@ add_executable(Main
     src/menu/Menu.cpp
     src/menu/EnterIpMenu.cpp
     src/menu/EnterPortMenu.cpp
+    src/menu/AccountMenu.cpp
     src/menu/OptionsMenu.cpp
     src/threads/WinPThread.c
     src/StageManager.cpp
@@ -192,6 +195,19 @@ target_link_libraries(TestLogin PRIVATE
     SFML::Network SFML::System SFML::Window SFML::Graphics SFML::Audio
 )
 enable_autocopy_runtime_dlls(TestLogin)
+
+add_executable(LoginServer
+    src/LoginServer.cpp
+    src/networking/Events.cpp
+    src/threads/WinPThread.c
+    src/networking/Connection.cpp
+    src/networking/ClientConnection.cpp
+    src/networking/ServerSocket.cpp
+)
+
+target_link_libraries(LoginServer PRIVATE
+    SFML::Network SFML::System SFML::Window SFML::Graphics SQLite::SQLite3
+)
 
 # (Optional) warnings
 if (MSVC)
