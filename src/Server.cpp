@@ -16,6 +16,9 @@
 #include "Networking/EventDefinitions/EventSelectMap.h"
 #include "Networking/EventDefinitions/EventSelectedMap.h"
 #include "Networking/EventDefinitions/EventStartGame.h"
+#include "Networking/EventDefinitions/EventEndOfRound.h"
+#include "Networking/EventDefinitions/EventEndOfGame.h"
+#include "Networking/EventDefinitions/EventGoToLobby.h"
 
 #include "Networking/EventDefinitions/EventServerHealth.h"
 #include "Logger.h"
@@ -127,6 +130,7 @@ void Server::mainLoop(){
     sf::Time startTime = tickClock.getElapsedTime();
     sf::Time latestElapsedTick = startTime;
     TICK_TYPE selectUntil;
+    TICK_TYPE showScoreUntil;
 
     while(true){
         sf::Time startTickTime = tickClock.getElapsedTime();
@@ -231,7 +235,7 @@ void Server::mainLoop(){
             const auto& spawns = gs.getStage().getSpawnPoints();
 
             // Outside RUNNING, nobody stays dead.
-            if (state != gameState::RUNNING) {
+            if (state == gameState::LOBBY) {
                 respawnAtTick.clear();
                 for (auto itPlayer = gameStates[currentTick].getPlayersBegin(); itPlayer != gameStates[currentTick].getPlayersEnd(); itPlayer++){
                     Player &p = itPlayer->second;
@@ -379,21 +383,47 @@ void Server::mainLoop(){
             }
         }
 
-        if (gameStates[currentTick].getGameState() == gameState::RUNNING && aliveCount == 1 && lastAlive) {
-            lastAlive->setScore(lastAlive->getScore() + 1); // or use a setter
-            // Notify clients: lastAlive->getId() won the round
-            if (lastAlive->getScore() >= 10) {
-                // Notify clients: lastAlive->getId() won the game
-                // Optionally reset scores, return to lobby, etc.
-            }
-        }
-
         //end of round
         //TODO: when round is finished send out a ENDOFROUND event wait 5 seconds and then send out a START event.
         if (gameStates[currentTick].getGameState() == gameState::RUNNING && aliveCount <= 1) {
             auto& gs = gameStates[currentTick];
-            const auto& spawns = gs.getStage().getSpawnPoints();
-            const int16_t stageId = gs.getStage().getStageId();
+
+            const bool hasWinner = (aliveCount == 1 && lastAlive != nullptr);
+            const OBJECT_ID_TYPE winnerPlayerId = hasWinner ? lastAlive->getId() : -1;
+            const unsigned int roundsToWin = std::max(1u, static_cast<unsigned int>(numberOfRounds));
+            if (!hasWinner) {
+                PLOG_ERROR << "couldnt find lastAlive Player";
+            } else {
+                const unsigned short newScore = static_cast<unsigned short>(
+                    std::min<unsigned int>(roundsToWin, static_cast<unsigned int>(lastAlive->getScore()) + 1u)
+                );
+                lastAlive->setScore(newScore);
+            }
+
+            const bool gameOver = hasWinner && (static_cast<unsigned int>(lastAlive->getScore()) >= roundsToWin);
+
+            const TICK_TYPE showScoreUntil = currentTick + sf::seconds(endOfRoundDurationTimeS)/tickRate;
+            showEndOfRoundUntilTick = showScoreUntil;
+            serverSocket.sendTcpEventToEveryone(EventEndOfRound(winnerPlayerId));
+
+            pendingEndOfGame = gameOver;
+            pendingEndOfGameWinnerId = gameOver ? winnerPlayerId : -1;
+            gs.setGameState(gameState::END_OF_ROUND);
+        }
+
+        auto& gs = gameStates[currentTick];
+        if (gs.getGameState() == gameState::END_OF_ROUND && currentTick >= showEndOfRoundUntilTick) {
+            auto& gs = gameStates[currentTick];
+
+            if (pendingEndOfGame) {
+                serverSocket.sendTcpEventToEveryone(EventEndOfGame(pendingEndOfGameWinnerId));
+                pendingEndOfGame = false;
+                pendingEndOfGameWinnerId = -1;
+                sendToLobbyAtTick = currentTick + sf::seconds(endOfGameDurationTimeS)/tickRate;
+                gs.setGameState(gameState::END_OF_GAME);
+            } else {
+                const auto& spawns = gs.getStage().getSpawnPoints();
+                const int16_t stageId = gs.getStage().getStageId();
 
             // Assign spawns deterministically by sorting players by id.
             std::vector<Player*> playersSorted;
@@ -430,17 +460,29 @@ void Server::mainLoop(){
                     playersSorted[i]->setPosition(spawns[spawnIdx]);
                 }
             }
-
             // Deactivate all projectiles so clients don't see leftover shots in the next round.
             gs.clearProjectiles();
 
             respawnAtTick.clear();
+            const TICK_TYPE nextRoundStartTick = currentTick + sf::seconds(mapStartTimeS)/tickRate;
+            gs.setGameStartTick(nextRoundStartTick);
+                serverSocket.sendTcpEventToEveryone(EventStartGame(nextRoundStartTick, stageId, spawnPoints));
+                gs.setGameState(gameState::STARTING);
+            }
+        }
 
-            const TICK_TYPE nextStartTick = currentTick + 600;
-            gs.setGameStartTick(nextStartTick);
-            gs.setGameState(gameState::STARTING);
+        // After showing the winner screen for a while, return everyone to the lobby.
+        if (gs.getGameState() == gameState::END_OF_GAME && currentTick >= sendToLobbyAtTick) {
+            Stage lobby = StageManager::loadStage(1); //TODO: maybe dont hardcode
 
-            serverSocket.sendTcpEventToEveryone(EventStartGame(nextStartTick, stageId, spawnPoints));
+            // Prevent immediately re-entering map selection due to stale ready flags.
+            for (auto itPlayer = gs.getPlayersBegin(); itPlayer != gs.getPlayersEnd(); ++itPlayer) {
+                itPlayer->second.setReadyToPlay(false);
+                itPlayer->second.setScore(0);
+            }
+
+            serverSocket.sendTcpEventToEveryone(EventGoToLobby());
+            gs.setGameState(gameState::LOBBY);
         }
 
         #if ENABLE_SERVER_RENDERING

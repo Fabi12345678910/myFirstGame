@@ -3,6 +3,8 @@
 #include <SFML/System/Clock.hpp>
 #include <SFML/System/Time.hpp>
 #include <cmath>
+#include <algorithm>
+#include <optional>
 #include "CircularArray.h"
 #include "FontManager.h"
 
@@ -276,6 +278,151 @@ void Renderer::renderGameStart(TICK_TYPE timeLeft) {
     headerText.setPosition(sf::Vector2f(W / 2.f, topMargin));
     headerText.setOrigin(headerText.getLocalBounds().getCenter());
     window.draw(headerText);
+}
+
+void Renderer::renderScore(const GameState& gameState, std::optional<OBJECT_ID_TYPE> winnerPlayerId) {
+    sf::Font& font = FontManager::getDefaultFont();
+
+    const float W = 1920.f;
+    const float H = 1080.f;
+
+    struct ScoreLine {
+        OBJECT_ID_TYPE playerId;
+        unsigned short score;
+    };
+
+    std::vector<ScoreLine> lines;
+    lines.reserve(gameState.getPlayerCount());
+    for (auto itPlayer = gameState.getPlayersBegin(); itPlayer != gameState.getPlayersEnd(); ++itPlayer) {
+        const Player& p = itPlayer->second;
+        lines.push_back({ p.getId(), p.getScore() });
+    }
+
+    std::sort(lines.begin(), lines.end(), [](const ScoreLine& a, const ScoreLine& b) {
+        if (a.score != b.score) return a.score > b.score;
+        return a.playerId < b.playerId;
+    });
+
+    const float titleSize = 0.06f * H;
+    const float lineSize = 0.04f * H;
+    const float panelWidth = 0.42f * W;
+    const float panelPadding = 0.02f * W;
+    const float lineGap = 0.012f * H;
+
+    const float panelX = (W - panelWidth) / 2.f;
+    const float panelY = 0.18f * H;
+
+    const float panelHeight = panelPadding * 2.f
+        + titleSize + lineGap
+        + (winnerPlayerId.has_value() ? (lineSize + lineGap) : 0.f)
+        + (lines.empty() ? lineSize : (lines.size() * (lineSize + lineGap)));
+
+    sf::RectangleShape panel({ panelWidth, panelHeight });
+    panel.setPosition({ panelX, panelY });
+    panel.setFillColor(sf::Color(0, 0, 0, 140));
+    panel.setOutlineThickness(2.f);
+    panel.setOutlineColor(sf::Color(255, 255, 255, 60));
+    window.draw(panel);
+
+    auto makeText = [&](const std::string& str, float size) {
+        sf::Text t(font, str, static_cast<unsigned int>(size));
+        t.setFillColor(sf::Color::White);
+        t.setOutlineColor(sf::Color::Black);
+        t.setOutlineThickness(2.f);
+        return t;
+    };
+
+    float cursorY = panelY + panelPadding;
+
+    {
+        sf::Text title = makeText("Score", titleSize);
+        title.setPosition({ panelX + panelWidth / 2.f, cursorY });
+        title.setOrigin(title.getLocalBounds().getCenter());
+        window.draw(title);
+        cursorY += titleSize + lineGap;
+    }
+
+    if (winnerPlayerId.has_value()) {
+        std::string winnerLine = (winnerPlayerId.value() >= 0)
+            ? ("Winner: P" + std::to_string(winnerPlayerId.value()))
+            : std::string("Winner: -");
+
+        sf::Text winnerText = makeText(winnerLine, lineSize);
+        winnerText.setPosition({ panelX + panelWidth / 2.f, cursorY });
+        winnerText.setOrigin(winnerText.getLocalBounds().getCenter());
+        winnerText.setFillColor(sf::Color(255, 220, 60));
+        window.draw(winnerText);
+        cursorY += lineSize + lineGap;
+    }
+
+    if (lines.empty()) {
+        sf::Text emptyText = makeText("No players", lineSize);
+        emptyText.setPosition({ panelX + panelWidth / 2.f, cursorY });
+        emptyText.setOrigin(emptyText.getLocalBounds().getCenter());
+        window.draw(emptyText);
+        return;
+    }
+
+    // Compute a stable name column width for alignment.
+    float maxNameWidth = 0.f;
+    for (const auto& l : lines) {
+        sf::Text tmp = makeText("P" + std::to_string(l.playerId), lineSize);
+        maxNameWidth = std::max(maxNameWidth, tmp.getLocalBounds().size.x);
+    }
+
+    const float leftX = panelX + panelPadding;
+    const float rightX = panelX + panelWidth - panelPadding;
+    const float nameX = leftX;
+    const float scoreX = std::max(nameX + maxNameWidth + 40.f, rightX - 50.f);
+
+    for (const auto& l : lines) {
+        sf::Text name = makeText("P" + std::to_string(l.playerId), lineSize);
+        name.setPosition({ nameX, cursorY });
+
+        sf::Text score = makeText(std::to_string(l.score), lineSize);
+        score.setPosition({ scoreX, cursorY });
+        score.setOrigin({ score.getLocalBounds().size.x, 0.f });
+
+        if (winnerPlayerId.has_value() && l.playerId == winnerPlayerId.value()) {
+            name.setFillColor(sf::Color(255, 220, 60));
+            score.setFillColor(sf::Color(255, 220, 60));
+        }
+
+        window.draw(name);
+        window.draw(score);
+
+        cursorY += lineSize + lineGap;
+    }
+}
+
+void Renderer::renderWinner(std::optional<OBJECT_ID_TYPE> winnerPlayerId) {
+    sf::Font& font = FontManager::getDefaultFont();
+
+    const float W = 1920.f;
+    const float H = 1080.f;
+
+    const float titleSize = 0.075f * H;
+
+    const float t = winnerBlinkClock.getElapsedTime().asSeconds();
+    const bool visible = std::fmod(t, 1.0f) < 0.55f;
+    if (!visible) {
+        return;
+    }
+
+    std::string line;
+    if (winnerPlayerId.has_value() && winnerPlayerId.value() >= 0) {
+        line = "Player " + std::to_string(winnerPlayerId.value()) + " won";
+    } else {
+        line = "Winner unknown";
+    }
+
+    sf::Text text(font, line, static_cast<unsigned int>(titleSize));
+    text.setFillColor(sf::Color(255, 220, 60));
+    text.setOutlineColor(sf::Color::Black);
+    text.setOutlineThickness(2.f);
+    text.setPosition({ W / 2.f, H / 2.f });
+    text.setOrigin(text.getLocalBounds().getCenter());
+    window.draw(text);
 }
 
 // simple color selector for tile types

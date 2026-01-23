@@ -19,7 +19,7 @@ public:
         };
     };
     EventEndOfRound(OBJECT_ID_TYPE playerId)
-        : gameStartTick(gameStartTick), stageId(stageId), spawnPoints(std::move(spawnPoints)){}
+        : winningPlayerId(playerId){}
     sf::Packet toPacket() const override{
         sf::Packet packet;
         packet << (DATATYPE_EVENT_TYPE) EVENT_TYPE_END_OF_ROUND;

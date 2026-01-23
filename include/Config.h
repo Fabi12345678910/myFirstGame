@@ -56,8 +56,11 @@ constexpr bool debugCollision = false;
 
 //Timings
 constexpr uint16_t mapSelectionTimeS = 10;
-constexpr uint16_t mapStartTimeS = 5;
+constexpr uint16_t endOfRoundDurationTimeS = 5;
+constexpr uint16_t endOfGameDurationTimeS = 5;
+constexpr uint16_t mapStartTimeS = 6;
 constexpr uint16_t selectionTimeoutMs = 100;
+constexpr unsigned short numberOfRounds = 2;
 
 
 constexpr int MAX_PLAYERS = 4;

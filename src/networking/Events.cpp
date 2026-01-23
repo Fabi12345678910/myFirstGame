@@ -13,6 +13,9 @@
 #include "Networking/EventDefinitions/EventGamestatePlayerInputHistory.h"
 #include "Networking/EventDefinitions/EventSelectMap.h"
 #include "Networking/EventDefinitions/EventSelectedMap.h"
+#include "Networking/EventDefinitions/EventEndOfRound.h"
+#include "Networking/EventDefinitions/EventEndOfGame.h"
+#include "Networking/EventDefinitions/EventGoToLobby.h"
 #include "Networking/EventDefinitions/EventStartGame.h"
 #include "Networking/EventDefinitions/EventServerHealth.h"
 
@@ -47,8 +50,14 @@ std::unique_ptr<Event> getEventFromPacket(sf::Packet& packet){
             return std::make_unique<EventSelectMap>(packet);
         case EVENT_TYPE_SELECTED_MAP:
             return std::make_unique<EventSelectedMap>(packet);
+        case EVENT_TYPE_END_OF_ROUND:
+            return std::make_unique<EventEndOfRound>(packet);
+        case EVENT_TYPE_END_OF_GAME:
+            return std::make_unique<EventEndOfGame>(packet);
         case EVENT_TYPE_START_GAME:
             return std::make_unique<EventStartGame>(packet);
+        case EVENT_TYPE_GO_TO_LOBBY:
+            return std::make_unique<EventGoToLobby>(packet);
         case EVENT_TYPE_SERVER_HEALTH:
             return std::make_unique<EventServerHealth>(packet);
         default:

@@ -45,6 +45,12 @@ private:
     static const int gameStateResyncTicks = 2;
     TICK_TYPE currentTick = 0;
 
+    TICK_TYPE showEndOfRoundUntilTick;
+    TICK_TYPE sendToLobbyAtTick;
+
+    bool pendingEndOfGame = false;
+    OBJECT_ID_TYPE pendingEndOfGameWinnerId = -1;
+
     int numPlayers = 0;
     CircularArray<std::vector<struct indexedPlayerInputWithId>, gameStateBufferSize> inputHistory;
     CircularArray<GameState, gameStateBufferSize> gameStates;
