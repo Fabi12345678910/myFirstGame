@@ -32,7 +32,7 @@ struct MapSelectionInput{
     bool confirm = false;
 };
 
-enum clientState{C_CONNECTING, C_LOBBY, C_MAP_SELECTION, C_COUNTDOWN, C_WAITING_FOR_COUNTDOWN, C_GAME_RUNNING};
+enum clientState{C_CONNECTING, C_LOBBY, C_MAP_SELECTION, C_COUNTDOWN, C_WAITING_FOR_COUNTDOWN, C_GAME_RUNNING, C_END_OF_ROUND, C_END_OF_GAME};
 
 /*struct ClientGameState{
     enum State{
@@ -58,6 +58,7 @@ private:
     std::uint64_t latestGeneratedTick = 0;
     std::uint64_t latestPreRenderedTick = 0;
     std::uint16_t tickrateMs = 100;
+    OBJECT_ID_TYPE lastWinningPlayerId;
     TICK_TYPE tickToDisplay = 0;
     //used by various input readers to avoid spamming selection
     TICK_TYPE lastTickWithSelection = 0;
@@ -71,7 +72,7 @@ private:
     void processEventsPlaying();
     void processEventsAwaitingSpawn();
     void processMapSelectionInputs(MapSelectionInput input);
-    void renderStateSpecificInfo(bool readyToPlay);
+    void renderStateSpecificInfo(bool readyToPlay, const GameState& gameState);
     void mainLoop();
     void updateGameStates(EventGamestatePlayerInputHistory &ev);
     playerInput processInputs();
@@ -84,6 +85,7 @@ private:
     bool isHost = false;
     MapSelectionState mapSelectionState;
     TICK_TYPE gameStartTick;
+    TICK_TYPE showEndOfRoundUntilTick;
     bool isReadyForSelection(){return ((std::int64_t)(tickToDisplay - lastTickWithSelection) * sf::milliseconds(tickrateMs) >= sf::milliseconds(selectionTimeoutMs));};
     void selectedSomething(){lastTickWithSelection = tickToDisplay;};
     void storeInputs(const TICK_TYPE& startingTick, const TICK_TYPE& currentTick, playerInput input);

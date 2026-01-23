@@ -13,6 +13,7 @@ struct playerUpdateInfo{
     float gravity;
     float speed;
     float health;
+    unsigned short score;
     bool readyToPlay;
     int16_t  projectileCooldown;
     playerUpdateInfo(){};
@@ -24,6 +25,7 @@ struct playerUpdateInfo{
         gravity = p.getGravity();
         speed = p.getSpeed();
         health = p.getHealth();
+        score = p.getScore();
         readyToPlay = p.getReadyToPlay();
         projectileCooldown = p.getProjectileCooldown();
     }
@@ -35,6 +37,7 @@ struct playerUpdateInfo{
         player.setGravity(gravity);
         player.setSpeed(speed);
         player.setHealth(health);
+        player.setScore(score);
         player.setReadyToPlay(readyToPlay);
         player.setProjectileCooldown(projectileCooldown);
     }
@@ -146,6 +149,7 @@ inline sf::Packet& operator <<(sf::Packet& packet, const playerUpdateInfo& p)
         << p.gravity
         << p.speed
         << p.health
+    << p.score
         << p.readyToPlay
         << p.projectileCooldown;
 }
@@ -160,6 +164,7 @@ inline sf::Packet& operator >>(sf::Packet& packet, playerUpdateInfo& p)
         >> p.gravity
         >> p.speed
         >> p.health
+    >> p.score
         >> p.readyToPlay
         >> p.projectileCooldown;
 }

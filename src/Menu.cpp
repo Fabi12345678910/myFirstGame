@@ -25,8 +25,8 @@ void Menu::set_values(){
   pos_mouse = {0,0};
   mouse_coord = {0, 0};
 
-  options = {"Host", "Join", "Options", "Quit"};
-  coords = {{400,200},{400,300},{400,400},{400,500}};
+  options = {"Name", "Hoddst", "Join", "Options", "Quit"};
+  coords = {{400,200},{400,200},{400,300},{400,400},{400,500}};
   sizes = {40,40,40,40};
 
   texts.clear();

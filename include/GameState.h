@@ -6,7 +6,7 @@
 #include "Types.h"
 #include <map>
 
-enum gameState{RUNNING, LOBBY, MAP_SELECT, LOADING, STARTING, END_OF_ROUND};
+enum gameState{RUNNING, LOBBY, MAP_SELECT, LOADING, STARTING, END_OF_ROUND, END_OF_GAME};
 
 class GameState {
 private:

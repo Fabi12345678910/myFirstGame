@@ -14,7 +14,10 @@
 #include "Networking/EventDefinitions/EventGamestatePlayerInputHistory.h"
 #include "Networking/EventDefinitions/EventSelectMap.h"
 #include "Networking/EventDefinitions/EventSelectedMap.h"
+#include "Networking/EventDefinitions/EventEndOfRound.h"
+#include "Networking/EventDefinitions/EventEndOfGame.h"
 #include "Networking/EventDefinitions/EventStartGame.h"
+#include "Networking/EventDefinitions/EventGoToLobby.h"
 #include "Networking/EventDefinitions/EventServerHealth.h"
 
 #include "Config.h"
@@ -146,6 +149,9 @@ void Client::processEventsPlaying(){
         if(eventSelectMap != nullptr){
             PLOG_DEBUG_IF(debugClientNetworking) << "Received [Event] Select Map";
             mapSelectionState.selectUntil = eventSelectMap->selectMapUntil;
+            mapSelectionState.confirmed = false;
+            mapSelectionState.selectedIndex = 0;
+            selectedSomething();
             this->clientState = C_MAP_SELECTION;
         }
 
@@ -156,6 +162,28 @@ void Client::processEventsPlaying(){
             this->clientState = C_COUNTDOWN;
             this->gameStartTick = eventStartGame->gameStartTick;
             this->gameStore.loadStage(selectedStage);
+        }
+
+        EventEndOfRound* eventEndOfRound = dynamic_cast<EventEndOfRound*>(ev);
+        if (eventEndOfRound != nullptr) {
+            PLOG_INFO_IF(debugClientNetworking) << "Received [Event] End Of Round (winnerPlayerId=" << eventEndOfRound->winningPlayerId << ")";
+            this->clientState = C_END_OF_ROUND;
+            this->lastWinningPlayerId = eventEndOfRound->winningPlayerId;
+        }
+
+        EventEndOfGame* eventEndOfGame = dynamic_cast<EventEndOfGame*>(ev);
+        if (eventEndOfGame != nullptr) {
+            PLOG_INFO_IF(debugClientNetworking) << "Received [Event] End Of Game (winnerPlayerId=" << eventEndOfGame->winningPlayerId << ")";
+            this->clientState = C_END_OF_GAME;
+            this->lastWinningPlayerId = eventEndOfGame->winningPlayerId;
+        }
+
+        EventGoToLobby* eventGoToLobby = dynamic_cast<EventGoToLobby*>(ev);
+        if (eventGoToLobby != nullptr) {
+            PLOG_INFO_IF(debugClientNetworking) << "Received [Event] Go to Lobby";
+            this->clientState = C_LOBBY;
+            this->lastWinningPlayerId = -1;
+            mapSelectionState.confirmed = false;
         }
 
         EventServerHealth *eventServerHealth = dynamic_cast<EventServerHealth*>(ev);
@@ -244,7 +272,7 @@ void Client::processMapSelectionInputs(MapSelectionInput input){
     }
 }
 
-void Client::renderStateSpecificInfo(bool readyToPlay){
+void Client::renderStateSpecificInfo(bool readyToPlay, const GameState& gameState){
     if (this->clientState == C_LOBBY) {
 //        TODO make some state PLAYING->READY_SELECTION
 //        renderer.renderWaitingMessage();
@@ -258,6 +286,12 @@ void Client::renderStateSpecificInfo(bool readyToPlay){
     }
     else if (this->clientState == C_COUNTDOWN) {
         renderer.renderGameStart(gameStartTick - tickToDisplay);
+    }
+    else if (this->clientState == C_END_OF_ROUND) {
+        renderer.renderScore(gameState, this->lastWinningPlayerId);
+    }
+    else if (this->clientState == C_END_OF_GAME) {
+        renderer.renderWinner(this->lastWinningPlayerId);
     }
 }
 
@@ -315,7 +349,8 @@ void Client::mainLoop(){
             if(tickToDisplay >= gameStartTick - 1){
                 clientState = C_GAME_RUNNING;
             }
-        }else if (clientState == C_GAME_RUNNING){
+        }
+        else if (clientState == C_GAME_RUNNING){
             storeInputs(prevDisplayedTick + 1, tickToDisplay, processInputs());
             sendInputs(prevDisplayedTick + 1, tickToDisplay);
         }
@@ -352,7 +387,7 @@ void Client::mainLoop(){
             LOG_TIMEPOINT("prepared interpolatedGameState");
             renderer.render(interpolatedGameState);
             LOG_TIMEPOINT("rendered interpolatedGameState");
-            renderStateSpecificInfo(readyToPlay);
+            renderStateSpecificInfo(readyToPlay, interpolatedGameState);
             LOG_TIMEPOINT("rendered statespecific info");
             
 
