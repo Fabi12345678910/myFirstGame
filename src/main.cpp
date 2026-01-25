@@ -1,6 +1,8 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/Audio.hpp>
+#include <SFML/Network/IpAddress.hpp>
 #include <nlohmann/json.hpp>
+#include "Config.h"
 #include "menu/Menu.h"
 #include "menu/EnterIpMenu.h"
 #include "menu/EnterPortMenu.h"
@@ -55,6 +57,14 @@ int main() {
                     menuMusic.stop();
                     currentScene = Scene::EXIT;
                     break;
+                }
+                if (menuResult == "Join public"){
+                    auto ip = sf::IpAddress::resolve(PUBLIC_SERVER);
+                    if(ip.has_value()){
+                        client = std::make_unique<Client>(window, *ip, PUBLIC_PORT);
+                        currentScene = Scene::CLIENT_LOBBY;
+                        break;
+                    }
                 }
                 if (menuResult == "Host") {
                     EnterPortMenu enterPortMenu(window);

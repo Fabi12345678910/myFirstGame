@@ -1,7 +1,9 @@
 #include "menu/EnterIpMenu.h"
+#include "Config.h"
 #include <cctype>
 #include <sstream>
 #include <stdexcept>
+#include <string>
 
 EnterIpMenu::EnterIpMenu(sf::RenderWindow& win)
 : window(win),
@@ -16,6 +18,7 @@ EnterIpMenu::EnterIpMenu(sf::RenderWindow& win)
 void EnterIpMenu::set_values() {
     ipBuffer.clear();
     portBuffer.clear();
+    portBuffer=std::to_string(DEFAULT_PORT);
     ip.reset();
 
     float w = window.getSize().x;

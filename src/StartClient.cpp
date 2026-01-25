@@ -6,7 +6,7 @@
 
 int main(int argc, char const *argv[])
 {
-    unsigned short port = DEFAUL_PORT;
+    unsigned short port = DEFAULT_PORT;
     sf::IpAddress ip = sf::IpAddress::LocalHost;
     if(argc > 1){
         auto maybeIp = sf::IpAddress::resolve(argv[1]);
