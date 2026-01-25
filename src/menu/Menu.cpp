@@ -4,7 +4,7 @@
 #include <SFML/Graphics.hpp>
 #include <stdexcept>
 
-Menu::Menu(sf::RenderWindow& win) : window(win) {
+Menu::Menu(sf::RenderWindow& win, WindowMessages& msgs) : window(win), msgs(msgs){
   set_values();
 }
 
@@ -125,6 +125,7 @@ void Menu::draw_all(){
   for(auto t : texts){
     window.draw(t); 
   }
+  msgs.renderStoredMessages(window);
   window.display();
 }
 

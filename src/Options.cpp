@@ -16,6 +16,7 @@ Options load_options(const std::string& filename) {
             opts.height = res[1];
         }
         opts.fullscreen = j.value("fullscreen", false);
+        opts.loginKey = j.value("login_key", 0);
     }
     return opts;
 }
@@ -26,6 +27,7 @@ void save_options(const Options& opts, const std::string& filename) {
     j["music_muted"] = opts.music_muted;
     j["resolution"] = {opts.width, opts.height};
     j["fullscreen"] = opts.fullscreen;
+    j["login_key"] = opts.loginKey;
     std::ofstream out(filename);
     out << j.dump(4);
 }

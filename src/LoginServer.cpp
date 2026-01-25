@@ -52,7 +52,7 @@ void LoginServer::processEvents(){
         EventRequestCreateUser *evRequestCreateUser = dynamic_cast<EventRequestCreateUser*>(ev);
         if(evRequestCreateUser != NULL){
             auto key = serverDataProvider.createUser();
-            conn.sendTcpEvent(EventNewUserCreated(key));
+//            conn.sendTcpEvent(EventNewUserCreated(key));
         }
     }
 }
@@ -66,7 +66,7 @@ void LoginServer::mainLoop(){
 int main(int argc, char const *argv[]){
     PersistentServerDataProviderMock mockProvider;
     PersistentServerDataProviderSqlite userDb("data.db");
-    {    // Insert a user and login key
+/*    {    // Insert a user and login key
         
         int64_t loginKey = -1; 
         loginKey = userDb.createUser("Alice");
@@ -83,6 +83,6 @@ int main(int argc, char const *argv[]){
         // Rename user
         userDb.renameUser(userId, "AliceNew");
         printf("Renamed user: %s\n", userDb.getUserName(userId).c_str());
-    }
+    }*/
     LoginServer(mockProvider, DEFAUL_LOGIN_PORT).run();
 }

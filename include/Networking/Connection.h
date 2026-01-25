@@ -2,8 +2,12 @@
 #include "Networking/Event.h"
 #include "Threads/Threads.h"
 #include <SFML/Network.hpp>
+#include <SFML/Network/IpAddress.hpp>
+#include <SFML/Network/Socket.hpp>
+#include <SFML/Network/TcpSocket.hpp>
 #include <atomic>
 #include <memory>
+#include <stdexcept>
 
 
 class Connection
@@ -23,6 +27,14 @@ public:
     //additional arguments passed into the event handler
     Connection(std::unique_ptr<sf::TcpSocket> tcpSocket, void* eventHandlerArgs = NULL)
     : eventHandlerArgs(eventHandlerArgs), tcpSocket(std::move(tcpSocket)){};
+
+    Connection(sf::IpAddress ipaddress, unsigned short recipientPort, void* eventHandlerArgs = NULL)
+    : eventHandlerArgs(eventHandlerArgs){
+        tcpSocket = std::make_unique<sf::TcpSocket>();
+        if(tcpSocket->connect(ipaddress, recipientPort) != sf::Socket::Status::Done){
+            throw std::runtime_error("error connecting to ip address");
+        };
+    };
 
     ~Connection(){
         if(this->eventHandlerThreadRunning){

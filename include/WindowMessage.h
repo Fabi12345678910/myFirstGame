@@ -17,7 +17,7 @@ struct Message{
     sf::Time displayTime;
     Message();
     Message(std::string msg, Message::Style style, sf::Time displayTime): msg(msg), style(style), displayTime(displayTime){
-        timer.start();
+        timer.restart();
     };
 
     bool operator<(Message const& other) const
@@ -32,21 +32,25 @@ struct Message{
 class WindowMessages
 {
 private:
-    std::set<Message> storedMessages;
+    std::set<Message> storedMessages = {};
 public:
-    WindowMessages(){};
+    WindowMessages(){
+        storedMessages = std::set<Message>();
+    };
     ~WindowMessages(){};
-    void storeMessage(const std::string & msg, Message::Style style, sf::Time&& displayTime){
+    void storeMessage(const std::string msg, Message::Style style, sf::Time&& displayTime){
         storedMessages.emplace(msg, style, displayTime);
     }
 
     void renderStoredMessages(sf::RenderWindow& window){
-        for (auto it = storedMessages.begin(); it != storedMessages.end(); it++) {
-            if(it->timer.getElapsedTime() > it->displayTime){
+        auto it = storedMessages.begin();
+        while(it != storedMessages.end()) {
+            if(it->timer.getElapsedTime() <= it->displayTime){
                 renderSingleMessage(window, it->msg, it->style);
+                it++;
             }
             else{
-                storedMessages.erase(it);
+                it = storedMessages.erase(it);
             };
         }
     }

@@ -44,7 +44,7 @@ public:
     virtual USER_LOGIN_KEY_TYPE createUser(const std::string& userName) override{
         //TODO autogenerate key and id
         USER_LOGIN_KEY_TYPE key = 21308412;
-        USER_ID_TYPE id  = 9876543210987;
+        USER_ID_TYPE id  = 43210987;
         {
             SQLiteStmt stmt(db.get(), "INSERT INTO kv_store (key, id) VALUES (?, ?);");
             stmt.bind(1, int64_t(key));

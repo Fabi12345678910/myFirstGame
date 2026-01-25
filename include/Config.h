@@ -63,3 +63,5 @@ constexpr uint16_t selectionTimeoutMs = 100;
 
 constexpr int MAX_PLAYERS = 4;
 constexpr int MAX_GAMEOBJECTS = 10000;
+
+constexpr auto LOGIN_SERVER = "localhost";

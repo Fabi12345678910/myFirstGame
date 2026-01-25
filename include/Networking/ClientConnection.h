@@ -3,6 +3,8 @@
 #include "Config.h"
 #include "Networking/Connection.h"
 #include "plog/Log.h"
+#include <SFML/Network/TcpSocket.hpp>
+#include <memory>
 
 class ClientConnection : public Connection
 {
@@ -19,6 +21,13 @@ public:
     ClientConnection(std::unique_ptr<sf::TcpSocket> tcpSocket, sf::IpAddress udpRecipientAdress, unsigned short udpRecipientPort, void* eventHandlerArgs = NULL)
         : Connection(std::move(tcpSocket), eventHandlerArgs), udpRecipientAdress(udpRecipientAdress), udpRecipientPort(udpRecipientPort){
         
+        if(udpSocket.bind(sf::Socket::AnyPort) != sf::Socket::Status::Done){
+            throw std::runtime_error("Error binding local udp port");
+        }
+    }
+
+    ClientConnection(sf::IpAddress targetIpAdress, unsigned short recipientPort, sf::IpAddress udpRecipientAdress, unsigned short udpRecipientPort, void* eventHandlerArgs = NULL)
+        : Connection(targetIpAdress, recipientPort, eventHandlerArgs), udpRecipientAdress(udpRecipientAdress), udpRecipientPort(udpRecipientPort){
         if(udpSocket.bind(sf::Socket::AnyPort) != sf::Socket::Status::Done){
             throw std::runtime_error("Error binding local udp port");
         }
