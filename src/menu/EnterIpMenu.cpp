@@ -1,12 +1,14 @@
 #include "menu/EnterIpMenu.h"
 #include "Config.h"
+#include "WindowMessages.h"
 #include <cctype>
 #include <sstream>
 #include <stdexcept>
 #include <string>
 
-EnterIpMenu::EnterIpMenu(sf::RenderWindow& win)
+EnterIpMenu::EnterIpMenu(sf::RenderWindow& win, WindowMessages& msgs)
 : window(win),
+  msgs(msgs),
   ipText(font, "", 32),
   portText(font, "", 32),
   labelText(font, "Enter IP and Port", 28),
@@ -117,6 +119,7 @@ void EnterIpMenu::draw_all() {
     window.draw(ipText);
     window.draw(portText);
     window.draw(infoText);
+    msgs.renderStoredMessages(window);
     window.display();
 }
 
