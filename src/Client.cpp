@@ -333,12 +333,15 @@ void Client::mainLoop(){
             MapSelectionInput input = processInputsMapSelection();
             processMapSelectionInputs(input);
             storeInputs(prevDisplayedTick + 1, tickToDisplay, playerInput());
+            // Keep sending neutral inputs so the server doesn't keep applying stale movement.
+            sendInputs(prevDisplayedTick + 1, tickToDisplay);
             if(tickToDisplay > mapSelectionState.selectUntil){
                 clientState = C_WAITING_FOR_COUNTDOWN;
             }
         }
         else if(clientState == C_WAITING_FOR_COUNTDOWN){
             storeInputs(prevDisplayedTick + 1, tickToDisplay, playerInput());
+            sendInputs(prevDisplayedTick + 1, tickToDisplay);
             if(tickToDisplay >= gameStartTick - 1){
                 clientState = C_GAME_RUNNING;
             }
