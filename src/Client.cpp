@@ -162,28 +162,40 @@ void Client::processEventsPlaying(){
             this->clientState = C_COUNTDOWN;
             this->gameStartTick = eventStartGame->gameStartTick;
             this->gameStore.loadStage(selectedStage);
+            this->endOfRoundScoreboard.clear();
+            this->endOfRoundScoreboard[this->playerId] = 0;
+            if (GameState* latest = this->gameStore.getGameState(tickToDisplay, true, nullptr)) {
+                for (auto itPlayer = latest->getPlayersBegin(); itPlayer != latest->getPlayersEnd(); ++itPlayer) {
+                    this->endOfRoundScoreboard[itPlayer->first] = 0;
+                }
+            }
+            this->endOfGameWinnerId = std::nullopt;
         }
 
         EventEndOfRound* eventEndOfRound = dynamic_cast<EventEndOfRound*>(ev);
         if (eventEndOfRound != nullptr) {
-            PLOG_INFO_IF(debugClientNetworking) << "Received [Event] End Of Round (winnerPlayerId=" << eventEndOfRound->winningPlayerId << ")";
+            PLOG_INFO_IF(debugClientNetworking) << "Received [Event] End Of Round";
             this->clientState = C_END_OF_ROUND;
-            this->lastWinningPlayerId = eventEndOfRound->winningPlayerId;
+            this->endOfRoundScoreboard.clear();
+            for (const auto& line : eventEndOfRound->scores) {
+                this->endOfRoundScoreboard[line.playerId] = line.score;
+            }
         }
 
         EventEndOfGame* eventEndOfGame = dynamic_cast<EventEndOfGame*>(ev);
         if (eventEndOfGame != nullptr) {
             PLOG_INFO_IF(debugClientNetworking) << "Received [Event] End Of Game (winnerPlayerId=" << eventEndOfGame->winningPlayerId << ")";
             this->clientState = C_END_OF_GAME;
-            this->lastWinningPlayerId = eventEndOfGame->winningPlayerId;
+            this->endOfGameWinnerId = eventEndOfGame->winningPlayerId;
         }
 
         EventGoToLobby* eventGoToLobby = dynamic_cast<EventGoToLobby*>(ev);
         if (eventGoToLobby != nullptr) {
             PLOG_INFO_IF(debugClientNetworking) << "Received [Event] Go to Lobby";
             this->clientState = C_LOBBY;
-            this->lastWinningPlayerId = -1;
             mapSelectionState.confirmed = false;
+            this->endOfRoundScoreboard.clear();
+            this->endOfGameWinnerId = std::nullopt;
         }
 
         EventServerHealth *eventServerHealth = dynamic_cast<EventServerHealth*>(ev);
@@ -288,10 +300,27 @@ void Client::renderStateSpecificInfo(bool readyToPlay, const GameState& gameStat
         renderer.renderGameStart(gameStartTick - tickToDisplay);
     }
     else if (this->clientState == C_END_OF_ROUND) {
-        renderer.renderScore(gameState, this->lastWinningPlayerId);
+        std::optional<OBJECT_ID_TYPE> winnerPlayerId = std::nullopt;
+        {
+            bool hasWinner = false;
+            unsigned short bestScore = 0;
+            OBJECT_ID_TYPE bestPlayerId = 0;
+            for (const auto& [playerId, score] : this->endOfRoundScoreboard) {
+                if (!hasWinner || score > bestScore || (score == bestScore && playerId < bestPlayerId)) {
+                    hasWinner = true;
+                    bestScore = score;
+                    bestPlayerId = playerId;
+                }
+            }
+            if (hasWinner) {
+                winnerPlayerId = bestPlayerId;
+            }
+        }
+
+        renderer.renderScore(this->endOfRoundScoreboard, winnerPlayerId);
     }
     else if (this->clientState == C_END_OF_GAME) {
-        renderer.renderWinner(this->lastWinningPlayerId);
+        renderer.renderWinner(this->endOfGameWinnerId);
     }
 }
 

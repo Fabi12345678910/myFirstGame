@@ -280,7 +280,7 @@ void Renderer::renderGameStart(TICK_TYPE timeLeft) {
     window.draw(headerText);
 }
 
-void Renderer::renderScore(const GameState& gameState, std::optional<OBJECT_ID_TYPE> winnerPlayerId) {
+void Renderer::renderScore(const std::unordered_map<OBJECT_ID_TYPE, unsigned short>& scores, std::optional<OBJECT_ID_TYPE> winnerPlayerId) {
     sf::Font& font = FontManager::getDefaultFont();
 
     const float W = 1920.f;
@@ -292,10 +292,9 @@ void Renderer::renderScore(const GameState& gameState, std::optional<OBJECT_ID_T
     };
 
     std::vector<ScoreLine> lines;
-    lines.reserve(gameState.getPlayerCount());
-    for (auto itPlayer = gameState.getPlayersBegin(); itPlayer != gameState.getPlayersEnd(); ++itPlayer) {
-        const Player& p = itPlayer->second;
-        lines.push_back({ p.getId(), p.getScore() });
+    lines.reserve(scores.size());
+    for (const auto& [playerId, score] : scores) {
+        lines.push_back({ playerId, score });
     }
 
     std::sort(lines.begin(), lines.end(), [](const ScoreLine& a, const ScoreLine& b) {
@@ -363,7 +362,6 @@ void Renderer::renderScore(const GameState& gameState, std::optional<OBJECT_ID_T
         return;
     }
 
-    // Compute a stable name column width for alignment.
     float maxNameWidth = 0.f;
     for (const auto& l : lines) {
         sf::Text tmp = makeText("P" + std::to_string(l.playerId), lineSize);
