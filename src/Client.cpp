@@ -263,27 +263,6 @@ void Client::sendInputs(const TICK_TYPE& startingTick, const TICK_TYPE& currentT
     }
 }
 
-void Client::processMapSelectionInputs(MapSelectionInput input){
-    if(this->mapSelectionState.confirmed){return;}
-    if(!isReadyForSelection()){
-        return;
-    }
-    if(input.goLeft){
-        mapSelectionState.selectedIndex = (mapSelectionState.selectedIndex + 1) % mapSelectionState.maps.size();
-        selectedSomething();
-    }
-    if(input.goRight){
-        mapSelectionState.selectedIndex = (mapSelectionState.selectedIndex - 1) % mapSelectionState.maps.size();
-        selectedSomething();
-    }
-    if(input.confirm){
-        EventSelectedMap eventSelectedMap(mapSelectionState.maps[mapSelectionState.selectedIndex].first);
-        conn.sendTcpEvent(eventSelectedMap);
-        mapSelectionState.confirmed = true;
-        selectedSomething();
-    }
-}
-
 void Client::renderStateSpecificInfo(bool readyToPlay, const GameState& gameState){
     if (this->clientState == C_LOBBY) {
 //        TODO make some state PLAYING->READY_SELECTION
@@ -359,12 +338,14 @@ void Client::mainLoop(){
             LOG_TIMEPOINT("processed playerInputs");
         }
         else if(clientState == C_MAP_SELECTION){
-            MapSelectionInput input = processInputsMapSelection();
-            processMapSelectionInputs(input);
             storeInputs(prevDisplayedTick + 1, tickToDisplay, playerInput());
             // Keep sending neutral inputs so the server doesn't keep applying stale movement.
             sendInputs(prevDisplayedTick + 1, tickToDisplay);
             if(tickToDisplay > mapSelectionState.selectUntil){
+                EventSelectedMap eventSelectedMap(mapSelectionState.maps[mapSelectionState.selectedIndex].first);
+                if (mapSelectionState.confirmed) {
+                    conn.sendTcpEvent(eventSelectedMap);
+                }
                 clientState = C_WAITING_FOR_COUNTDOWN;
             }
         }
@@ -381,6 +362,14 @@ void Client::mainLoop(){
             if(tickToDisplay >= gameStartTick - 1){
                 clientState = C_GAME_RUNNING;
             }
+        }
+        else if (clientState == C_END_OF_ROUND) {
+            storeInputs(prevDisplayedTick + 1, tickToDisplay, playerInput());
+            sendInputs(prevDisplayedTick + 1, tickToDisplay);
+        }
+        else if (clientState == C_END_OF_GAME) {
+            storeInputs(prevDisplayedTick + 1, tickToDisplay, playerInput());
+            sendInputs(prevDisplayedTick + 1, tickToDisplay);
         }
         else if (clientState == C_GAME_RUNNING){
             storeInputs(prevDisplayedTick + 1, tickToDisplay, processInputs());
@@ -446,13 +435,15 @@ void Client::mainLoop(){
         }else{
             PLOG_DEBUG << "can't render tick " << tickToDisplay;
         }
-        renderer.processDisplayEvents();
+        if (clientState != clientState::C_MAP_SELECTION) { //this is pfusch should be fixed
+            renderer.processDisplayEvents();
+        }
         #undef LOG_TIMEPOINT
     }
     PLOG_INFO << "exiting main loop";
 }
 
-playerInput Client::processInputs(){
+playerInput Client::processInputs(){ // maybe shouldve used window poll event
     playerInput input;
     
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A)){
@@ -471,20 +462,5 @@ playerInput Client::processInputs(){
         input.readyToPlay = true;
     }
 
-    return input;
-}
-
-MapSelectionInput Client::processInputsMapSelection(){
-    using namespace sf::Keyboard;
-    MapSelectionInput input;
-    if (isKeyPressed(Key::Down) || isKeyPressed(Key::Left)){
-        input.goLeft = true;
-    }
-    else if (isKeyPressed(Key::Up) || isKeyPressed(Key::Right)){
-        input.goRight = true;
-    }
-    if(isKeyPressed(Key::Enter)){
-        input.confirm = true;
-    }
     return input;
 }

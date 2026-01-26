@@ -2,18 +2,19 @@
 #include "Types.h"
 #include "Collidable.h"
 #include "Movable.h"
+#include "Config.h"
 #include "GameObject.h"
 #include <SFML/Graphics.hpp>
 
 class Player : public Collidable, public Movable, public GameObject {
 private:
     bool  isOnGround = false;
-    float gravity    = 800.f;
-    float speed      = 400.f;
-    float health     = 10.f;
+    float gravity    = defaultGravity;
+    float speed      = defaultSpeed;
+    float health     = defaultHealth;
     unsigned short score = 0;
     bool readyToPlay = false;
-    int16_t  projectileCooldown   = 0; // bullet cooldown
+    int16_t  projectileCooldown = 0; // bullet cooldown
     bool  facing     = FACING_LEFT; // -1 if looking left, 1 if looking right
 
     //the ghostPlayer is only available on Clients and displays the predicted playerState

@@ -193,13 +193,13 @@ void Renderer::renderMapSelection(TICK_TYPE timeLeft, int16_t& selectedId, bool&
         {
             switch (key->code)
             {
-                case sf::Keyboard::Key::Down:
-                case sf::Keyboard::Key::Left:
+                case sf::Keyboard::Key::Up:
+                case sf::Keyboard::Key::Right:
                     selectedId = (selectedId + 1) % maps.size();
                     break;
 
-                case sf::Keyboard::Key::Up:
-                case sf::Keyboard::Key::Right:
+                case sf::Keyboard::Key::Down:
+                case sf::Keyboard::Key::Left:
                     selectedId = (selectedId - 1 + maps.size()) % maps.size();
                     break;
 

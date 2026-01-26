@@ -240,7 +240,7 @@ void Server::mainLoop(){
                 for (auto itPlayer = gameStates[currentTick].getPlayersBegin(); itPlayer != gameStates[currentTick].getPlayersEnd(); itPlayer++){
                     Player &p = itPlayer->second;
                     if (p.getHealth() <= 0) {
-                        p.setHealth(10.f);
+                        p.setHealth(defaultHealth);
                         p.setVelocity({0.f, 0.f});
                         p.setProjectileCooldown(0);
                         if (!spawns.empty()) {

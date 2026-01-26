@@ -65,6 +65,14 @@ constexpr uint16_t mapStartTimeS = 6;
 constexpr uint16_t selectionTimeoutMs = 100;
 constexpr unsigned short numberOfRounds = 2;
 
+//Player
+constexpr float defaultGravity = 800;
+constexpr float defaultSpeed = 400;
+constexpr float defaultHealth = 10;
+constexpr float defaultBulletCooldown = 100;
+
+//Projectile
+constexpr float defaultProjectileSpeed = 1000;
 
 constexpr int MAX_PLAYERS = 4;
 constexpr int MAX_GAMEOBJECTS = 10000;

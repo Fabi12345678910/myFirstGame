@@ -1,5 +1,6 @@
 #pragma once
 #include "Types.h"
+#include "Config.h"
 #include "GameState.h"
 #include <SFML/Network.hpp>
 #include "UpdateInfo.h"
@@ -60,7 +61,7 @@ struct playerInput{
             Projectile proj(projId, bulletSize, spawnPos);
             proj.setSpeed(proj.getSpeed() * dir);
             gsUpdater.addProjectile(proj);
-            gsUpdater.setPlayerProjectileCooldown(player, 100);
+            gsUpdater.setPlayerProjectileCooldown(player, defaultBulletCooldown);
         }
         // readyToPlay isn't used in RUNNING, but keeping it here is harmless.
         if(readyToPlay) {

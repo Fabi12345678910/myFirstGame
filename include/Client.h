@@ -74,7 +74,7 @@ private:
     void performLogin();
     void processEventsPlaying();
     void processEventsAwaitingSpawn();
-    void processMapSelectionInputs(MapSelectionInput input);
+    void processMapSelectionInputs();
     void renderStateSpecificInfo(bool readyToPlay, const GameState& gameState);
     void mainLoop();
     void updateGameStates(EventGamestatePlayerInputHistory &ev);

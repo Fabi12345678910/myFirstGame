@@ -1,12 +1,13 @@
 #pragma once
 #include "Collidable.h"
+#include "Config.h"
 #include "Movable.h"
 #include "GameObject.h"
 #include <SFML/Graphics.hpp>
 
 class Projectile : public Collidable, public Movable, public GameObject {
 private:
-    float speed    = 800.f;
+    float speed    = defaultProjectileSpeed;
 
 public:
     Projectile(OBJECT_ID_TYPE id, sf::Vector2f size, sf::Vector2f position)
