@@ -1,6 +1,7 @@
 #include "menu/EnterIpMenu.h"
 #include "Config.h"
 #include "WindowMessages.h"
+#include "plog/Log.h"
 #include <cctype>
 #include <sstream>
 #include <stdexcept>
@@ -127,8 +128,11 @@ std::optional<std::pair<sf::IpAddress, unsigned short>> EnterIpMenu::run_menu() 
     set_values();
 
     while (window.isOpen() && !done) {
+        PLOG_ERROR << "loop events";
         loop_events();
+        PLOG_ERROR << "draw all";
         draw_all();
+        PLOG_ERROR << "done";
     }
 
     if (!ip.has_value())
