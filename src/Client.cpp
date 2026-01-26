@@ -169,6 +169,12 @@ void Client::processEventsPlaying(){
             PLOG_INFO_IF(debugClientNetworking) << "Received [Event] End Of Round (winnerPlayerId=" << eventEndOfRound->winningPlayerId << ")";
             this->clientState = C_END_OF_ROUND;
             this->lastWinningPlayerId = eventEndOfRound->winningPlayerId;
+
+            if (eventEndOfRound->winningPlayerId >= 0) {
+                std::uint32_t& score = this->playerScores[eventEndOfRound->winningPlayerId];
+                score++;
+                PLOG_INFO_IF(debugClientNetworking) << "Updated local score (playerId=" << eventEndOfRound->winningPlayerId << ", score=" << score << ")";
+            }
         }
 
         EventEndOfGame* eventEndOfGame = dynamic_cast<EventEndOfGame*>(ev);
