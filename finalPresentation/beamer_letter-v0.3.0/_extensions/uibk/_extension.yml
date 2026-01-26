@@ -1,0 +1,51 @@
+title: "UIBK Revealjs Presentation Theme for quarto"
+author: "Reto Stauffer & Achim Zeileis"
+# Quarto extension version
+version: 0.3.0
+contributes:
+
+    # Define format options for uibk-revealjs
+    formats:
+        revealjs:
+            theme: uibk-revealjs.scss
+            include-after-body: uibk-revealjs.html
+            logo: uibk_logo_4c_cmyk.svg
+            show-footer: true
+            cc-by: false
+            self-contained: true
+            width: 1920
+            height: 1080
+            margin: 0
+            max-width: 100%
+            min-scale: 0.3
+            max-scale: 2
+            filters: [uibk-revealjs.lua]
+            resource-path:
+                [assets/webfonts]
+            license: false
+            email-obfuscation: references
+            slide-number: true
+
+            ## author meta information
+            author-mastodon: GabrieleMustermann2025
+            author-mastodon-server: social.uibk.ac.at
+            author-bluesky: Mustermann25
+            author-website: https://www.uibk.ac.at/
+            author-email:   Gabriele.Mustermann@uibk.ac.at
+
+        # Format definition for 'uibk-beamer'
+        beamer:
+            slide-level: 2
+            pdf-engine: pdflatex
+            theme: uibk
+            aspectratio: 169
+            classoptions: [11pt,t,usepdftitle=false]
+            filters: [uibk-beamer-skip.lua, uibk-yaml-options.lua]
+
+            ## author meta information
+            author-mastodon: GabrieleMustermann2025
+            author-mastodon-server: social.uibk.ac.at
+            author-bluesky: Mustermann25
+            author-website: https://www.uibk.ac.at/
+            author-email:   Gabriele.Mustermann@uibk.ac.at
+

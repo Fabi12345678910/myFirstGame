@@ -1,0 +1,37 @@
+# do not ignore this file
+!.gitignore
+
+## targets
+letter.pdf
+slides.pdf
+slides.html
+slides-beamer.pdf
+slides-revealjs.html
+poster.pdf
+README.pdf
+uibklatex.zip
+
+# folder with images
+ftp_headerimages
+header
+_image/*
+_image/*.pdf
+_image/*.png
+
+# gitlab-runner
+builds
+
+# by-products
+*.aux
+*.log
+*.nav
+*.out
+*.pdf
+*.snm
+*.swp
+*.toc
+*.vrb
+*.fdb_latexmk
+*.fls
+
+/.quarto/

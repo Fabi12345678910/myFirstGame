@@ -1,0 +1,326 @@
+---
+title: "PDF Presentations Using the Universität Innsbruck Corporate Design"
+author: "Gabriele Mustermann"
+subtitle: "An Implementation via Quarto and beamer"
+url: "https://www.uibk.ac.at/statistics"
+date: "2025-10-14"
+format:
+    beamer:
+        slide_level: 2
+        aspectratio: 169
+        theme: uibk
+        themeoptions: quarto,nototalframenumber,logo,foot,license
+        header-includes:
+          - \headerimage{6}
+          - \footertext{{\LaTeX} beamer theme with Quarto}
+
+pdf-engine: pdflatex
+
+# social media
+author-mastodon: GabrieleMustermann2025
+author-mastodon-server: social.uibk.ac.at
+author-bluesky: Mustermann25
+author-website: https://www.uibk.ac.at/
+author-email:   Gabriele.Mustermann@uibk.ac.at
+---
+
+
+## Overview
+
+**Demo:** Instead of authoring beamer slides in the Universität Innsbruck corporate design
+in LaTeX it is also possible to use Markdown/Quarto.
+
+\smallskip
+
+**Installation:** You either need to have the `uibk` beamer theme files/images in your
+local folder or install them in your TEXMF tree. See the documentation for the beamer
+theme for more details
+
+::: {.callout-tip}
+# Quarto
+
+[Quarto](https://quarto.org/) is an open-source scientific and technical publishing system.
+It allows to create a wide variety of output documents (web pages, presentations, books, etc.)
+from Markdown text files, also containing code in Python, R, Julia, or Observable.
+:::
+
+
+## Introduction
+
+**Itemized lists:**
+
+* Level 1
+    * Level 2
+        * Level 3
+
+. . .
+
+**Incremental enumerated list:**
+
+::: {.incremental}
+1. First item
+2. Second item
+3. Third item
+:::
+
+
+
+## Spacing
+
+Three classes are available for vertical spacers, namely
+`\smallskip`, `\medskip` and `\bigskip` which can be used via LaTeX:
+
+```
+\medskip
+```
+
+In this sentence we have ...
+
+... the default paragraph skip. In this sentence ...
+
+\smallskip
+
+
+... there is a `\smallskip`. In this sentence ...
+
+\medskip
+
+... there is a `\medskip`. And finally we have ...
+
+\bigskip
+
+... a `\bigskip`.
+
+
+
+## Formatting
+
+**Text highlighting:**
+
+~~strike~~, **bold**, _italic_, [UIBK blue]{.uibkblue}, [UIBK orange]{.uibkorange}
+
+\medskip
+
+**Predefined colors:**
+
+- \fcolorbox{black}{uibkblue}{\rule{0pt}{.6em}\rule{.5em}{0pt}} \quad blue (`uibkblue`)
+- \fcolorbox{black}{uibkbluel}{\rule{0pt}{.6em}\rule{.5em}{0pt}} \quad light blue (`uibkbluel`)
+- \fcolorbox{black}{uibkorange}{\rule{0pt}{.6em}\rule{.5em}{0pt}} \quad orange (`uibkorange`)
+- \fcolorbox{black}{uibkorangel}{\rule{0pt}{.6em}\rule{.5em}{0pt}} \quad light orange (`uibkorangel`)
+- \fcolorbox{black}{uibkgray}{\rule{0pt}{.6em}\rule{.5em}{0pt}} \quad gray (`uibkgray`)
+- \fcolorbox{black}{uibkgraym}{\rule{0pt}{.6em}\rule{.5em}{0pt}} \quad medium gray (`uibkgraym`)
+- \fcolorbox{black}{uibkgrayl}{\rule{0pt}{.6em}\rule{.5em}{0pt}} \quad light gray (`uibkgrayl`)
+
+
+## Beamer blocks
+
+### Block
+
+This block uses `uibkblue` and `uibkbluel`. It starts with:
+
+`### Block`
+
+
+### Alert block {.alert}
+
+This block uses `uibkorange` and `uibkorangel`. It starts with:
+
+`### Alert block {.alert}`
+
+
+
+### Example block {.example}
+
+This block uses `uibkgraym` and `uibkgrayl`. It starts with:
+
+`### Example block {.example}`
+
+
+
+## Quarto callout blocks
+
+::: {.callout-note}
+# Note
+
+Note that there are five types of callouts, see below.
+:::
+
+::: {.callout-warning}
+# Warning
+
+Callouts provide a simple way to attract attention.
+:::
+
+::: {.callout-important}
+# Callout is important
+
+Danger, callouts will really improve your writing.
+:::
+
+
+## Callout blocks
+
+::: {.callout-tip}
+# Callout with caption
+
+This is an example of a callout with a caption.
+:::
+
+:::{.callout-caution collapse="true"}
+## Callout caution
+
+Callout with caution.
+:::
+
+
+## Code execution
+
+Quarto allows to create dynamic content in several programming languages:
+
+- [R][ref-R]
+- [Python][ref-python]
+- [Julia][ref-julia]
+- [Observable][ref-observable]
+
+::: {.medskip}
+:::
+
+::: {.callout-note}
+# Executing Python code
+If a `.qmd` contains both R and Python chunks, the R package [`reticulate`](https://rstudio.github.io/reticulate/)
+is required which moderates between R and Python.
+
+If only Pyton is used, `jupyter` is used to execute/render Python chunks.
+:::
+
+
+## Code execution
+
+**Some R code:**
+
+```{r r-histogram}
+#| echo: true
+#| fig: true
+#| fig-width: 8
+#| fig-height: 3
+#| fig-cap: Histogram of random variable `x`.
+x <- rnorm(300, 3, 1)
+hist(x)
+```
+
+
+## Linear regression model
+
+**Data:**
+
+```{r r-data}
+#| echo: true
+data("airquality")
+head(airquality, n = 8)
+```
+
+## Linear regression model
+
+**Estimating the model:**
+
+```{r r-linear-model-estimation}
+#| echo: true
+m <- lm(Ozone ~ Temp, data = airquality)
+```
+
+**Model summary:**
+
+\tiny
+```{r r-linear-model-coef}
+summary(m)
+```
+
+## Linear regression model
+
+**Visualization:**
+
+```{r r-linear-model-summary}
+#| echo: !expr '-1'
+#| fig-height: 3.9
+#| fig-width: 5.5
+#| out-width: 47%
+par(mar = c(4, 3, 1, 1))
+plot(Ozone ~ Temp, data = airquality)
+abline(m, col = "tomato", lwd = 3)
+```
+
+
+## Code execution
+
+**Some Python code:**
+
+```{python py-numpy}
+#| echo: true
+import numpy as np
+x = np.random.normal(size = 100)
+m = float(x.mean())
+print(f"The average of the random variable `x` is: {m:.3f}")
+```
+
+
+## Histogram plot
+
+```{python py-matplotlib}
+#| echo: true
+#| out-width: 50%
+from matplotlib import pyplot as plt
+tmp = plt.hist(x, color = "#cecece")
+plt.title("histogram") 
+plt.show()
+```
+
+
+
+## Column layout
+
+:::: {.columns}
+
+::: {.column width="40%"}
+First column, 35% width.
+
+More text continues here, if necessary across several lines within the same column.
+:::
+
+::: {.column width="60%"}
+Second column, 65% width.
+
+Even more text here.
+:::
+
+::::
+
+
+## Getting up
+
+- Turn off alarm
+- Get out of bed
+
+## Going to sleep
+
+- Get in bed
+- Count sheep
+
+
+---
+
+## Thank you for your attention!
+\bigskip \bigskip
+
+|             |                                                                                      |
+|:------------|:-------------------------------------------------------------------------------------|
+| _Mastodon:_ | [@{{< meta author-mastodon >}}@{{< meta author-mastodon-server >}}](https://{{< meta author-mastodon-server >}}/@{{< meta author-mastodon >}}) |
+| _Bluesky:_  | [@{{< meta author-bluesky >}}](https://bsky.app/profile/{{< meta author-bluesky >}}) |
+| _Website:_  | [{{< meta author-website >}}]({{< meta author-website >}})                           |
+| _Email:_    | [{{< meta author-email >}}](mailto:{{< meta author-email >}})                        |
+
+
+[ref-R]: https://www.R-project.org/
+[ref-python]: https://www.python.org/
+[ref-julia]: https://julialang.org/
+[ref-observable]: https://observablehq.com/
+[ref-fontawesome-ext]: https://github.com/quarto-ext/fontawesome

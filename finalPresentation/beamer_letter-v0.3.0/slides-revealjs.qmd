@@ -1,0 +1,377 @@
+---
+title: "HTML Presentations Using the Universität Innsbruck Corporate Design"
+author: "Gabriele Mustermann (<a href='mailto:gabriele.mustermann@uibk.ac.at'>Gabriele.Mustermann@uibk.ac.at</a>)"
+subtitle: "An Implementation via Quarto and reveal.js"
+institute: "<a href=\"https://www.uibk.ac.at/statistics\" target=\"_blank\"><code>https://www.uibk.ac.at/statistics</code></a>"
+format:
+    uibk-revealjs:
+        self-contained: true
+        date: 2025-10-14
+        footer: Quarto/reveal.js presentation theme
+        auto-stretch: false
+
+## To overwrite author-* details uncomment the lines below and
+## adjust the value on the right hand side of the colon.
+# author-mastodon:     GabrieleMustermann2025
+# author-mastodon-url: https://social.uibk.ac.at
+# author-bluesky:      Mustermann25
+# author-website:      https://www.uibk.ac.at/statistik
+# author-email:        Gabriele.Mustermann@uibk.ac.at
+
+# Options:
+#  slide-number: true      # default
+#  slide-number: false     # do not show slide numbers
+#  slide-number: "c"       # compact; show slide number only (not total slide number)
+slide-number: "c"
+
+# Options:
+#  show-footer: true       # Show footer (default)
+#  show-footer: false      # Do not show footer line
+show-footer: true
+
+# Option to disable the logo in the footer; re-define 'logo' as empty
+#  logo: ""
+
+# Options for including CC-BY licence logo
+cc-by: true
+---
+
+
+
+## Overview
+
+**Demo:** Creating HTML presentation slides in the Universität Innsbruck corporate design.
+The following slides demonstrate some of the features/styling.
+
+::: {.callout-tip}
+# Quarto
+
+[Quarto](https://quarto.org/) is an open-source scientific and technical publishing system.
+It allows to create a wide variety of output documents (web pages, presentations, books, etc.)
+from Markdown text files, also containing code in Python, R, Julia, or Observable.
+:::
+
+
+::: {.bigskip}
+:::
+
+
+**Infrastructure:** Custom Quarto extension `uibk-revealjs`.
+ 
+::: {.callout-caution}
+# Under construction
+The extension `uibk-revealjs` is an early release and may be updated/extended
+in the future.
+:::
+
+
+::: {.bigskip}
+:::
+
+
+**Link:** [Quarto/reveal.js demo](https://quarto.org/docs/presentations/revealjs/demo/#/title-slide) in the official Quarto documentation.
+
+
+
+## Installation/usage
+
+**Installation:**
+
+- The `uibk-revealjs` extension is provided along with this presentation template.
+- It needs to be installed locally along with the Quarto [fontawesome-ext][ref-fontawesome-ext] extension.
+- Tip: Adding the option `--no-prompt` in the code below suppresses the `[Y/n]` prompt.
+
+```
+quarto install extension .
+quarto install extension quarto-ext/fontawesome
+```
+
+::: {.medskip}
+:::
+
+
+**Usage:** 
+
+- The Quarto/Markdown source file is `slides-revealjs.qmd`.
+- Rendering yields the HTML slides `slides-revealjs.html`.
+
+```
+quarto render slides-revealjs.qmd
+```
+
+
+
+## Known issues
+
+* `E` (tools: PDF export mode) is not working.  
+  Use `slides-beamer.qmd` instead for rendering directly to PDF.
+* The banner on the `.closing` slides does not yet span the entire slide width.
+
+
+## Introduction
+
+### Heading 3 (`###`)
+
+#### Heading 4 (`####`)
+
+##### Heading 5 (`#####`)
+
+
+::: {.medskip}
+:::
+
+### Itemized lists:
+
+* Level 1
+    * Level 2
+        * Level 3
+
+
+### Incremental enumerated lists:
+
+::: {.incremental}
+1. First item
+2. Second item
+3. Third item
+:::
+
+
+
+## Spacing
+
+Three classes are available for vertical spacers, namely
+`.smallskip`, `.medskip` and `.bigskip` which can be used with fenced divs like:
+
+```
+::: {.smallskip}
+:::
+```
+
+In this sentence we have ...
+
+
+... the default paragraph skip. In this sentence ...
+
+::: {.smallskip}
+:::
+
+
+... there is a `.smallskip`. In this sentence ...
+
+::: {.medskip}
+:::
+
+... there is a `.medskip`. And finally we have ...
+
+::: {.bigskip}
+:::
+
+... a `.bigskip`.
+
+
+
+## Formatting
+
+### Text highlighting
+
+~~strike~~, **bold**, _italic_, [UIBK blue]{.uibkblue}, [UIBK orange]{.uibkorange}
+
+### Predefined colors
+
+* []{.square .uibkblue} blue (`.uibkblue`)
+* []{.square .uibkbluel} light blue (`.uibkbluel`)
+* []{.square .uibkorange} orange (`.uibkorange`)
+* []{.square .uibkorangel} light orange (`.uibkorangel`)
+* []{.square .uibkgray} gray (`.uibkgray`)
+* []{.square .uibkgraym} medium gray (`.uibkgraym`)
+* []{.square .uibkgrayl} light gray (`.uibkgrayl`)
+
+
+
+## Callout blocks
+
+::: {.callout-note}
+# Note
+
+Note that there are five types of callouts, including: `note`, `tip`, `warning`, `caution`, and `important`.
+:::
+
+::: {.callout-warning}
+# Warning
+
+Callouts provide a simple way to attract attention, for example, to this warning.
+:::
+
+::: {.callout-important}
+# Callout is important
+
+Danger, callouts will really improve your writing.
+:::
+
+::: {.callout-tip}
+# Callout with caption
+
+This is an example of a callout with a caption.
+:::
+
+:::{.callout-caution collapse="true"}
+## Callout caution
+
+Callout with caution.
+:::
+
+
+## Code execution
+
+Quarto allows to create dynamic content in several programming languages:
+
+- [R][ref-R]
+- [Python][ref-python]
+- [Julia][ref-julia]
+- [Observable][ref-observable]
+
+::: {.medskip}
+:::
+
+::: {.callout-note}
+# Executing Python code
+If a `.qmd` contains both R and Python chunks, the R package [`reticulate`](https://rstudio.github.io/reticulate/)
+is required which moderates between R and Python.
+
+If only Pyton is used, `jupyter` is used to execute/render Python chunks.
+:::
+
+
+## Code execution
+
+Some R code:
+
+```{r r-histogram}
+#| echo: true
+#| fig: true
+#| fig-height: 4.0
+#| fig-width: 6.5
+#| out-width: 60%
+x <- rnorm(300, 3, 1)
+hist(x)
+```
+
+
+## Tabsets with R code
+
+::: {.panel-tabset}
+
+### Linear model
+
+```{r r-linear-model}
+#| echo: true
+data("airquality")
+m <- lm(Ozone ~ Temp, data = airquality)
+summary(m)
+```
+
+### Data
+
+```{r r-data}
+#| echo: true
+head(airquality, n = 10)
+```
+
+### Visualization
+
+```{r r-scatterplot}
+#| echo: !expr '-1'
+#| fig: true
+#| fig-height: 3.9
+#| fig-width: 5.5
+#| out-width: 44%
+par(mar = c(4, 3, 1, 1))
+plot(Ozone ~ Temp, data = airquality)
+abline(m, col = "tomato", lwd = 3)
+```
+
+:::
+
+
+
+## Tabsets with Python code
+
+::: {.panel-tabset}
+
+### numpy
+
+```{python py-numpy}
+#| echo: true
+import numpy as np
+x = np.random.normal(size = 100)
+float(x.mean().round(5))
+```
+
+### matplotlib
+
+```{python py-matplotlib}
+#| echo: true
+#| out-width: 57%
+from matplotlib import pyplot as plt
+tmp = plt.hist(x, color = "#cecece")
+plt.title("histogram") 
+plt.show()
+```
+
+:::
+
+
+## Column layout
+
+:::: {.columns}
+
+::: {.column width="40%"}
+First column, 35% width.
+
+More text continues here, if necessary across several lines within the same column.
+:::
+
+::: {.column width="60%"}
+Second column, 65% width.
+
+Even more text here.
+:::
+
+::::
+
+
+
+# A New Chapter
+
+## Getting up
+
+- Turn off alarm
+- Get out of bed
+
+## Going to sleep
+
+- Get in bed
+- Count sheep
+
+
+---
+
+::: {.closing}
+#### Thank you for your attention!
+
+|                                             |                                                                                      |
+|:--------------------------------------------|:-------------------------------------------------------------------------------------|
+| {{< fa brands mastodon title="Mastodon">}}  | [@{{< meta author-mastodon >}}@{{< meta author-mastodon-server >}}](https://{{< meta author-mastodon-server >}}/@{{< meta author-mastodon >}}) |
+| {{< fa brands bluesky title="Bluesky">}}    | [@{{< meta author-bluesky >}}](https://bsky.app/profile/{{< meta author-bluesky >}}) |
+| {{< fa solid globe title="Website">}}       | [{{< meta author-website >}}]({{< meta author-website >}})                           |
+| {{< fa solid at title="E-Mail">}}           | [{{< meta author-email >}}](mailto:{{< meta author-email >}})                        |
+:::
+
+
+
+
+[ref-R]: https://www.R-project.org/
+[ref-python]: https://www.python.org/
+[ref-julia]: https://julialang.org/
+[ref-observable]: https://observablehq.com/
+[ref-fontawesome-ext]: https://github.com/quarto-ext/fontawesome

@@ -1,0 +1,101 @@
+
+/* ----------------------------------------
+ * Definition for Vera, VeraMono, and VeraSerif
+ * Source:
+ * - https://download.gnome.org/sources/ttf-bitstream-vera/1.10/
+ */
+
+@font-face {
+    font-family: "VeraSans";
+    font-weight: none;
+    font-style: normal;
+    src: url("../fonts/ttf-bitstream-vera-1.10/Vera.ttf");
+}
+@font-face {
+    font-family: "VeraSans";
+    font-weight: bold;
+    font-style: normal;
+    src: url("../fonts/ttf-bitstream-vera-1.10/VeraBd.ttf");
+}
+@font-face {
+    font-family: "VeraSans";
+    font-weight: bold;
+    font-style: italic;
+    src: url("../fonts/ttf-bitstream-vera-1.10/VeraBI.ttf");
+}
+@font-face {
+    font-family: "VeraSans";
+    font-weight: none;
+    font-style: italic;
+    src: url("../fonts/ttf-bitstream-vera-1.10/VeraIt.ttf");
+}
+
+@font-face {
+    font-family: "VeraMono";
+    font-weight: none;
+    font-style: normal;
+    src: url("../fonts/ttf-bitstream-vera-1.10/VeraMono.ttf");
+}
+@font-face {
+    font-family: "VeraMono";
+    font-weight: bold;
+    font-style: normal;
+    src: url("../fonts/ttf-bitstream-vera-1.10/VeraMoBd.ttf");
+}
+@font-face {
+    font-family: "VeraMono";
+    font-weight: bold;
+    font-style: italic;
+    src: url("../fonts/ttf-bitstream-vera-1.10/VeraMoBI.ttf");
+}
+@font-face {
+    font-family: "VeraMono";
+    font-weight: none;
+    font-style: italic;
+    src: url("../fonts/ttf-bitstream-vera-1.10/VeraMoIt.ttf");
+}
+
+@font-face {
+    font-family: "VeraSerif";
+    font-weight: none;
+    font-style: normal;
+    src: url("../fonts/ttf-bitstream-vera-1.10/VeraSeBd.ttf");
+}
+@font-face {
+    font-family: "VeraSerif";
+    font-weight: bold;
+    font-style: normal;
+    src: url("../fonts/ttf-bitstream-vera-1.10/VeraSe.ttf");
+}
+
+
+
+/* ----------------------------------------------------
+ * Definition for font Carlito
+ */
+
+@font-face {
+    font-family: "Carlito";
+    font-weight: none;
+    font-style: normal;
+    src: url("../fonts/google-crosextrafonts-carlito-20130920/Carlito-Regular.ttf");
+}
+@font-face {
+    font-family: "Carlito";
+    font-weight: bold;
+    font-style: normal;
+    src: url("../fonts/google-crosextrafonts-carlito-20130920/Carlito-Bold.ttf");
+}
+@font-face {
+    font-family: "Carlito";
+    font-weight: bold;
+    font-style: italic;
+    src: url("../fonts/google-crosextrafonts-carlito-20130920/Carlito-BoldItalic.ttf");
+}
+@font-face {
+    font-family: "Carlito";
+    font-weight: none;
+    font-style: italic;
+    src: url("../fonts/google-crosextrafonts-carlito-20130920/Carlito-Italic.ttf");
+}
+
