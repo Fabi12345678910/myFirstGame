@@ -1,6 +1,7 @@
 #pragma once
 #include <SFML/Graphics.hpp>
 #include <optional>
+#include <unordered_map>
 #include "GameState.h"
 #include "GameStateHealth.h"
 #include "Networking/EventDefinitions/EventServerHealth.h"
@@ -26,7 +27,7 @@ public:
     void renderMapSelection(TICK_TYPE timeLeft, int16_t& selectionIndex, bool& confirmed, std::vector<std::pair<int16_t, std::string>> maps);
     void renderLoading();
     void renderGameStart(TICK_TYPE gameStartTick);
-    void renderScore(const GameState& gameState, std::optional<OBJECT_ID_TYPE> winnerPlayerId = std::nullopt);
+    void renderScore(const std::unordered_map<OBJECT_ID_TYPE, unsigned short>& scores, std::optional<OBJECT_ID_TYPE> winnerPlayerId = std::nullopt);
     void renderWinner(std::optional<OBJECT_ID_TYPE> winnerPlayerId);
     sf::RenderWindow& getWindow() {
         return window;

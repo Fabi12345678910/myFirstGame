@@ -404,7 +404,14 @@ void Server::mainLoop(){
 
             const TICK_TYPE showScoreUntil = currentTick + sf::seconds(endOfRoundDurationTimeS)/tickRate;
             showEndOfRoundUntilTick = showScoreUntil;
-            serverSocket.sendTcpEventToEveryone(EventEndOfRound(winnerPlayerId));
+
+            std::vector<EventEndOfRound::PlayerScoreLine> scoreLines;
+            scoreLines.reserve(gs.getPlayerCount());
+            for (auto itPlayer = gs.getPlayersBegin(); itPlayer != gs.getPlayersEnd(); ++itPlayer) {
+                const Player& p = itPlayer->second;
+                scoreLines.push_back({ p.getId(), p.getScore() });
+            }
+            serverSocket.sendTcpEventToEveryone(EventEndOfRound(std::move(scoreLines)));
 
             pendingEndOfGame = gameOver;
             pendingEndOfGameWinnerId = gameOver ? winnerPlayerId : -1;

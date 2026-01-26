@@ -11,6 +11,7 @@
 #include "Types.h"
 
 #include <SFML/System/Time.hpp>
+#include <optional>
 #include <queue>
 #include <mutex>
 #include <SFML/Graphics.hpp>
@@ -59,8 +60,8 @@ private:
     std::uint64_t latestGeneratedTick = 0;
     std::uint64_t latestPreRenderedTick = 0;
     std::uint16_t tickrateMs = 100;
-    OBJECT_ID_TYPE lastWinningPlayerId;
-    std::unordered_map<OBJECT_ID_TYPE, std::uint32_t> playerScores;
+    std::unordered_map<OBJECT_ID_TYPE, unsigned short> endOfRoundScoreboard;
+    std::optional<OBJECT_ID_TYPE> endOfGameWinnerId = std::nullopt;
     TICK_TYPE tickToDisplay = 0;
     //used by various input readers to avoid spamming selection
     TICK_TYPE lastTickWithSelection = 0;
