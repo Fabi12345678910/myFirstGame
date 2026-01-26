@@ -1,6 +1,11 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/Audio.hpp>
+#include <SFML/Network/IpAddress.hpp>
+#include <SFML/System/Time.hpp>
+#include <exception>
 #include <nlohmann/json.hpp>
+#include "Config.h"
+#include "WindowMessages.h"
 #include "menu/Menu.h"
 #include "menu/EnterIpMenu.h"
 #include "menu/EnterPortMenu.h"
@@ -23,6 +28,9 @@ enum class Scene {
 
 int main() {
     initLogger();
+
+    WindowMessages msgs;
+
     Options opts = load_options("config.json");
     save_options(opts, "config.json");
     sf::State style = opts.fullscreen ? sf::State::Fullscreen : sf::State::Windowed;
@@ -49,47 +57,79 @@ int main() {
                 }
             }
             while (window.isOpen()) { 
-                Menu menu(window); //needs to be inside so graphical changes are applied
+                Menu menu(window, msgs); //needs to be inside so graphical changes are applied
                 std::string menuResult = menu.run_menu();
                 if (!window.isOpen()) {
                     menuMusic.stop();
                     currentScene = Scene::EXIT;
                     break;
                 }
+                if (menuResult == "Join public"){
+                    auto ip = sf::IpAddress::resolve(PUBLIC_SERVER);
+                    if(ip.has_value()){
+                        try {
+                            client = std::make_unique<Client>(window, *ip, PUBLIC_PORT);
+                            currentScene = Scene::CLIENT_LOBBY;
+                        } catch (std::exception& e) {
+                            msgs.storeMessage(e.what(), Message::WARNING, sf::seconds(2));
+                        }
+                        break;
+                    }else{
+                        msgs.storeMessage("unable to find public server", Message::WARNING, sf::seconds(1.5));
+                    }
+                }
                 if (menuResult == "Host") {
-                    EnterPortMenu enterPortMenu(window);
+                    EnterPortMenu enterPortMenu(window, msgs);
                     auto portResult = enterPortMenu.run_menu();
                     if (!portResult) {
                         // User cancelled, show menu again
                         continue;
                     }
                     unsigned short port = *portResult;
-                    server = std::make_unique<Server>(port);
-                    serverThread = std::thread([&] {
-                        server->run();
-                    });
+                    try {
+                        server = std::make_unique<Server>(port);
+                        serverThread = std::thread([&] {
+                            server->run();
+                        });
+                    } catch (std::exception& e) {
+                        msgs.storeMessage(e.what(), Message::WARNING, sf::seconds(1.5));
+                        continue;
+                    }
+                    
                     // Wait for server to be ready
                     while (!server || !server->isReady()) {
-                        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                        sf::sleep(sf::milliseconds(10));
                     }
-                    client = std::make_unique<Client>(window, sf::IpAddress::LocalHost, port);
-                    client->setIsHost(false);
+                    try{
+                        client = std::make_unique<Client>(window, sf::IpAddress::LocalHost, port);
+                    } catch(std::exception& e){
+                        msgs.storeMessage(e.what(), Message::WARNING, sf::seconds(1.5));
+                        continue;
+                    }
+                    client->setIsHost(true);
                     currentScene = Scene::CLIENT_LOBBY;
                     break;
                 }
                 else if (menuResult == "Join") {
-                    EnterIpMenu enterIpMenu(window);
+                    EnterIpMenu enterIpMenu(window, msgs);
                     auto result = enterIpMenu.run_menu();
                     if (!result) {
                         PLOG_ERROR << "something went wrong when entering ip and port";
                         continue;
                     }
-                    client = std::make_unique<Client>(window, result->first, result->second);
+                    try{
+                        PLOG_ERROR << "creating tha clienta";
+                        client = std::make_unique<Client>(window, result->first, result->second);
+                    } catch (std::exception& e) {
+                        PLOG_ERROR << "client creation failed";
+                        msgs.storeMessage(e.what(), Message::WARNING, sf::seconds(2));
+                        continue;
+                    }
                     currentScene = Scene::CLIENT_LOBBY;
                     break;
                 }
                 else if (menuResult == "Options") {
-                    OptionsMenu optionsMenu(window, opts);
+                    OptionsMenu optionsMenu(window, opts, msgs);
                     optionsMenu.run_menu(&menuMusic);
                     save_options(opts, "config.json");
                 }

@@ -3,6 +3,7 @@
 #include "Config.h"
 #include "Networking/Connection.h"
 #include "plog/Log.h"
+#include <SFML/System/Time.hpp>
 
 class ClientConnection : public Connection
 {
@@ -26,7 +27,7 @@ public:
 
     static ClientConnection createClientConnection(sf::IpAddress targetIpAdress, unsigned short recipientPort, void* eventHandlerArgs = NULL){
         std::unique_ptr<sf::TcpSocket> tcpSocket = std::make_unique<sf::TcpSocket>();
-        if (tcpSocket->connect(targetIpAdress, recipientPort) != sf::Socket::Status::Done)
+        if (tcpSocket->connect(targetIpAdress, recipientPort, sf::seconds(1)) != sf::Socket::Status::Done)
         {
             throw std::runtime_error("Error connecting to tcp server");
         }

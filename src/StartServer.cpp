@@ -6,7 +6,7 @@
 int main(int argc, char const *argv[])
 {
     initLogger();
-    unsigned short port = DEFAUL_PORT;
+    unsigned short port = DEFAULT_PORT;
     if(argc > 1){
         //parsing 
         int iPort = atoi(argv[1]);

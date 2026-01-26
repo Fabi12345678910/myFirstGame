@@ -1,10 +1,15 @@
 #include "menu/EnterIpMenu.h"
+#include "Config.h"
+#include "WindowMessages.h"
+#include <SFML/System/Time.hpp>
 #include <cctype>
 #include <sstream>
 #include <stdexcept>
+#include <string>
 
-EnterIpMenu::EnterIpMenu(sf::RenderWindow& win)
+EnterIpMenu::EnterIpMenu(sf::RenderWindow& win, WindowMessages& msgs)
 : window(win),
+  msgs(msgs),
   ipText(font, "", 32),
   portText(font, "", 32),
   labelText(font, "Enter IP and Port", 28),
@@ -16,6 +21,7 @@ EnterIpMenu::EnterIpMenu(sf::RenderWindow& win)
 void EnterIpMenu::set_values() {
     ipBuffer.clear();
     portBuffer.clear();
+    portBuffer=std::to_string(DEFAULT_PORT);
     ip.reset();
 
     float w = window.getSize().x;
@@ -85,6 +91,8 @@ void EnterIpMenu::loop_events() {
                     if (resolved.has_value()) {
                         ip = resolved.value();
                         done = true;
+                    }else{
+                        msgs.storeMessage("could not resolve host", Message::WARNING, sf::seconds(1));
                     }
                 }
             }
@@ -114,6 +122,7 @@ void EnterIpMenu::draw_all() {
     window.draw(ipText);
     window.draw(portText);
     window.draw(infoText);
+    msgs.renderStoredMessages(window);
     window.display();
 }
 
@@ -125,8 +134,9 @@ std::optional<std::pair<sf::IpAddress, unsigned short>> EnterIpMenu::run_menu() 
         draw_all();
     }
 
-    if (!ip.has_value())
+    if (!ip.has_value()){
         return std::nullopt;
+    }
     unsigned short port = 0;
     std::istringstream(portBuffer) >> port;
     return std::make_pair(ip.value(), port);

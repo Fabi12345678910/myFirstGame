@@ -22,14 +22,14 @@ int sleep(unsigned long sec){
 #endif
 
 void* runServer(void*){
-    Server server = Server(DEFAUL_PORT);
+    Server server = Server(DEFAULT_PORT);
     server.run();
     return NULL;
 }
 
 void* runClient(void*){
     sf::RenderWindow window(sf::VideoMode(sf::Vector2u(1920,1080)), "LocalGameClient");
-    Client client(window, sf::IpAddress::LocalHost, DEFAUL_PORT);
+    Client client(window, sf::IpAddress::LocalHost, DEFAULT_PORT);
     client.run();
     return NULL;
 }

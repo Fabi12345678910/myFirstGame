@@ -4,8 +4,8 @@
 #include <sstream>
 #include <algorithm>
 
-OptionsMenu::OptionsMenu(sf::RenderWindow& win, Options& options)
-    : window(win), opts(options)/*
+OptionsMenu::OptionsMenu(sf::RenderWindow& win, Options& options, WindowMessages& msgs)
+    : window(win), opts(options), msgs(msgs)/*
       labelText(font, "Options", 32), infoText(font, "Left/Right: Volume  Enter: Mute/Unmute  Esc: Back", 18), volumeText(font, "", 32)*/
 {
     set_values();
@@ -171,6 +171,9 @@ void OptionsMenu::draw_all() {
         hint.setOrigin(sf::Vector2f{bounds.position.x + bounds.size.x / 2, bounds.position.y + bounds.size.y / 2});
         window.draw(hint);
     }
+
+    msgs.renderStoredMessages(window);
+
     window.display();
 }
 

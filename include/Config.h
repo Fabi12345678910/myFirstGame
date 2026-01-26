@@ -4,7 +4,10 @@
 #include <cstdint>
 #define VERSION_TYPE std::uint16_t
 
-constexpr uint16_t DEFAUL_PORT = 4444;
+constexpr auto PUBLIC_SERVER = "localhost";
+constexpr uint16_t PUBLIC_PORT = 4444;
+
+constexpr uint16_t DEFAULT_PORT = 4444;
 
 //0x.MM.mm.hh
 //MM = major changes

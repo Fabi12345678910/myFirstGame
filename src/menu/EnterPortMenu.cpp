@@ -1,9 +1,12 @@
 #include "menu/EnterPortMenu.h"
+#include "Config.h"
+#include "WindowMessages.h"
 #include <cctype>
 #include <sstream>
 
-EnterPortMenu::EnterPortMenu(sf::RenderWindow& win)
+EnterPortMenu::EnterPortMenu(sf::RenderWindow& win, WindowMessages& msgs)
 : window(win),
+  msgs(msgs),
   portText(font, "", 32),
   labelText(font, "Enter Port", 28),
   infoText(font, "Press Enter to confirm", 20)
@@ -13,6 +16,7 @@ EnterPortMenu::EnterPortMenu(sf::RenderWindow& win)
 
 void EnterPortMenu::set_values() {
     portBuffer.clear();
+    portBuffer=std::to_string(DEFAULT_PORT);
 
     float w = window.getSize().x;
     float h = window.getSize().y;
@@ -93,6 +97,9 @@ void EnterPortMenu::draw_all() {
     window.draw(labelText);
     window.draw(portText);
     window.draw(infoText);
+
+    msgs.renderStoredMessages(window);
+    
     window.display();
 }
 

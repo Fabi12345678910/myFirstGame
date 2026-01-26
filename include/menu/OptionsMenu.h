@@ -2,6 +2,7 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/Audio.hpp>
 #include "Options.h"
+#include "WindowMessages.h"
 
 class OptionsMenu {
     sf::RenderWindow& window;
@@ -12,6 +13,8 @@ class OptionsMenu {
     std::vector<sf::Text> texts;
     std::vector<sf::Vector2f> coords;
     size_t optionsSize;
+
+    WindowMessages& msgs;
 
     Options& opts;
     unsigned short pos;
@@ -27,6 +30,6 @@ class OptionsMenu {
     void loop_events();
     void draw_all();
 public:
-    OptionsMenu(sf::RenderWindow& win, Options& opts);
+    OptionsMenu(sf::RenderWindow& win, Options& opts, WindowMessages& msgs);
     void run_menu(sf::Music* music = nullptr);
 };
