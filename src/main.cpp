@@ -118,8 +118,10 @@ int main() {
                         continue;
                     }
                     try{
+                        PLOG_ERROR << "creating tha clienta";
                         client = std::make_unique<Client>(window, result->first, result->second);
                     } catch (std::exception& e) {
+                        PLOG_ERROR << "client creation failed";
                         msgs.storeMessage(e.what(), Message::WARNING, sf::seconds(2));
                         continue;
                     }

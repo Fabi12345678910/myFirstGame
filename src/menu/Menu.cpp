@@ -1,6 +1,7 @@
 #include "menu/Menu.h"
 #include "plog/Log.h"
 #include <SFML/Graphics.hpp>
+#include <SFML/Window/Keyboard.hpp>
 #include <stdexcept>
 
 Menu::Menu(sf::RenderWindow& win, WindowMessages& msgs) : window(win), msgs(msgs){
@@ -70,38 +71,42 @@ void Menu::loop_events(){
       set_values();
     }
 
+
+    if (auto key = event.getIf<sf::Event::KeyPressed>()) {
+      switch (key->code) {
+        case sf::Keyboard::Key::Down:{
+          if( pos < 4){
+            ++pos;
+            pressed = true;
+            texts[pos].setOutlineThickness(4);
+            texts[pos - 1].setOutlineThickness(0);
+            pressed = false;
+            theselect = false;
+          }
+          break;
+        }
+        case sf::Keyboard::Key::Up:{
+          if( pos > 0){
+            --pos;
+            pressed = true;
+            texts[pos].setOutlineThickness(4);
+            texts[pos + 1].setOutlineThickness(0);
+            pressed = false;
+            theselect = false;
+          }
+          break;
+        }
+        case sf::Keyboard::Key::Enter:{
+          theselect = true;
+          PLOG_DEBUG << options[pos] << '\n';
+          break;
+        }
+        default:
+          break;
+      }
+    }
     // pos_mouse = sf::Mouse::getPosition(window);
     // mouse_coord = window.mapPixelToCoords(pos_mouse);
-
-    if(sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Down) && !pressed){
-      if( pos < 3){
-        ++pos;
-        pressed = true;
-        texts[pos].setOutlineThickness(4);
-        texts[pos - 1].setOutlineThickness(0);
-        pressed = false;
-        theselect = false;
-      }
-    }
-
-    if(sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Up) && !pressed){
-      if( pos > 0){
-        --pos;
-        pressed = true;
-        texts[pos].setOutlineThickness(4);
-        texts[pos + 1].setOutlineThickness(0);
-        pressed = false;
-        theselect = false;
-      }
-    }
-
-    if(sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Enter) && !theselect){
-      theselect = true;
-      // if( pos == 3){
-      //   window.close();
-      // }
-      PLOG_DEBUG << options[pos] << '\n';
-    }
 
     // if(sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)){
     //   if(winclose.getGlobalBounds().contains(mouse_coord)){

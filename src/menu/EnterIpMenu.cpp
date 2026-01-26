@@ -1,7 +1,7 @@
 #include "menu/EnterIpMenu.h"
 #include "Config.h"
 #include "WindowMessages.h"
-#include "plog/Log.h"
+#include <SFML/System/Time.hpp>
 #include <cctype>
 #include <sstream>
 #include <stdexcept>
@@ -91,6 +91,8 @@ void EnterIpMenu::loop_events() {
                     if (resolved.has_value()) {
                         ip = resolved.value();
                         done = true;
+                    }else{
+                        msgs.storeMessage("could not resolve host", Message::WARNING, sf::seconds(1));
                     }
                 }
             }
@@ -128,15 +130,13 @@ std::optional<std::pair<sf::IpAddress, unsigned short>> EnterIpMenu::run_menu() 
     set_values();
 
     while (window.isOpen() && !done) {
-        PLOG_ERROR << "loop events";
         loop_events();
-        PLOG_ERROR << "draw all";
         draw_all();
-        PLOG_ERROR << "done";
     }
 
-    if (!ip.has_value())
+    if (!ip.has_value()){
         return std::nullopt;
+    }
     unsigned short port = 0;
     std::istringstream(portBuffer) >> port;
     return std::make_pair(ip.value(), port);
