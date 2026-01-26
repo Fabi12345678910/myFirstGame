@@ -8,7 +8,7 @@ class GameStateUpdater
 {
 private:
 public:
-    GameStateUpdater(/* args */){};
+    GameStateUpdater(){};
     ~GameStateUpdater(){};
     virtual void setPlayerVelocity(Player& player, sf::Vector2f velocity) = 0;
     virtual void deltaMovePlayer(Player& player, sf::Vector2f deltaPosition) = 0;

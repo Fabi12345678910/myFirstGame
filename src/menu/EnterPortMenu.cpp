@@ -71,20 +71,29 @@ void EnterPortMenu::loop_events() {
             if (c == '\b') {
                 if (!portBuffer.empty()) portBuffer.pop_back();
             }
-            else if (c == '\r' || c == '\n') {
-                if (!portBuffer.empty()) {
-                    done = true;
-                }
-            }
             else if (std::isdigit(c) && portBuffer.size() < 5) {
                 portBuffer += c;
             }
         }
 
         if (auto key = event.getIf<sf::Event::KeyPressed>()) {
-            if (key->code == sf::Keyboard::Key::Escape) {
-                done = true;
-                portBuffer.clear();
+            switch (key->code) {
+                case sf::Keyboard::Key::Enter:{
+                    if (!portBuffer.empty()) {
+                      done = true;
+                    }
+                    break;
+                }
+                case sf::Keyboard::Key::Escape: {
+                    done = true;
+                    portBuffer.clear();
+                    break;
+                }
+                default: {
+                    portBuffer.clear();
+                    break;
+                }
+
             }
         }
     }

@@ -105,10 +105,26 @@ void EnterIpMenu::loop_events() {
         }
 
         if (auto key = event.getIf<sf::Event::KeyPressed>()) {
-            if (key->code == sf::Keyboard::Key::Tab)
-                enteringIp = !enteringIp;
-            else if (key->code == sf::Keyboard::Key::Escape)
-                done = true, ip.reset();
+            switch (key->code) {
+                case sf::Keyboard::Key::Tab: {
+                    enteringIp = !enteringIp;
+                }
+                case sf::Keyboard::Key::Escape: {
+                    done = true;
+                    ip.reset();
+                }
+                case sf::Keyboard::Key::Enter: {
+                    if (!portBuffer.empty()) {
+                      done = true;
+                    }
+                    break;
+                }
+                default: {
+                    portBuffer.clear();
+                    break;
+                }
+
+            }
         }
     }
 }
