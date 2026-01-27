@@ -72,6 +72,19 @@ void EnterIpMenu::set_values() {
 }
 
 void EnterIpMenu::loop_events() {
+    const auto confirm = [&]() {
+        if (ipBuffer.empty() || portBuffer.empty())
+            return;
+
+        auto resolved = sf::IpAddress::resolve(ipBuffer);
+        if (resolved.has_value()) {
+            ip = resolved.value();
+            done = true;
+        } else {
+            msgs.storeMessage("could not resolve host", Message::WARNING, sf::seconds(1));
+        }
+    };
+
     while (auto ev = window.pollEvent()) {
         const sf::Event& event = *ev;
 
@@ -86,15 +99,7 @@ void EnterIpMenu::loop_events() {
                 else if (!enteringIp && !portBuffer.empty()) portBuffer.pop_back();
             }
             else if (c == '\r' || c == '\n') {
-                if (!ipBuffer.empty() && !portBuffer.empty()) {
-                    auto resolved = sf::IpAddress::resolve(ipBuffer);
-                    if (resolved.has_value()) {
-                        ip = resolved.value();
-                        done = true;
-                    }else{
-                        msgs.storeMessage("could not resolve host", Message::WARNING, sf::seconds(1));
-                    }
-                }
+                confirm();
             }
             else if (std::isprint(c)) {
                 if (enteringIp && ipBuffer.size() < 64)
@@ -108,19 +113,18 @@ void EnterIpMenu::loop_events() {
             switch (key->code) {
                 case sf::Keyboard::Key::Tab: {
                     enteringIp = !enteringIp;
+                    break;
                 }
                 case sf::Keyboard::Key::Escape: {
                     done = true;
                     ip.reset();
+                    break;
                 }
                 case sf::Keyboard::Key::Enter: {
-                    if (!portBuffer.empty()) {
-                      done = true;
-                    }
+                    confirm();
                     break;
                 }
                 default: {
-                    portBuffer.clear();
                     break;
                 }
 
