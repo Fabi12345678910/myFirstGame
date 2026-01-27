@@ -1,0 +1,8 @@
+\beamer@sectionintoc {1}{MyFirstGame}{1}{0}{1}
+\beamer@subsectionintoc {1}{1}{Component Overview}{2}{0}{1}
+\beamer@subsectionintoc {1}{2}{Dependencies}{3}{0}{1}
+\beamer@subsectionintoc {1}{3}{Code Insight: GameStateStore}{4}{0}{1}
+\beamer@subsectionintoc {1}{4}{Code Insight: GameUpdates}{6}{0}{1}
+\beamer@subsectionintoc {1}{5}{Lessons learned}{8}{0}{1}
+\beamer@subsectionintoc {1}{6}{Live Demo}{9}{0}{1}
+\beamer@sectionintoc {2}{Thanks}{10}{0}{2}
