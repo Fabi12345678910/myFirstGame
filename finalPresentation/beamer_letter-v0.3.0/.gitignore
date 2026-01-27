@@ -3,7 +3,7 @@
 
 ## targets
 letter.pdf
-slides.pdf
+## slides.pdf
 slides.html
 slides-beamer.pdf
 slides-revealjs.html
@@ -26,7 +26,7 @@ builds
 *.log
 *.nav
 *.out
-*.pdf
+## *.pdf
 *.snm
 *.swp
 *.toc
