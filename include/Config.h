@@ -4,8 +4,8 @@
 #include <cstdint>
 #define VERSION_TYPE std::uint16_t
 
-constexpr auto PUBLIC_SERVER = "localhost";
-constexpr uint16_t PUBLIC_PORT = 4444;
+constexpr auto PUBLIC_SERVER = "sunouns.de";
+constexpr uint16_t PUBLIC_PORT = 30567;
 
 constexpr uint16_t DEFAULT_PORT = 4444;
 
