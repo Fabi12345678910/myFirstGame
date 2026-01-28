@@ -10,13 +10,14 @@ public:
     OBJECT_ID_TYPE playerId;
     TICK_TYPE latestServerTick;
     std::uint16_t serverTickRateMs;
+    std::int16_t currentMap;
     EventLoginConfirmation(sf::Packet packet){
-        if(!(packet >> playerId >> latestServerTick >> serverTickRateMs)){
-            throw std::runtime_error("failed to event contents");
+        if(!(packet >> playerId >> latestServerTick >> serverTickRateMs >> currentMap)){
+            throw std::runtime_error("failed to read event contents");
         };
     };
-    EventLoginConfirmation(OBJECT_ID_TYPE playerId, TICK_TYPE latestServerTick, std::uint16_t serverTickRateMs):
-        playerId(playerId), latestServerTick(latestServerTick), serverTickRateMs(serverTickRateMs){} 
+    EventLoginConfirmation(OBJECT_ID_TYPE playerId, TICK_TYPE latestServerTick, std::uint16_t serverTickRateMs, std::int16_t currentMap):
+        playerId(playerId), latestServerTick(latestServerTick), serverTickRateMs(serverTickRateMs), currentMap(currentMap){} 
 
     sf::Packet toPacket() const override{
         sf::Packet packet;
@@ -24,6 +25,7 @@ public:
         packet << playerId;
         packet << latestServerTick;
         packet << serverTickRateMs;
+        packet << currentMap;
         return packet;
     }
 };

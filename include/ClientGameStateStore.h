@@ -271,7 +271,9 @@ public:
     }
     
     bool loadStage(Stage& stage){
-        for (size_t idx = gameStates.getSize() - 1; idx >= gameStates.getMinIndex(); idx--){
+        PLOG_ERROR << "gameStates.getSize(): " << gameStates.getSize();
+        for (size_t idx = gameStates.getSize() - 1; idx >= gameStates.getMinIndex() && idx < gameStates.getSize(); idx--){
+        PLOG_ERROR << "idx: " << idx;
             gameStates[idx].gameState.setStage(stage);
             if(gameStates[idx].gameStateUpdated){
                 return true;

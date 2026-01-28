@@ -526,6 +526,12 @@ void Server::processEvents(std::vector<indexedPlayerInputWithId>& playerInputs){
                 conn.sendTcpEvent(EventLoginDenied(0));
                 } catch (...) {
                 }
+            }
+            else if(this->gameStates[currentTick].getGameState() != LOBBY){
+                try {
+                conn.sendTcpEvent(EventLoginDenied(2));
+                } catch (...) {
+                }
             }else if(evLoginRequest->apiVersion != CONF_API_VERSION){
                 try {
                 conn.sendTcpEvent(EventLoginDenied(1));
@@ -540,9 +546,9 @@ void Server::processEvents(std::vector<indexedPlayerInputWithId>& playerInputs){
                 //generate empty inputData for new player
                 playerInputs.emplace_back(0, playerInput(), nextPlayerId);
                 try {
-                    conn.sendTcpEvent(EventLoginConfirmation(nextPlayerId, currentTick, TICKRATE_MS));
+                    conn.sendTcpEvent(EventLoginConfirmation(nextPlayerId, currentTick, TICKRATE_MS, gameStates[currentTick].getStage().getStageId()));
                 } catch (...) {
-
+                    
                 }
             }
         }

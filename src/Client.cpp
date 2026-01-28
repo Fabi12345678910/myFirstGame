@@ -85,6 +85,8 @@ void Client::performLogin(){
                 if(evLoginSuccess->latestServerTick < displayTickDifference){
                     throw std::runtime_error("unable to initiate entity interpolation");
                 }
+                Stage stage = StageManager::loadStage(evLoginSuccess->currentMap);
+                this->gameStore.loadStage(stage);
                 clientState = C_LOBBY;
                 conn.setUdpArgs(&eventData);
                 conn.setUdpEventHandler(udpClientEventHandler);
@@ -103,11 +105,11 @@ void Client::performLogin(){
 
 void Client::run(){
 
-    GameState baseGameState = GameState();
-    Stage lobbyStage = StageManager::loadStage(1);
-    baseGameState.setStage(lobbyStage);
-
-    gameStore = ClientGameStateStore<clientGameStateBufferSize>(1, baseGameState);
+//    GameState baseGameState = GameState();
+//    Stage lobbyStage = StageManager::loadStage(1);
+//    baseGameState.setStage(lobbyStage);
+//
+//    gameStore = ClientGameStateStore<clientGameStateBufferSize>(1, baseGameState);
     gameStore.setTickrate(sf::milliseconds(this->tickrateMs).asSeconds());
     gameStore.setLocalPlayerId(this->playerId);
 
