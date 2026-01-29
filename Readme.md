@@ -27,3 +27,31 @@ There are several options available to execute:
 - Server [port]: server only
 - Client [target] [port]: client only
 - LocalGame: start server and connect to it locally
+
+# Responsibilities
+
+While having seperation in responsibilities, 
+a lot of debugging and minor bug improvements have been done in cooperation.
+
+## (0,5) Main menu - Alan Gallo
+- Host game
+- Join server
+- Exit
+## (0,5) Audio - Alan Gallo
+- Background music
+- ~~Sound effects~~
+## (2) Movement - Alan Gallo
+- Running left / right
+- Jumping
+- ~~Special move of some sort, potentially: (dashing, wall-jump,  double-jump, etc.)~~
+## (2) Stages - Alan Gallo
+- Design different stages
+- ~~Moving parts of stages~~
+## (1) Voting for Stages - Alan Gallo
+- Players vote for stage before game
+## (3) Multiplayer - Fabian Pfaff
+- Ensure players can host and join game
+- Ensure Game State Synchronization
+## (2) Main combat - Fabian Pfaff
+- Real time combat
+- Attack, ~~Block~~
