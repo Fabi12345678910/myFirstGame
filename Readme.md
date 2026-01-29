@@ -19,3 +19,11 @@ Additional packages(as used in the ci on debian trixie):
 # Compilation
 1. `cmake -B build`
 2. `cd build && cmake --build .`
+
+# Execution
+make sure to change your current working directory to `<repo_path>/build`. \
+There are several options available to execute:
+- Main: starts up the main menu, recommended
+- Server [port]: server only
+- Client [target] [port]: client only
+- LocalGame: start server and connect to it locally
