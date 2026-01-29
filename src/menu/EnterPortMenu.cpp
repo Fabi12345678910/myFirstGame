@@ -90,7 +90,7 @@ void EnterPortMenu::loop_events() {
                     break;
                 }
                 default: {
-                    portBuffer.clear();
+//                    portBuffer.clear();
                     break;
                 }
 
