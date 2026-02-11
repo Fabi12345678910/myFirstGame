@@ -1,6 +1,0 @@
-PWD /home/fabianp/Development/advancedcpp/finalPresentation/beamer_letter-v0.3.0
-INPUT /home/fabianp/opt/texlive/2024/texmf.cnf
-INPUT /home/fabianp/opt/texlive/2024/texmf-dist/web2c/texmf.cnf
-INPUT /home/fabianp/opt/texlive/2024/texmf-var/web2c/pdftex/pdflatex.fmt
-INPUT tempCodeRunnerFile.tex
-OUTPUT /home/fabianp/Development/advancedcpp/.auxfiles/finalPresentation/beamer_letter-v0.3.0/tempCodeRunnerFile.log
