@@ -1,5 +1,6 @@
 /build/
 /.cache/
+/.auxfiles/
 .vscode/launch.json
 .vscode/settings.json
 CMakePresets.json
