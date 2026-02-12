@@ -104,16 +104,9 @@ void Client::performLogin(){
 }
 
 void Client::run(){
-
-//    GameState baseGameState = GameState();
-//    Stage lobbyStage = StageManager::loadStage(1);
-//    baseGameState.setStage(lobbyStage);
-//
-//    gameStore = ClientGameStateStore<clientGameStateBufferSize>(1, baseGameState);
     gameStore.setTickrate(sf::milliseconds(this->tickrateMs).asSeconds());
     gameStore.setLocalPlayerId(this->playerId);
 
-    //enter the main loop
     mainLoop();
 }
 
@@ -215,12 +208,6 @@ void Client::processEventsPlaying(){
     }
 }
 
-
-//local GameStateAddons{
-//  uint32_t localInputId; //this might just be the client tick
-//  Player   localPlayer;
-//  inputs   clientInputs
-//}
 void Client::updateGameStates(EventGamestatePlayerInputHistory& ev){
     TICK_TYPE currentTickInfo = ev.startingGameTick;
     while (ev.hasNextInfo())
@@ -461,7 +448,7 @@ playerInput Client::processInputs(){ // maybe shouldve used window poll event
         input.projectile = true;
     }
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::R)) {
-        input.readyToPlay = true;
+        input.readyToPlay = true; //maximal pfusch
     }
 
     return input;

@@ -39,10 +39,8 @@ static bool applyVoidTeleportY(GameStateUpdater& gsUpdater, Player& player, sf::
 
 void updateGame(GameStateUpdater& gsUpdater, GameState& gameState, float deltaTime, std::vector<Player*> playersToUpdate, std::vector<Projectile*> projectilesToUpdate){
 
-    //move all movable objects
     for(Player* player : playersToUpdate){
 
-        // Dead players should not participate in physics/collisions.
         if (player->getHealth() <= 0) {
             continue;
         }
@@ -51,7 +49,6 @@ void updateGame(GameStateUpdater& gsUpdater, GameState& gameState, float deltaTi
             gsUpdater.setPlayerProjectileCooldown(*player, player->getProjectileCooldown() - 1);
         }
 
-        //set player not on ground unless otherwise computed by a collision later
         gsUpdater.setPlayerOnGround(*player, false);
 
         const sf::FloatRect before = player->getShape().getGlobalBounds();
@@ -87,7 +84,6 @@ void updateGame(GameStateUpdater& gsUpdater, GameState& gameState, float deltaTi
     }
     for (Projectile* projectile : projectilesToUpdate) {
         projectile->getShape().move(sf::Vector2f(projectile->getSpeed(), 0) * deltaTime);
-        // check collision with players
         for (auto itPlayer = gameState.getPlayersBegin(); itPlayer != gameState.getPlayersEnd(); itPlayer++){
             Player& player = itPlayer->second;
             if (player.getHealth() <= 0) {
@@ -103,7 +99,6 @@ void updateGame(GameStateUpdater& gsUpdater, GameState& gameState, float deltaTi
             }
             else { PLOG_WARNING << "projectile collided with a non collidable player"; } 
         }
-        // check collision with stage objects
         for (StageObject &stageObject: gameState.getStage().getStageObjects()){
 
             const Collidable *collidable = dynamic_cast<const Collidable*>(&stageObject);

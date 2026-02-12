@@ -54,22 +54,16 @@ bool handlePlayerSolidCollision(GameStateUpdater& gsUpdater, Player& player, Gam
     float combinedHalfWidths = (playerBounds.size.x / 2.f) + (otherBounds.size.x / 2.f);
     float combinedHalfHeights = (playerBounds.size.y / 2.f) + (otherBounds.size.y / 2.f);
 
-    // Only handle if actually colliding
     float overlapX = combinedHalfWidths - abs(dx);
     float overlapY = combinedHalfHeights - abs(dy);
 
     //TODO: this needs rework, we have to check both collision types correctly, not skip one because the other was bigger
     if (overlapX < overlapY) {
         sf::Vector2f playerMovement = collisionPosition.getGlobalBounds().position - player.getShape().getGlobalBounds().position;
-        // Horizontal collision
         if (dx > 0.f) {
-            // Player is on the right
-            // move Player to the left till the object
             playerMovement.x += overlapX;
             gsUpdater.deltaMovePlayer(player, sf::Vector2f(overlapX, 0.f));
-//            player.getShape().move(sf::Vector2f(overlapX, 0.f));
         } else {
-            // Player is on the left
             playerMovement.x -= overlapX;
             gsUpdater.deltaMovePlayer(player, sf::Vector2f(-overlapX, 0.f));
         }
@@ -79,12 +73,9 @@ bool handlePlayerSolidCollision(GameStateUpdater& gsUpdater, Player& player, Gam
         return true;
     } else {
         sf::Vector2f playerMovement = collisionPosition.getGlobalBounds().position - player.getShape().getGlobalBounds().position;
-        // Vertical collision
         if (dy > 0.f) {
-            // Player is below
             playerMovement.y += overlapY;
         } else {
-            // Player is above
             playerMovement.y -= overlapY;
             gsUpdater.setPlayerOnGround(player, true);
         }
@@ -104,11 +95,9 @@ static bool crossedTopFromAbove(const sf::RectangleShape& oldPosition, sf::Recta
 }
 
 bool handlePlayerSemiSolidCollision(GameStateUpdater& gsUpdater, Player& player, GameObject& object, sf::RectangleShape& collisionPosition, sf::Vector2f playerVelocity){
-    // One-way platform: only land when falling from above and crossing the top
     const sf::FloatRect tBox = object.getShape().getGlobalBounds();
     sf::Vector2f playerMovement = collisionPosition.getGlobalBounds().position - player.getShape().getGlobalBounds().position;
 
-//    const bool movingDown = playerVelocity.y > 0.f;
     PLOG_VERBOSE_IF(debugCollision) << ", crossedTopFromAbove: " << crossedTopFromAbove(player.getShape(), collisionPosition, tBox);
     if (crossedTopFromAbove(player.getShape(), collisionPosition, tBox)) {
         const float platformTop = tBox.position.y;
@@ -116,7 +105,6 @@ bool handlePlayerSemiSolidCollision(GameStateUpdater& gsUpdater, Player& player,
         
         auto newPosition = collisionPosition.getGlobalBounds().position;
         newPosition.y = tBox.position.y - collisionPosition.getGlobalBounds().size.y;
-        //playerMovement.y+=correction;
         gsUpdater.absoluteMovePlayer(player, newPosition);
         playerVelocity.y = 0.f;
         player.setVelocity(playerVelocity);
@@ -137,12 +125,10 @@ bool handlePlayerHazardCollision(GameStateUpdater& gsUpdater, Player& player, Ga
 }
 
 bool handlePlayerJumpPadCollision(GameStateUpdater& gsUpdater, Player& player, GameObject& object, sf::RectangleShape& collisionPosition, sf::Vector2f playerVelocity){
-    //const sf::FloatRect pNow = player.getShape().getGlobalBounds();
     const sf::FloatRect tBox = object.getShape().getGlobalBounds();
     const bool movingDown = playerVelocity.y > 0.f;
 
     if (movingDown && crossedTopFromAbove(player.getShape(), collisionPosition, tBox)) {
-        // Tune this impulse to taste; gravity is positive downward
         constexpr float kJumpPadImpulse = -700.f; // upward
         playerVelocity.y = kJumpPadImpulse;
         gsUpdater.setPlayerVelocity(player, playerVelocity);

@@ -9,10 +9,7 @@
 #include "FontManager.h"
 
 void Renderer::renderWaitingMessage() {
-    //0  -199 = 1 dot
-    //200-399 = 2 dots
-    //400-599 = 3 dots
-    
+
     int numDots;
     sf::Time elapsedWaitTime = waitingDotClock.getElapsedTime();
     if(elapsedWaitTime >= sf::milliseconds(400)){
@@ -53,21 +50,20 @@ void Renderer::renderWaitingMessage() {
     void Renderer::renderFrameTimeGraph(const CircularArray<HEALTH_FRAME_TIME_TYPE, 256>& frameTimes, HEALTH_FRAME_TIME_TYPE criticalMs, float startX, float startY){
     constexpr float barWidth = 2.f;
     constexpr float barSpacing = 1.f;
-    constexpr float graphHeight = 100.f; // max height in pixels
+    constexpr float graphHeight = 100.f;
 
     size_t minIdx = frameTimes.getMinIndex();
     size_t maxIdx = frameTimes.getSize();
 
     for (size_t i = minIdx; i < maxIdx; ++i) {
         float ms = frameTimes[i];
-        float height = std::min(ms * 5.f, graphHeight); // scale for visibility
-        height = std::max(height, 1.f); //at least 1 to have some visibility
+        float height = std::min(ms * 5.f, graphHeight);
+        height = std::max(height, 1.f);
 
         sf::RectangleShape bar({barWidth, height});
         bar.setPosition(sf::Vector2f(startX + (i - minIdx) * (barWidth + barSpacing),
                         startY + graphHeight - height));
 
-        // Color gradient
         if (ms < criticalMs) bar.setFillColor(sf::Color::Green);
         else bar.setFillColor(sf::Color::Red);
         ;
@@ -75,7 +71,6 @@ void Renderer::renderWaitingMessage() {
         window.draw(bar);
     }
 
-    // Draw critical line
     float critHeight = std::min(criticalMs * 5.f, graphHeight);
     sf::RectangleShape criticalLine({(maxIdx - minIdx) * (barWidth + barSpacing), 1.f});
     criticalLine.setPosition(sf::Vector2f(startX, startY + graphHeight - critHeight));
@@ -84,11 +79,11 @@ void Renderer::renderWaitingMessage() {
 }
 
 void Renderer::renderServerQueueHealth(std::uint8_t health){
-    float barWidth = 20.f; // width of each tick bar
-    float spacing = 5.f;   // space between bars
-    float startX = 50.f;   // left margin
-    float startY = 100.f;   // top margin
-    float barHeight = 20.f; // max height of bars
+    float barWidth = 20.f; 
+    float spacing = 5.f;
+    float startX = 50.f;
+    float startY = 100.f;
+    float barHeight = 20.f;
 
     constexpr uint8_t maxBars = 5;
 
@@ -127,11 +122,11 @@ sf::Color getHealthColor(TickHealth::HealthState state) {
 }
 
 void Renderer::renderGameStateHealth(HealthReport& report){
-    float barWidth = 20.f; // width of each tick bar
-    float spacing = 5.f;   // space between bars
-    float startX = 50.f;   // left margin
-    float startY = 50.f;   // top margin
-    float barHeight = 20.f; // max height of bars
+    float barWidth = 20.f;
+    float spacing = 5.f;
+    float startX = 50.f;
+    float startY = 50.f;
+    float barHeight = 20.f;
 
     for (size_t i = 0; i < report.tickHealths.size(); ++i) {
         const TickHealth& tick = report.tickHealths[i];
@@ -180,7 +175,6 @@ void Renderer::renderMapSelection(TICK_TYPE timeLeft, int16_t& selectedId, bool&
     float lineSpacing = 0.05f * H;
     float textScale = 0.03f * H;
 
-    // ─── INPUT ───────────────────────────────────────────────
     while (auto eventOpt = window.pollEvent()) {
         
         const sf::Event& event = *eventOpt;
@@ -213,7 +207,6 @@ void Renderer::renderMapSelection(TICK_TYPE timeLeft, int16_t& selectedId, bool&
         }
     }
 
-    // ─── HEADER ──────────────────────────────────────────────
     int secondsLeft = timeLeft/100;
     std::string header = "Select Map " + std::to_string(secondsLeft);
     sf::Text headerText(font, header, textScale);
@@ -221,7 +214,6 @@ void Renderer::renderMapSelection(TICK_TYPE timeLeft, int16_t& selectedId, bool&
     headerText.setOrigin(headerText.getLocalBounds().getCenter());
     window.draw(headerText);
 
-    // ─── MENU ────────────────────────────────────────────────
     std::string label = "<< " + std::to_string(maps[selectedId].first) + " " + maps[selectedId].second + " >>";
     sf::Text entry(font, label, textScale);
 
@@ -254,7 +246,6 @@ void Renderer::renderLoading() {
         float y = center.y + radius * std::sin(theta);
         sf::CircleShape dot(dotRadius);
         dot.setOrigin(sf::Vector2f(dotRadius, dotRadius));
-        // Fade effect for spinner
         int alpha = static_cast<int>(180 + 75 * std::sin(theta - waitingAngle));
         dot.setFillColor(sf::Color(255, 255, 255, alpha));
         dot.setPosition(sf::Vector2f(x, y));
@@ -423,20 +414,9 @@ void Renderer::renderWinner(std::optional<OBJECT_ID_TYPE> winnerPlayerId) {
     window.draw(text);
 }
 
-// simple color selector for tile types
-static sf::Color colorForStageType(StageObjectType t) {
-    switch (t) {
-        case StageObjectType::Solid:      return sf::Color(130, 130, 130);   // gray
-        case StageObjectType::HalfSolid:  return sf::Color(90, 170, 255);    // blue
-        case StageObjectType::Death: return sf::Color(220, 60, 30);     // red/orange
-        default:                          return sf::Color::White;
-    }
-}
-
 void Renderer::render(GameState& gameState) {
-    window.clear(sf::Color(25, 25, 28)); // dark background
+    window.clear(sf::Color(25, 25, 28));
 
-    // ---- Stage ----
     for (const StageObject& obj : gameState.getStage().getStageObjects()) {
         sf::RectangleShape shape = obj.getShape();
         shape.setFillColor(colorForStageType(obj.getType()));
@@ -445,7 +425,6 @@ void Renderer::render(GameState& gameState) {
         window.draw(shape);
     }
 
-    // ---- Spawn points (optional visualization) ----
     for (const sf::Vector2f& sp : gameState.getStage().getSpawnPoints()) {
         sf::CircleShape dot{5.f};
         dot.setOrigin({5.f, 5.f});
@@ -454,7 +433,6 @@ void Renderer::render(GameState& gameState) {
         window.draw(dot);
     }
 
-    // ---- Players ----
     for (auto itPlayer = gameState.getPlayersBegin(); itPlayer != gameState.getPlayersEnd(); itPlayer++){
         if (itPlayer->second.getHealth() <= 0) {continue;}
         sf::RectangleShape rect = itPlayer->second.getShape();
@@ -464,7 +442,6 @@ void Renderer::render(GameState& gameState) {
         window.draw(rect);
     }
 
-    // ---- Projectiles ----
     for (auto itProjectile = gameState.getProjectilesBegin(); itProjectile != gameState.getProjectilesEnd(); itProjectile++){
         sf::RectangleShape rect = itProjectile->second.getShape();
         rect.setFillColor(sf::Color(255, 220, 60));
@@ -472,8 +449,6 @@ void Renderer::render(GameState& gameState) {
         rect.setOutlineColor(sf::Color(0, 0, 0, 70));
         window.draw(rect);
     }
-
-    //window.display();
 }
 
 void Renderer::processDisplayEvents() {
@@ -483,5 +458,15 @@ void Renderer::processDisplayEvents() {
             window.close();
             exit(EXIT_SUCCESS);
         }
+    }
+}
+
+// simple color selector for tile types
+static sf::Color colorForStageType(StageObjectType t) {
+    switch (t) {
+        case StageObjectType::Solid:      return sf::Color(130, 130, 130);   // gray
+        case StageObjectType::HalfSolid:  return sf::Color(90, 170, 255);    // blue
+        case StageObjectType::Death: return sf::Color(220, 60, 30);     // red/orange
+        default:                          return sf::Color::White;
     }
 }

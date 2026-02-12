@@ -18,7 +18,6 @@
 #include "Logger.h"
 #include "plog/Log.h"
 
-// Enum for scene management
 enum class Scene {
     MENU,
     CLIENT_LOBBY,
@@ -57,7 +56,7 @@ int main() {
                 }
             }
             while (window.isOpen()) { 
-                Menu menu(window, msgs); //needs to be inside so graphical changes are applied
+                Menu menu(window, msgs);
                 std::string menuResult = menu.run_menu();
                 if (!window.isOpen()) {
                     menuMusic.stop();
@@ -82,7 +81,6 @@ int main() {
                     EnterPortMenu enterPortMenu(window, msgs);
                     auto portResult = enterPortMenu.run_menu();
                     if (!portResult) {
-                        // User cancelled, show menu again
                         continue;
                     }
                     unsigned short port = *portResult;
@@ -96,7 +94,6 @@ int main() {
                         continue;
                     }
                     
-                    // Wait for server to be ready
                     while (!server || !server->isReady()) {
                         sf::sleep(sf::milliseconds(10));
                     }
@@ -137,9 +134,6 @@ int main() {
                     currentScene = Scene::EXIT;
                     menuMusic.stop();
                     break;
-                }
-                else {
-                    //menuResult.clear();
                 }
             }
             menuMusic.stop();

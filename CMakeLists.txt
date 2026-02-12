@@ -76,7 +76,6 @@ add_executable(Main
     src/Server.cpp
     src/rendering/Renderer.cpp
     src/operations/GameUpdate.cpp
-    src/operations/PlayerOperations.cpp
     src/networking/Events.cpp
     src/networking/Connection.cpp
     src/networking/ClientConnection.cpp
@@ -99,7 +98,6 @@ add_executable(LocalGame
     src/Server.cpp
     src/Client.cpp
     src/operations/GameUpdate.cpp
-    src/operations/PlayerOperations.cpp
     src/networking/Events.cpp
     src/rendering/Renderer.cpp
     src/networking/Connection.cpp
@@ -144,7 +142,6 @@ add_executable(Server
     src/StartServer.cpp
     src/threads/WinPThread.c
     src/operations/GameUpdate.cpp
-    src/operations/PlayerOperations.cpp
     src/networking/Events.cpp
     src/rendering/Renderer.cpp
     src/networking/Connection.cpp
@@ -165,7 +162,6 @@ add_executable(Client
     src/StartClient.cpp
     src/threads/WinPThread.c
     src/operations/GameUpdate.cpp
-    src/operations/PlayerOperations.cpp
     src/rendering/Renderer.cpp
     src/networking/Events.cpp
     src/networking/Connection.cpp

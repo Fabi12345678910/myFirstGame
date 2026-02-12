@@ -2,7 +2,6 @@
 #include "Player.h"
 #include "Projectile.h"
 #include "Types.h"
-//handles calculated updates for a specific gamestate, may be implemented different on client/server
 //all methods required by either the client or the server should be defined here and used in Gameupdate.update()
 class GameStateUpdater
 {

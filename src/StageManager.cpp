@@ -16,11 +16,9 @@ Stage StageManager::loadStage(int16_t stageId)
     std::vector<StageObject> objects;
     std::vector<sf::Vector2f> spawns;
 
-    // Parse spawn points
     for (auto& s : j["spawnPoints"])
         spawns.emplace_back(s["x"], s["y"]);
 
-    // Parse stage objects
     for (auto& o : j["objects"])
     {
         int id = o["id"];
@@ -28,7 +26,6 @@ Stage StageManager::loadStage(int16_t stageId)
         sf::Vector2f position{ o["position"]["x"], o["position"]["y"] };
         std::string typeStr = o["type"];
 
-        // Convert string type to enum if needed
         StageObjectType type;
         if (typeStr == "Solid")       type = StageObjectType::Solid;
         else if (typeStr == "HalfSolid") type = StageObjectType::HalfSolid;
@@ -36,11 +33,9 @@ Stage StageManager::loadStage(int16_t stageId)
         else if (typeStr == "Death")     type = StageObjectType::Death;
         else throw std::runtime_error("Unknown StageObject type: " + typeStr);
 
-        // Construct StageObject directly
         objects.emplace_back(id, size, position, type);
     }
 
-    // Construct Stage directly
     Stage stage(
         stageId,
         std::move(objects),
@@ -48,7 +43,6 @@ Stage StageManager::loadStage(int16_t stageId)
         j["name"].get<std::string>()
     );
 
-    // Set optional flags / bounds
     stage.setWrapEdgesX(j["wrapEdgesX"]);
     stage.setVoidTeleportY(j["voidTeleportY"]);
     stage.setBounds(sf::FloatRect(sf::Vector2f(

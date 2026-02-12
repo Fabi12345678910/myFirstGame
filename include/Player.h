@@ -14,8 +14,8 @@ private:
     float health     = defaultHealth;
     unsigned short score = 0;
     bool readyToPlay = false;
-    int16_t  projectileCooldown = 0; // bullet cooldown
-    bool  facing     = FACING_LEFT; // -1 if looking left, 1 if looking right
+    int16_t  projectileCooldown = 0;
+    bool  facing     = FACING_LEFT;
 
     //the ghostPlayer is only available on Clients and displays the predicted playerState
     static constexpr OBJECT_ID_TYPE ghostPlayerId = 9999;
@@ -53,9 +53,4 @@ public:
 
     unsigned short getScore() const { return score; }
     void setScore(unsigned short s) { score = s; }
-    // Player(float width, float height, float x, float y);
-    // sf::FloatRect getBounds() const override;
-    // void update(float dt) override;
-    // void onCollision(StaticCollidable& other) override;
-    // void draw(sf::RenderWindow &window) const override;
 };
