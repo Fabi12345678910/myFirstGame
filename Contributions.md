@@ -3,7 +3,7 @@
 - `src/menu/*.[hpp/cpp]`
 - `src/main.cpp`
 - `src/Options.[hpp/cpp]`
-- `src/rendering/Renderer.[hpp/cpp]`:11-51, 146-467
+- `src/rendering/Renderer.[hpp/cpp]`:11-51, 146-472
 
 ### Movement
 - 

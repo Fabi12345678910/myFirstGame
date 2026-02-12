@@ -414,6 +414,16 @@ void Renderer::renderWinner(std::optional<OBJECT_ID_TYPE> winnerPlayerId) {
     window.draw(text);
 }
 
+// simple color selector for tile types
+static sf::Color colorForStageType(StageObjectType t) {
+    switch (t) {
+        case StageObjectType::Solid:      return sf::Color(130, 130, 130);   // gray
+        case StageObjectType::HalfSolid:  return sf::Color(90, 170, 255);    // blue
+        case StageObjectType::Death: return sf::Color(220, 60, 30);     // red/orange
+        default:                          return sf::Color::White;
+    }
+}
+
 void Renderer::render(GameState& gameState) {
     window.clear(sf::Color(25, 25, 28));
 
@@ -458,15 +468,5 @@ void Renderer::processDisplayEvents() {
             window.close();
             exit(EXIT_SUCCESS);
         }
-    }
-}
-
-// simple color selector for tile types
-static sf::Color colorForStageType(StageObjectType t) {
-    switch (t) {
-        case StageObjectType::Solid:      return sf::Color(130, 130, 130);   // gray
-        case StageObjectType::HalfSolid:  return sf::Color(90, 170, 255);    // blue
-        case StageObjectType::Death: return sf::Color(220, 60, 30);     // red/orange
-        default:                          return sf::Color::White;
     }
 }
